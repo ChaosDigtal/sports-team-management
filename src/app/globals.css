@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-sans-plex), "Segoe UI", sans-serif;
+  --font-mono: var(--font-mono-plex), ui-monospace, monospace;
+  --color-canvas: #eef1f4;
+  --color-ink: #172033;
+  --color-muted: #5c6b80;
+  --color-line: #dce3eb;
+  --color-sidebar: #121a24;
+  --color-accent: #0b6b56;
+  --color-accent-ink: #084c3d;
+  --color-danger: #9f2430;
+}
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans), "Segoe UI", sans-serif;
+}
+
+@property --wip-edge {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: transparent;
+}
+
+@keyframes task-wip-outside {
+  0%,
+  68% {
+    --wip-edge: #dc2626;
+  }
+  84% {
+    --wip-edge: transparent;
+  }
+  100% {
+    --wip-edge: #dc2626;
+  }
+}
+
+.task-wip-outside {
+  animation: task-wip-outside 3.6s ease-in-out infinite;
+}
+
+.task-wip-outside > td {
+  box-shadow: inset 0 2px 0 var(--wip-edge), inset 0 -2px 0 var(--wip-edge);
+}
+
+.task-wip-outside > td:first-child {
+  box-shadow: inset 2px 0 0 var(--wip-edge), inset 0 2px 0 var(--wip-edge), inset 0 -2px 0 var(--wip-edge);
+}
+
+.task-wip-outside > td:last-child {
+  box-shadow: inset -2px 0 0 var(--wip-edge), inset 0 2px 0 var(--wip-edge), inset 0 -2px 0 var(--wip-edge);
+}
+
+.metric-link {
+  background-color: #fff;
+  transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.metric-link:hover {
+  background-color: #b7ebda;
+  border-color: #0b6b56;
+  box-shadow: 0 8px 18px rgba(11, 107, 86, 0.16);
+  transform: translateY(-2px);
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  margin: 0;
+}
