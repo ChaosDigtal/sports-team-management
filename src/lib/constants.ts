@@ -1,4 +1,4 @@
-import type { AccountStatus, PlatformId, ProjectKind, TaskStatus, WithdrawalStatus } from "./types";
+import type { AccountStatus, AssessmentStatus, CandidateStatus, PlatformId, ProjectKind, TaskStatus, WithdrawalStatus } from "./types";
 
 export const PLATFORMS: Array<{ id: PlatformId; label: string; state: "live" | "soon" }> = [
   { id: "da", label: "DA", state: "live" },
@@ -15,6 +15,14 @@ export const ACCOUNT_STATUSES: AccountStatus[] = [
 
 export function isSuspendedStatus(status: string) {
   return status.startsWith("Suspended");
+}
+
+export const CANDIDATE_STATUSES: CandidateStatus[] = ["Pending", "Active", "Passed", "Client No Longer Interested"];
+export const ASSESSMENT_STATUSES: AssessmentStatus[] = ["Ready", "Started", "Waiting", "Failed", "Passed", "On Assessment"];
+
+export function assessmentLabel(status: string, stage: string) {
+  if (status === "On Assessment") return stage ? `On Assessment - ${stage}` : "On Assessment";
+  return status;
 }
 
 export const TASK_STATUSES: TaskStatus[] = ["WIP", "Completed", "Exited"];
@@ -82,6 +90,11 @@ export function timezoneLabel(id: string) {
 
 export function countryLabel(id: string) {
   return COUNTRIES.find((country) => country.id === id)?.label ?? (id || "—");
+}
+
+export function countryName(id: string) {
+  const label = COUNTRIES.find((country) => country.id === id)?.label ?? id;
+  return label.replace(/\s*\([^)]*\)\s*$/, "");
 }
 
 const ACCOUNT_OFFSET_TASK_ZONE: Record<string, string> = {

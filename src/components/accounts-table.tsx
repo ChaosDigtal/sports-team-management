@@ -7,7 +7,7 @@ import { chromeRemoteLabel } from "@/lib/constants";
 import { teamShare } from "@/lib/format";
 import { formatAccountTime, isWorkingAccountTime } from "@/lib/time";
 import type { AccountRow } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import { cn, softTag } from "@/lib/utils";
 
 type ColumnId =
   | "name"
@@ -136,7 +136,7 @@ export function AccountsTable({
             Columns
           </button>
           {open ? (
-            <div className="absolute right-0 z-20 mt-2 w-64 rounded-md border border-line bg-white p-3 shadow-lg">
+            <div className="absolute right-0 z-20 mt-2 w-64 rounded-md border border-line bg-surface p-3 shadow-lg">
               <p className="mb-2 text-xs text-muted">Choose what this table shows. Name stays on.</p>
               <div className="grid max-h-80 gap-1 overflow-y-auto">
                 {available.map((column) => (
@@ -172,9 +172,9 @@ export function AccountsTable({
           </div>
         </form>
       </div>
-      <div className="overflow-x-auto rounded-lg border border-line bg-white">
+      <div className="overflow-x-auto rounded-lg border border-line bg-surface">
         <table className="w-full border-collapse text-sm">
-          <thead className="bg-[#f6f8fa]">
+          <thead className="bg-header">
             <tr>
               {visible.map((column) => (
                 <th key={column.id} className={cn(thClass, "!text-center")}>
@@ -186,7 +186,7 @@ export function AccountsTable({
           <tbody className="divide-y divide-line">
             {accounts.length === 0 ? <EmptyRow colSpan={visible.length}>No accounts match.</EmptyRow> : null}
             {accounts.map((account) => (
-              <tr key={account.id} className="hover:bg-[#f7faf9]">
+              <tr key={account.id} className="hover:bg-hover">
                 {visible.map((column) => (
                   <td key={column.id} className={cn(tdClass, "!text-center", column.id === "share" && "tabular-nums")}>
                     <Cell account={account} column={column.id} now={now} />
@@ -232,7 +232,7 @@ function WeekTargetBar({
   const title = `${parts.map((part) => `${part.label} ${part.hours.toFixed(1)}h`).join(" · ")}${hasTarget ? ` · Target ${target.toFixed(1)}h` : ""}`;
   return (
     <div className="mx-auto w-40" title={title}>
-      <div className={cn("flex h-2.5 overflow-hidden rounded-full bg-slate-300", over && "ring-2 ring-red-500 ring-offset-1")}>
+      <div className={cn("flex h-2.5 overflow-hidden rounded-full bg-slate-300 dark:bg-slate-600", over && "ring-2 ring-red-500 ring-offset-1 ring-offset-surface")}>
         {parts.map((part) =>
           part.hours > 0 ? <div key={part.label} className={cn("h-full", part.className)} style={{ width: `${(part.hours / basis) * 100}%` }} /> : null,
         )}
@@ -309,12 +309,12 @@ const CHROME_TAG: Record<string, string> = {
 
 function CountryTag({ country }: { country: string }) {
   if (!country) return <>—</>;
-  return <span className={cn("inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset", COUNTRY_TAG[country] ?? "bg-slate-100 text-slate-700 ring-slate-500/15")}>{country}</span>;
+  return <span className={cn("inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset", softTag(COUNTRY_TAG[country] ?? "bg-slate-100 text-slate-700 ring-slate-500/15"))}>{country}</span>;
 }
 
 function ChromeRemoteTag({ value }: { value: string }) {
   return (
-    <span className={cn("inline-flex max-w-56 items-center rounded-full px-2 py-0.5 text-xs font-medium break-all ring-1 ring-inset", CHROME_TAG[value] ?? "bg-slate-100 text-slate-700 ring-slate-500/15")}>
+    <span className={cn("inline-flex max-w-56 items-center rounded-full px-2 py-0.5 text-xs font-medium break-all ring-1 ring-inset", softTag(CHROME_TAG[value] ?? "bg-slate-100 text-slate-700 ring-slate-500/15"))}>
       {chromeRemoteLabel(value)}
     </span>
   );

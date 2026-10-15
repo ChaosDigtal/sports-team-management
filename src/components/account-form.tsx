@@ -28,7 +28,7 @@ export function AccountForm({
   const [scheduleTouched, setScheduleTouched] = useState(Boolean(account));
   return (
     <div className="max-w-3xl">
-      <form id="account-form" action={formAction} className="rounded-lg border border-line bg-white p-5">
+      <form id="account-form" action={formAction} className="rounded-lg border border-line bg-surface p-5">
         <FormError message={state.error} />
         {account ? <input type="hidden" name="id" value={account.id} /> : null}
         {account ? (
@@ -121,7 +121,7 @@ export function AccountForm({
           <Field label="Suspended at" hint="Filled in for a suspended status. Cleared when the account is Active.">
             <input className={inputClass} name="suspendedAt" type="datetime-local" defaultValue={suspendedLocal ?? ""} />
           </Field>
-          <div className="rounded-md border border-line bg-[#f7f8fa] p-4 sm:col-span-2">
+          <div className="rounded-md border border-line bg-header p-4 sm:col-span-2">
             <h3 className="text-sm font-semibold">AI Datatrainer Account</h3>
             <div className="mt-3 grid gap-4 sm:grid-cols-2">
               <Field label="Email">

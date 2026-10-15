@@ -66,7 +66,7 @@ export function TaskForm({
 
   return (
     <div className="max-w-3xl">
-      <form id="task-form" action={formAction} className="rounded-lg border border-line bg-white p-5">
+      <form id="task-form" action={formAction} className="rounded-lg border border-line bg-surface p-5">
         <FormError message={state.error} />
         {task ? <input type="hidden" name="id" value={task.id} /> : null}
         {task ? (

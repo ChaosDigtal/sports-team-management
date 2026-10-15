@@ -32,7 +32,7 @@ export function WeekLeaderboard({
     <Panel title="This week" caption="Sunday through Saturday, Japan Standard Time. Rank is by earnings.">
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-sm">
-          <thead className="bg-[#f6f8fa]">
+          <thead className="bg-header">
             <tr>
               <SortTh label="Rank" column="rank" sort={sort} dir={dir} query={query} sortKey="weekSort" dirKey="weekDir" />
               <SortTh label="User" column="user" sort={sort} dir={dir} query={query} sortKey="weekSort" dirKey="weekDir" />
@@ -45,7 +45,7 @@ export function WeekLeaderboard({
           <tbody className="divide-y divide-line">
             {ordered.length === 0 ? <EmptyRow colSpan={columns}>No one is on the roster yet.</EmptyRow> : null}
             {ordered.map((row) => (
-              <tr key={row.id} className="hover:bg-[#f7faf9]">
+              <tr key={row.id} className="hover:bg-hover">
                 <td className={cn(tdClass, "!text-center")}>
                   <RankMark rank={row.rank} />
                 </td>
@@ -88,7 +88,7 @@ export function AllTimeLeaderboard({
     <Panel title="All time" caption="Medals are awarded when a week ends, by hours worked that week. Rank is by total hours.">
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-sm">
-          <thead className="bg-[#f6f8fa]">
+          <thead className="bg-header">
             <tr>
               <SortTh label="Rank" column="rank" sort={sort} dir={dir} query={query} sortKey="allSort" dirKey="allDir" />
               <SortTh label="User" column="user" sort={sort} dir={dir} query={query} sortKey="allSort" dirKey="allDir" />
@@ -108,7 +108,7 @@ export function AllTimeLeaderboard({
           <tbody className="divide-y divide-line">
             {ordered.length === 0 ? <EmptyRow colSpan={columns}>No one is on the roster yet.</EmptyRow> : null}
             {ordered.map((row) => (
-              <tr key={row.id} className="hover:bg-[#f7faf9]">
+              <tr key={row.id} className="hover:bg-hover">
                 <td className={cn(tdClass, "!text-center")}>
                   <RankMark rank={row.rank} />
                 </td>

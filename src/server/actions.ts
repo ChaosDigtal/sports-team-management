@@ -7,6 +7,8 @@ import { canManageUsers, isManager } from "@/lib/access";
 import { requireUser } from "@/lib/auth";
 import {
   ACCOUNT_STATUSES,
+  ASSESSMENT_STATUSES,
+  CANDIDATE_STATUSES,
   isSuspendedStatus,
   ACCOUNT_TIMEZONES,
   CHROME_REMOTE_OPTIONS,
@@ -17,6 +19,7 @@ import {
   TASK_STATUSES,
   WITHDRAWAL_STATUSES,
 } from "@/lib/constants";
+import { createCandidate, deleteCandidate, getCandidate, updateAssessment, updateCandidate } from "@/lib/candidates";
 import { computeEarning, round2 } from "@/lib/format";
 import { refreshProfitEstimate } from "@/lib/stats";
 import { defaultWithdrawalMinutes } from "@/lib/time";
@@ -47,7 +50,7 @@ import {
   updateWithdrawalStatus,
 } from "@/lib/queries";
 import { elapsedHours, zonedLocalToUtc } from "@/lib/time";
-import type { AccountStatus, ActionState, PlatformRole, ProjectKind, TaskStatus, WithdrawalStatus } from "@/lib/types";
+import type { AccountStatus, ActionState, CandidateStatus, PlatformRole, ProjectKind, TaskStatus, WithdrawalStatus } from "@/lib/types";
 
 function refresh() {
   revalidatePath("/", "layout");
@@ -535,6 +538,110 @@ export async function saveUser(_prev: ActionState, formData: FormData): Promise<
   }
   refresh();
   redirect(destination);
+}
+
+export async function saveCandidate(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const user = await requireUser();
+  if (!isManager(user)) return { error: "Only a platform admin can edit candidates." };
+  const id = readString(formData, "id", 20).value;
+  const name = readString(formData, "name", 80);
+  const whatsapp = readString(formData, "whatsapp", 40);
+  const email = readString(formData, "email", 120);
+  const emailPassword = readString(formData, "emailPassword", 200);
+  const accountPassword = readString(formData, "accountPassword", 200);
+  const timezone = readString(formData, "timezone", 64);
+  const chromeRemote = readString(formData, "chromeRemote", 120);
+  const anydeskId = readString(formData, "anydeskId", 80);
+  const anydeskPassword = readString(formData, "anydeskPassword", 200);
+  const ultraviewerId = readString(formData, "ultraviewerId", 80);
+  const ultraviewerPassword = readString(formData, "ultraviewerPassword", 200);
+  const phone = readString(formData, "phone", 40);
+  const address = readString(formData, "address", 240);
+  const dob = readString(formData, "dob", 20);
+  const gender = readString(formData, "gender", 40);
+  const race = readString(formData, "race", 80);
+  const country = readString(formData, "country", 8);
+  const linkedinUrl = readString(formData, "linkedinUrl", 300);
+  const resumeUrl = readString(formData, "resumeUrl", 300);
+  const status = readString(formData, "status", 40);
+  const sharing = readNumber(formData, "sharingPercent");
+  const fields = [name, whatsapp, email, emailPassword, accountPassword, timezone, chromeRemote, anydeskId, anydeskPassword, ultraviewerId, ultraviewerPassword, phone, address, dob, gender, race, country, linkedinUrl, resumeUrl, status];
+  if (fields.some((field) => !field.ok) || !sharing.ok) return { error: "One of the fields is too long." };
+  if (!name.value) return { error: "Add a candidate name." };
+  if (sharing.value != null && (sharing.value < 0 || sharing.value > 100)) return { error: "Profit share has to be between 0 and 100." };
+  if (!ACCOUNT_TIMEZONES.some((zone) => zone.id === timezone.value)) return { error: "Choose a timezone." };
+  if (!CANDIDATE_STATUSES.includes(status.value as CandidateStatus)) return { error: "Choose a status." };
+  if (!CHROME_REMOTE_OPTIONS.some((option) => option.value === chromeRemote.value)) return { error: "Choose a Chrome Remote Desktop login." };
+  if (gender.value && !GENDERS.includes(gender.value)) return { error: "Choose a gender." };
+  if (race.value && !RACES.includes(race.value)) return { error: "Choose a race." };
+  if (country.value && !COUNTRIES.some((item) => item.id === country.value)) return { error: "Choose a country." };
+  if (email.value && !email.value.includes("@")) return { error: "Email needs an @ sign." };
+  if (!validUrl(linkedinUrl.value) || !validUrl(resumeUrl.value)) return { error: "Links need to start with http:// or https://." };
+  if (dob.value && !/^\d{4}-\d{2}-\d{2}$/.test(dob.value)) return { error: "Date of birth needs a real date." };
+  const input = {
+    name: name.value,
+    whatsapp: whatsapp.value,
+    sharingPercent: sharing.value,
+    email: email.value,
+    emailPassword: emailPassword.value,
+    accountPassword: accountPassword.value,
+    timezone: timezone.value,
+    chromeRemote: chromeRemote.value,
+    anydeskId: anydeskId.value,
+    anydeskPassword: anydeskPassword.value,
+    ultraviewerId: ultraviewerId.value,
+    ultraviewerPassword: ultraviewerPassword.value,
+    phone: phone.value,
+    address: address.value,
+    dob: dob.value,
+    gender: gender.value,
+    race: race.value,
+    country: country.value,
+    linkedinUrl: linkedinUrl.value,
+    resumeUrl: resumeUrl.value,
+    status: status.value as CandidateStatus,
+  };
+  let destination = "";
+  try {
+    if (id) {
+      if (!getCandidate(id)) return { error: "That candidate no longer exists." };
+      updateCandidate(id, input);
+      destination = `/onboarding/${id}?notice=saved`;
+    } else {
+      destination = `/onboarding/${createCandidate(input, new Date().toISOString())}?notice=saved`;
+    }
+  } catch {
+    return { error: "Couldn't save that candidate." };
+  }
+  refresh();
+  redirect(destination);
+}
+
+export async function removeCandidate(id: string) {
+  const user = await requireUser();
+  if (!isManager(user)) redirect("/onboarding");
+  deleteCandidate(id);
+  refresh();
+  redirect("/onboarding?notice=deleted");
+}
+
+export async function saveAssessment(formData: FormData) {
+  const user = await requireUser();
+  if (!isManager(user)) redirect("/onboarding/assessments");
+  const id = Number(readString(formData, "id", 20).value);
+  const status = readString(formData, "status", 40).value;
+  const stage = readString(formData, "stage", 80).value;
+  const startTime = readString(formData, "startTime", 40).value;
+  const endTime = readString(formData, "endTime", 40).value;
+  const taskId = readString(formData, "taskId", 80).value;
+  if (!Number.isInteger(id) || id <= 0) redirect("/onboarding/assessments");
+  if (!ASSESSMENT_STATUSES.includes(status as (typeof ASSESSMENT_STATUSES)[number])) redirect("/onboarding/assessments");
+  if ((startTime && !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(startTime)) || (endTime && !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(endTime))) {
+    redirect("/onboarding/assessments");
+  }
+  updateAssessment(id, { startTime, endTime, taskId, status, stage });
+  refresh();
+  redirect("/onboarding/assessments?notice=saved");
 }
 
 export async function removeUser(id: string) {

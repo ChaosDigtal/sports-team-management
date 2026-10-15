@@ -118,6 +118,46 @@ CREATE TABLE IF NOT EXISTS dashboard_estimates (
   amount REAL NOT NULL,
   calculated_at TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS "DA_candidates" (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  whatsapp TEXT NOT NULL DEFAULT '',
+  sharing_percent REAL,
+  email TEXT NOT NULL DEFAULT '',
+  email_password TEXT NOT NULL DEFAULT '',
+  account_password TEXT NOT NULL DEFAULT '',
+  timezone TEXT NOT NULL DEFAULT 'UTC-8',
+  chrome_remote TEXT NOT NULL DEFAULT '',
+  anydesk_id TEXT NOT NULL DEFAULT '',
+  anydesk_password TEXT NOT NULL DEFAULT '',
+  ultraviewer_id TEXT NOT NULL DEFAULT '',
+  ultraviewer_password TEXT NOT NULL DEFAULT '',
+  phone TEXT NOT NULL DEFAULT '',
+  address TEXT NOT NULL DEFAULT '',
+  dob TEXT NOT NULL DEFAULT '',
+  gender TEXT NOT NULL DEFAULT '',
+  race TEXT NOT NULL DEFAULT '',
+  country TEXT NOT NULL DEFAULT '',
+  linkedin_url TEXT NOT NULL DEFAULT '',
+  resume_url TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'Pending'
+);
+
+CREATE TABLE IF NOT EXISTS "DA_assessments" (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  candidate_id TEXT NOT NULL REFERENCES "DA_candidates"(id) ON DELETE CASCADE,
+  start_time TEXT NOT NULL DEFAULT '',
+  end_time TEXT NOT NULL DEFAULT '',
+  task_id TEXT NOT NULL DEFAULT '',
+  status TEXT NOT NULL DEFAULT 'Ready',
+  stage TEXT NOT NULL DEFAULT '',
+  stuck INTEGER NOT NULL DEFAULT 0,
+  stuck_error TEXT NOT NULL DEFAULT ''
+);
+
+CREATE INDEX IF NOT EXISTS idx_da_assessments_candidate ON "DA_assessments"(candidate_id);
 `;
 
 function openDatabase() {
@@ -292,6 +332,59 @@ function ensureWithdrawalSchedule(db: DatabaseSync) {
       calculated_at TEXT NOT NULL
     );
   `);
+}
+
+function ensureOnboarding(db: DatabaseSync) {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS "DA_candidates" (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      whatsapp TEXT NOT NULL DEFAULT '',
+      sharing_percent REAL,
+      email TEXT NOT NULL DEFAULT '',
+      email_password TEXT NOT NULL DEFAULT '',
+      account_password TEXT NOT NULL DEFAULT '',
+      timezone TEXT NOT NULL DEFAULT 'UTC-8',
+      chrome_remote TEXT NOT NULL DEFAULT '',
+      anydesk_id TEXT NOT NULL DEFAULT '',
+      anydesk_password TEXT NOT NULL DEFAULT '',
+      ultraviewer_id TEXT NOT NULL DEFAULT '',
+      ultraviewer_password TEXT NOT NULL DEFAULT '',
+      phone TEXT NOT NULL DEFAULT '',
+      address TEXT NOT NULL DEFAULT '',
+      dob TEXT NOT NULL DEFAULT '',
+      gender TEXT NOT NULL DEFAULT '',
+      race TEXT NOT NULL DEFAULT '',
+      country TEXT NOT NULL DEFAULT '',
+      linkedin_url TEXT NOT NULL DEFAULT '',
+      resume_url TEXT NOT NULL DEFAULT '',
+      created_at TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'Pending'
+    );
+    CREATE TABLE IF NOT EXISTS "DA_assessments" (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      candidate_id TEXT NOT NULL REFERENCES "DA_candidates"(id) ON DELETE CASCADE,
+      start_time TEXT NOT NULL DEFAULT '',
+      end_time TEXT NOT NULL DEFAULT '',
+      task_id TEXT NOT NULL DEFAULT '',
+      status TEXT NOT NULL DEFAULT 'Ready',
+      stage TEXT NOT NULL DEFAULT '',
+      stuck INTEGER NOT NULL DEFAULT 0,
+      stuck_error TEXT NOT NULL DEFAULT ''
+    );
+    CREATE TABLE IF NOT EXISTS "DA_assessment_notifications" (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      payload TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      delivered INTEGER NOT NULL DEFAULT 0
+    );
+    CREATE INDEX IF NOT EXISTS idx_da_assessments_candidate ON "DA_assessments"(candidate_id);
+    INSERT OR IGNORE INTO sequences (name, value) VALUES ('DA-C', 0);
+  `);
+  const columns = db.prepare(`PRAGMA table_info("DA_assessments")`).all() as Array<{ name: string }>;
+  const names = new Set(columns.map((column) => column.name));
+  if (!names.has("stuck")) db.exec(`ALTER TABLE "DA_assessments" ADD COLUMN stuck INTEGER NOT NULL DEFAULT 0`);
+  if (!names.has("stuck_error")) db.exec(`ALTER TABLE "DA_assessments" ADD COLUMN stuck_error TEXT NOT NULL DEFAULT ''`);
 }
 
 function linkExistingWithdrawals(db: DatabaseSync) {
@@ -669,6 +762,7 @@ export function getDb() {
   }
   ensureTaskWithdrawalColumn(db);
   ensureWithdrawalSchedule(db);
+  ensureOnboarding(db);
   return db;
 }
 

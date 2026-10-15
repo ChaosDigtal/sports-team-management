@@ -47,7 +47,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         {manager ? <Metric label="Earnings this week" value={formatMoney(summary.weekEarnings)} /> : null}
         <Metric label="Hours this week" value={formatHours(summary.weekHours)} hint={manager ? "All DA tasks" : "Your logged time"} />
         {user.isSuperAdmin ? (
-          <div className="min-w-0 rounded-lg border border-line bg-white px-4 py-3">
+          <div className="min-w-0 rounded-lg border border-line bg-surface px-4 py-3">
             <div className="flex items-start justify-between gap-2">
               <div className="text-[11px] font-semibold uppercase tracking-wide text-muted">Estimated Profit This Week</div>
               <RefreshEstimateButton action={refreshEstimatedProfit} />
@@ -110,7 +110,7 @@ function Metric({ label, value, hint, href }: { label: string; value: string; hi
       {hint ? <div className="mt-1 text-xs text-muted">{hint}</div> : null}
     </>
   );
-  if (!href) return <div className="min-w-0 rounded-lg border border-line bg-white px-4 py-3">{body}</div>;
+  if (!href) return <div className="min-w-0 rounded-lg border border-line bg-surface px-4 py-3">{body}</div>;
   return (
     <Link href={href} className={clickableCard}>
       {body}

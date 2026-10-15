@@ -19,8 +19,8 @@ export function WeekChart({ weeks }: { weeks: WeekPoint[] }) {
           const y = pad.top + innerH - (tick / max) * innerH;
           return (
             <g key={tick}>
-              <line x1={pad.left} x2={width - pad.right} y1={y} y2={y} stroke="#e3e8ef" />
-              <text x={pad.left - 8} y={y + 4} textAnchor="end" fontSize="11" fill="#5c6b80">
+              <line x1={pad.left} x2={width - pad.right} y1={y} y2={y} stroke="var(--color-line)" />
+              <text x={pad.left - 8} y={y + 4} textAnchor="end" fontSize="11" fill="var(--color-muted)">
                 {moneyAxis(tick)}
               </text>
             </g>
@@ -42,7 +42,7 @@ export function WeekChart({ weeks }: { weeks: WeekPoint[] }) {
               >
                 <title>{`${week.rangeLabel}: ${formatMoney(week.earnings)}`}</title>
               </rect>
-              <text x={x + barWidth / 2} y={height - 12} textAnchor="middle" fontSize="11" fill="#5c6b80">
+              <text x={x + barWidth / 2} y={height - 12} textAnchor="middle" fontSize="11" fill="var(--color-muted)">
                 {week.label}
               </text>
             </g>

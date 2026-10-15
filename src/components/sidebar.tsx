@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTransition, type ReactNode } from "react";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { roleLabel } from "@/lib/access";
 import { PLATFORMS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
@@ -14,6 +15,7 @@ const items = [
   { href: "/statistics", label: "Statistics", icon: ChartIcon, superOnly: false },
   { href: "/projects", label: "Projects", icon: LayersIcon, superOnly: false },
   { href: "/tasks", label: "Tasks", icon: CheckIcon, superOnly: false },
+  { href: "/onboarding", label: "Onboarding", icon: OnboardingIcon, superOnly: false },
   { href: "/accounts", label: "Accounts", icon: CardIcon, superOnly: false },
   { href: "/withdrawals", label: "Withdrawals", icon: WithdrawIcon, superOnly: true },
   { href: "/users", label: "Users", icon: PeopleIcon, superOnly: false },
@@ -37,7 +39,7 @@ export function Sidebar({ user, platform }: { user: SessionUser; platform: Platf
         <label className="mt-4 block">
           <span className="text-[11px] font-medium uppercase tracking-wide text-white/40">Platform</span>
           <select
-            className="mt-1.5 h-9 w-full rounded-md border border-white/10 bg-[#1c2633] px-2 text-sm text-white"
+            className="mt-1.5 h-9 w-full rounded-md border border-white/10 bg-black/25 px-2 text-sm text-white"
             value={platform}
             aria-label="Platform"
             disabled={pending}
@@ -62,19 +64,41 @@ export function Sidebar({ user, platform }: { user: SessionUser; platform: Platf
         {items.filter((item) => !item.superOnly || user.isSuperAdmin).map((item) => {
           const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
           const Icon = item.icon;
+          const onboarding = item.href === "/onboarding";
+          const candidatesActive = active && !pathname.startsWith("/onboarding/assessments");
           return (
-            <Link
-              key={item.href}
-              href={item.href}
-              aria-current={active ? "page" : undefined}
-              className={cn(
-                "flex shrink-0 items-center gap-2.5 rounded-md px-3 py-2 text-sm",
-                active ? "bg-white/10 text-white" : "text-[#c5d0dc] hover:bg-white/5 hover:text-white",
-              )}
-            >
-              <Icon />
-              {item.label}
-            </Link>
+            <div key={item.href} className="shrink-0">
+              <Link
+                href={item.href}
+                aria-current={active ? "page" : undefined}
+                className={cn(
+                  "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm",
+                  active ? "bg-white/10 text-white" : "text-[#c5d0dc] hover:bg-white/5 hover:text-white",
+                )}
+              >
+                <Icon />
+                {item.label}
+              </Link>
+              {onboarding && active ? (
+                <div className="mb-1 ml-8 mt-0.5 flex gap-1 md:flex-col">
+                  <Link
+                    href="/onboarding"
+                    className={cn("rounded px-2 py-1 text-xs", candidatesActive ? "bg-white/15 text-white" : "text-white/60 hover:text-white")}
+                  >
+                    Candidates
+                  </Link>
+                  <Link
+                    href="/onboarding/assessments"
+                    className={cn(
+                      "rounded px-2 py-1 text-xs",
+                      pathname.startsWith("/onboarding/assessments") ? "bg-white/15 text-white" : "text-white/60 hover:text-white",
+                    )}
+                  >
+                    Assessments
+                  </Link>
+                </div>
+              ) : null}
+            </div>
           );
         })}
       </nav>
@@ -83,11 +107,14 @@ export function Sidebar({ user, platform }: { user: SessionUser; platform: Platf
           <div className="truncate text-sm font-medium">{user.name}</div>
           <div className="truncate text-xs text-white/50">{roleLabel(user)}</div>
         </div>
-        <form action="/api/logout" method="post" className="md:mt-3">
-          <button type="submit" className="text-xs text-white/70 hover:text-white">
-            Sign out
-          </button>
-        </form>
+        <div className="mt-3 flex flex-col items-start gap-2">
+          <ThemeToggle />
+          <form action="/api/logout" method="post">
+            <button type="submit" className="text-xs text-white/70 hover:text-white">
+              Sign out
+            </button>
+          </form>
+        </div>
       </div>
     </aside>
   );
@@ -98,6 +125,16 @@ function IconFrame({ children }: { children: ReactNode }) {
     <svg viewBox="0 0 24 24" className="size-[18px] shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
       {children}
     </svg>
+  );
+}
+
+function OnboardingIcon() {
+  return (
+    <IconFrame>
+      <path d="M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
+      <path d="M3.5 19a4.5 4.5 0 0 1 9 0" />
+      <path d="M15 8h5M17.5 5.5v5" />
+    </IconFrame>
   );
 }
 

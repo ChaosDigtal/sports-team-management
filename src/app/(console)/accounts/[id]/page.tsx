@@ -57,7 +57,7 @@ function visibleAccount(account: Account) {
 function AccountRead({ account }: { account: ReturnType<typeof visibleAccount> }) {
   return (
     <div className="max-w-3xl space-y-6">
-      <section className="rounded-lg border border-line bg-white p-5">
+      <section className="rounded-lg border border-line bg-surface p-5">
         <div className="mb-4 flex items-center justify-between gap-3">
           <h2 className="text-sm font-semibold">Account</h2>
           <Badge tone={accountTone(account.status)}>{account.status}</Badge>
@@ -85,7 +85,7 @@ function AccountRead({ account }: { account: ReturnType<typeof visibleAccount> }
           ]}
         />
       </section>
-      <section className="rounded-lg border border-line bg-white p-5">
+      <section className="rounded-lg border border-line bg-surface p-5">
         <h2 className="mb-4 text-sm font-semibold">Remote access</h2>
         <Facts
           items={[
@@ -97,7 +97,7 @@ function AccountRead({ account }: { account: ReturnType<typeof visibleAccount> }
           ]}
         />
       </section>
-      <section className="rounded-lg border border-line bg-white p-5">
+      <section className="rounded-lg border border-line bg-surface p-5">
         <h2 className="mb-4 text-sm font-semibold">Client profile</h2>
         <Facts
           items={[

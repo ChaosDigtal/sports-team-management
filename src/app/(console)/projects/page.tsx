@@ -43,7 +43,7 @@ export default async function ProjectsPage({ searchParams }: { searchParams: Pro
               href={buildHref("/projects", { type: option.id, q, sort, dir })}
               className={cn(
                 "rounded-full px-3 py-1 text-sm",
-                kind === option.id ? "bg-ink text-white" : "border border-line bg-white text-muted hover:text-ink",
+                kind === option.id ? "bg-inverse text-inverse-ink" : "border border-line bg-surface text-muted hover:text-ink",
               )}
             >
               {option.label}
@@ -66,9 +66,9 @@ export default async function ProjectsPage({ searchParams }: { searchParams: Pro
           </button>
         </form>
       </div>
-      <div className="overflow-x-auto rounded-lg border border-line bg-white">
+      <div className="overflow-x-auto rounded-lg border border-line bg-surface">
         <table className="w-full border-collapse text-sm">
-          <thead className="bg-[#f6f8fa]">
+          <thead className="bg-header">
             <tr>
               <th className={cn(thClass, "!text-center")}>
                 <SortLink label="Name" column="name" sort={sort} dir={dir} kind={kind} q={q} />
@@ -86,7 +86,7 @@ export default async function ProjectsPage({ searchParams }: { searchParams: Pro
           <tbody className="divide-y divide-line">
             {projects.length === 0 ? <EmptyRow colSpan={7}>No projects match.</EmptyRow> : null}
             {projects.map((project) => (
-              <tr key={project.id} className="hover:bg-[#f7faf9]">
+              <tr key={project.id} className="hover:bg-hover">
                 <td className={cn(tdClass, "!text-center")}>
                   <Link
                     href={`/projects/${project.id}`}

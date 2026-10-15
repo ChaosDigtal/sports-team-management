@@ -25,7 +25,7 @@ export function ProjectForm({
   const end = durationParts(project?.recommendedEndMinutes);
   return (
     <div className="max-w-2xl">
-      <form id="project-form" action={formAction} className="rounded-lg border border-line bg-white p-5">
+      <form id="project-form" action={formAction} className="rounded-lg border border-line bg-surface p-5">
         <FormError message={state.error} />
         {project ? <input type="hidden" name="id" value={project.id} /> : null}
         {project ? (

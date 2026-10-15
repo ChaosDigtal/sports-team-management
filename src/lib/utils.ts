@@ -2,6 +2,13 @@ export function cn(...parts: Array<string | false | null | undefined>) {
   return parts.filter(Boolean).join(" ");
 }
 
+export function softTag(token: string) {
+  return token
+    .split(/\s+/)
+    .map((part) => (/^bg-[a-z]+-(50|100)$/.test(part) ? `${part} dark:bg-white` : part))
+    .join(" ");
+}
+
 export function one(value: string | string[] | undefined) {
   if (Array.isArray(value)) return value[0] ?? "";
   return value ?? "";

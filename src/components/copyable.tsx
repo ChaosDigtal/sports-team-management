@@ -75,7 +75,7 @@ export function CopyIconButton({
       aria-label={copied ? "Copied" : "Copy"}
       title={copied ? "Copied" : "Copy"}
       className={cn(
-        "inline-flex size-6 shrink-0 items-center justify-center rounded text-muted hover:bg-[#e7eeec] hover:text-ink",
+        "inline-flex size-6 shrink-0 items-center justify-center rounded text-muted hover:bg-hover hover:text-ink",
         className,
       )}
       onMouseDown={(event) => event.preventDefault()}

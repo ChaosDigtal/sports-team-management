@@ -451,7 +451,7 @@ function DateRange({ from, to, preserve }: { from: string; to: string; preserve:
         href={buildHref("/statistics", { ...preserve, from: sunday, to: saturday })}
         className={cn(
           "inline-flex h-10 items-center rounded-full px-3 text-sm",
-          thisWeek ? "bg-ink text-white" : "border border-line bg-white text-muted hover:text-ink",
+          thisWeek ? "bg-inverse text-inverse-ink" : "border border-line bg-surface text-muted hover:text-ink",
         )}
       >
         This week
@@ -460,7 +460,7 @@ function DateRange({ from, to, preserve }: { from: string; to: string; preserve:
         href={buildHref("/statistics", preserve)}
         className={cn(
           "inline-flex h-10 items-center rounded-full px-3 text-sm",
-          ranged ? "border border-line bg-white text-ink hover:bg-canvas" : "border border-line bg-white text-muted",
+          ranged ? "border border-line bg-surface text-ink hover:bg-canvas" : "border border-line bg-surface text-muted",
         )}
       >
         Clear
@@ -471,7 +471,7 @@ function DateRange({ from, to, preserve }: { from: string; to: string; preserve:
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="min-w-36 rounded-lg border border-line bg-white px-3 py-2">
+    <div className="min-w-36 rounded-lg border border-line bg-surface px-3 py-2">
       <div className="text-[11px] font-semibold uppercase tracking-wide text-muted">{label}</div>
       <div className="mt-1 text-lg font-semibold tabular-nums">{value}</div>
     </div>

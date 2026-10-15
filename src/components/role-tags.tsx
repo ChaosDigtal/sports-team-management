@@ -1,6 +1,6 @@
 import { PLATFORMS } from "@/lib/constants";
 import type { SessionUser } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import { cn, softTag } from "@/lib/utils";
 
 const TAG_CLASS: Record<string, string> = {
   super: "bg-violet-50 text-violet-800 ring-violet-600/20",
@@ -28,7 +28,7 @@ export function RoleTags({ user }: { user: SessionUser }) {
   return (
     <span className="inline-flex flex-wrap items-center justify-center gap-1.5">
       {tags.map((tag) => (
-        <span key={tag.key} className={cn("inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset", tag.className)}>
+        <span key={tag.key} className={cn("inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset", softTag(tag.className))}>
           {tag.label}
         </span>
       ))}

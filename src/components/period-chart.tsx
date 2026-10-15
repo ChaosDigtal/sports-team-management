@@ -36,7 +36,7 @@ export function PeriodCharts({ points, showEarnings }: { points: ChartPoint[]; s
               type="button"
               className={cn(
                 "rounded-full px-3 py-1 text-sm",
-                grain === item.id ? "bg-ink text-white" : "border border-line bg-white text-muted hover:text-ink",
+                grain === item.id ? "bg-inverse text-inverse-ink" : "border border-line bg-surface text-muted hover:text-ink",
               )}
               onClick={() => {
                 setGrain(item.id);
@@ -139,7 +139,7 @@ function BarChart({
     <div className="mb-4 overflow-x-auto">
       <h3 className="mb-2 text-sm font-semibold">{title}</h3>
       <svg viewBox={`0 0 ${width} ${height}`} className="h-64 min-w-full" role="img" aria-label={title}>
-        <line x1={pad.left} x2={width - pad.right} y1={pad.top + innerH} y2={pad.top + innerH} stroke="#e3e8ef" />
+        <line x1={pad.left} x2={width - pad.right} y1={pad.top + innerH} y2={pad.top + innerH} stroke="var(--color-line)" />
         {keys.map((key, index) => {
           const value = values[index] ?? 0;
           const barHeight = (value / max) * innerH;
@@ -151,10 +151,10 @@ function BarChart({
               <rect x={x} y={barHeight === 0 ? pad.top + innerH - 2 : y} width={barWidth} height={Math.max(barHeight, 2)} rx="3" fill={key === current ? currentColor : color}>
                 <title>{`${periodLabel(key, key.length === 4 ? "year" : key.length === 7 ? "month" : "day")}: ${label}`}</title>
               </rect>
-              <text x={x + barWidth / 2} y={Math.max(12, y - 6)} textAnchor="middle" fontSize="10" fontWeight="600" fill="#172033">
+              <text x={x + barWidth / 2} y={Math.max(12, y - 6)} textAnchor="middle" fontSize="10" fontWeight="600" fill="var(--color-ink)">
                 {label}
               </text>
-              <text x={x + barWidth / 2} y={height - 14} textAnchor="middle" fontSize="11" fill="#5c6b80">
+              <text x={x + barWidth / 2} y={height - 14} textAnchor="middle" fontSize="11" fill="var(--color-muted)">
                 {periodLabel(key, key.length === 4 ? "year" : key.length === 7 ? "month" : key.length === 10 ? "day" : "week")}
               </text>
             </g>

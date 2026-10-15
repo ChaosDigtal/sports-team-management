@@ -42,7 +42,7 @@ export default async function UserPage({
           onDelete={actor.id === person.id ? undefined : removeUser.bind(null, person.id)}
         />
       ) : (
-        <div className="max-w-2xl rounded-lg border border-line bg-white p-5">
+        <div className="max-w-2xl rounded-lg border border-line bg-surface p-5">
           <Facts
             items={[
               { label: "Login ID", value: <span className="font-mono">{person.id}</span> },

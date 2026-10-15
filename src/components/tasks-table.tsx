@@ -6,7 +6,7 @@ import { Badge, EmptyRow, taskTone, tdClass, thClass } from "@/components/ui";
 import { formatDuration, formatLogged, formatMoney, formatWhen } from "@/lib/format";
 import { formatAccountTime, isWorkingAccountTime, openMinutes } from "@/lib/time";
 import type { Task } from "@/lib/types";
-import { buildHref, cn } from "@/lib/utils";
+import { buildHref, cn, softTag } from "@/lib/utils";
 
 const ASSIGNEE_COLORS = [
   "bg-emerald-50 text-emerald-800 ring-emerald-600/20",
@@ -54,9 +54,9 @@ export function TasksTable({
   const columns = 11 + (canSeeEarnings ? 1 : 0) + (canSeePayout ? 1 : 0);
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-line bg-white">
+    <div className="overflow-x-auto rounded-lg border border-line bg-surface">
       <table className="w-full border-collapse text-sm">
-        <thead className="bg-[#f6f8fa]">
+        <thead className="bg-header">
           <tr>
             <SortTh label="Task" column="id" sort={sort} dir={dir} filters={filters} />
             <th className={cn(thClass, "!text-center")}>Account</th>
@@ -80,7 +80,7 @@ export function TasksTable({
             const over = elapsed != null && task.status === "WIP" && task.maxAllowedMinutes != null && elapsed > task.maxAllowedMinutes;
             const outside = task.status === "WIP" && now != null && !isWorkingAccountTime(now, task.accountTimezone);
             return (
-              <tr key={task.id} className={cn(over ? "bg-red-200 hover:bg-red-200" : "hover:bg-[#f7faf9]", outside && "task-wip-outside")}>
+              <tr key={task.id} className={cn(over ? "bg-red-200 hover:bg-red-200 dark:bg-red-950 dark:text-red-100 dark:hover:bg-red-950" : "hover:bg-hover", outside && "task-wip-outside")}>
                 <td className={cn(tdClass, "!text-center")}>
                   <Link
                     href={`/tasks/${task.id}`}
@@ -173,7 +173,7 @@ function colorIndex(id: string, size: number) {
 
 function AccountTag({ id, name }: { id: string; name: string }) {
   return (
-    <span className={cn("inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset", ACCOUNT_COLORS[colorIndex(id, ACCOUNT_COLORS.length)])}>
+    <span className={cn("inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset", softTag(ACCOUNT_COLORS[colorIndex(id, ACCOUNT_COLORS.length)]))}>
       {name}
     </span>
   );
@@ -181,7 +181,7 @@ function AccountTag({ id, name }: { id: string; name: string }) {
 
 function AssigneeTag({ id, name }: { id: string; name: string }) {
   return (
-    <span className={cn("inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset", ASSIGNEE_COLORS[colorIndex(id, ASSIGNEE_COLORS.length)])}>
+    <span className={cn("inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset", softTag(ASSIGNEE_COLORS[colorIndex(id, ASSIGNEE_COLORS.length)]))}>
       {name}
     </span>
   );
@@ -196,7 +196,7 @@ function ElapsedBar({ minutes, limit }: { minutes: number | null; limit: number 
   return (
     <div className="mx-auto w-40">
       {hasLimit ? (
-        <div className={cn("h-2.5 overflow-hidden rounded-full bg-slate-300", over && "ring-2 ring-red-500 ring-offset-1")}>
+        <div className={cn("h-2.5 overflow-hidden rounded-full bg-slate-300 dark:bg-slate-600", over && "ring-2 ring-red-500 ring-offset-1 ring-offset-surface")}>
           <div className="h-full bg-green-500" style={{ width: `${width}%` }} />
         </div>
       ) : null}

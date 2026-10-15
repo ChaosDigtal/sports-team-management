@@ -21,7 +21,7 @@ export function UserForm({
   const daRole = user?.roles.da ?? "";
   return (
     <div className="max-w-2xl">
-      <form id="user-form" action={formAction} className="rounded-lg border border-line bg-white p-5">
+      <form id="user-form" action={formAction} className="rounded-lg border border-line bg-surface p-5">
         <FormError message={state.error} />
         {user ? <input type="hidden" name="id" value={user.id} /> : null}
         <div className="grid gap-4">

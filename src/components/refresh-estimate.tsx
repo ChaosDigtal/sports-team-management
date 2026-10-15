@@ -18,7 +18,7 @@ function RefreshIcon() {
       aria-label="Refresh estimated profit"
       title="Refresh"
       disabled={pending}
-      className="rounded-md p-1 text-muted hover:bg-emerald-100 hover:text-accent disabled:opacity-60"
+      className="rounded-md p-1 text-muted hover:bg-hover hover:text-accent disabled:opacity-60"
     >
       <svg viewBox="0 0 20 20" className={`size-4 ${pending ? "animate-spin" : ""}`} fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
         <path d="M16.2 10a6.2 6.2 0 1 1-1.6-4.2" strokeLinecap="round" />

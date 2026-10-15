@@ -77,9 +77,9 @@ export default async function WithdrawalsPage({ searchParams }: { searchParams: 
           </Link>
         ) : null}
       </form>
-      <div className="overflow-x-auto rounded-lg border border-line bg-white">
+      <div className="overflow-x-auto rounded-lg border border-line bg-surface">
         <table className="w-full border-collapse text-sm">
-          <thead className="bg-[#f6f8fa]">
+          <thead className="bg-header">
             <tr>
               <th className={cn(thClass, "!text-center")}>ID</th>
               <th className={cn(thClass, "!text-center")}>Account</th>
@@ -93,7 +93,7 @@ export default async function WithdrawalsPage({ searchParams }: { searchParams: 
           <tbody className="divide-y divide-line">
             {rows.length === 0 ? <EmptyRow colSpan={7}>No withdrawals match.</EmptyRow> : null}
             {rows.map((row) => (
-              <tr key={row.id} className="hover:bg-[#f7faf9]">
+              <tr key={row.id} className="hover:bg-hover">
                 <td className={cn(tdClass, "!text-center font-mono text-xs")}>{row.id}</td>
                 <td className={cn(tdClass, "!text-center")}>
                   <Link href={`/accounts/${row.accountId}`}>
@@ -118,7 +118,7 @@ export default async function WithdrawalsPage({ searchParams }: { searchParams: 
 
 function SummaryCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="min-w-40 rounded-lg border border-line bg-white px-4 py-3">
+    <div className="min-w-40 rounded-lg border border-line bg-surface px-4 py-3">
       <div className="text-[11px] font-semibold uppercase tracking-wide text-muted">{label}</div>
       <div className="mt-1 text-xl font-semibold tabular-nums">{value}</div>
     </div>

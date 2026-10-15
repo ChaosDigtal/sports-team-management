@@ -72,7 +72,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
               href={buildHref("/tasks", { ...filters, status: item })}
               className={cn(
                 "rounded-full px-3 py-1 text-sm",
-                active ? "bg-ink text-white" : "border border-line bg-white text-muted hover:text-ink",
+                active ? "bg-inverse text-inverse-ink" : "border border-line bg-surface text-muted hover:text-ink",
               )}
             >
               {label}

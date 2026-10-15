@@ -41,7 +41,7 @@ export function ShareTable({
     <Panel title={title} caption={caption}>
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-sm">
-          <thead className="bg-[#f6f8fa]">
+          <thead className="bg-header">
             <tr>
               <th className={cn(thClass, "!text-center w-16")}>Rank</th>
               <th className={cn(thClass, "!text-center")}>{nameHeader}</th>
@@ -55,7 +55,7 @@ export function ShareTable({
           <tbody className="divide-y divide-line">
             {rows.length === 0 ? <EmptyRow colSpan={columns}>No logged time for this selection.</EmptyRow> : null}
             {rows.map((row) => (
-              <tr key={row.id} className="hover:bg-[#f7faf9]">
+              <tr key={row.id} className="hover:bg-hover">
                 <td className={cn(tdClass, "!text-center")}>
                   <RankMark rank={row.rank} />
                 </td>
@@ -78,7 +78,7 @@ export function ShareTable({
           </tbody>
           {rows.length > 0 ? (
             <tfoot>
-              <tr className="bg-[#f6f8fa] font-medium">
+              <tr className="bg-header font-medium">
                 <td className={cn(tdClass, "!text-center")} />
                 <td className={cn(tdClass, "!text-center")}>Total</td>
                 {showEarnings ? (

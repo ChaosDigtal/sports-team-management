@@ -43,7 +43,7 @@ export default async function ProjectPage({
       {manager ? (
         <ProjectForm action={saveProject} project={record} onDelete={removeProject.bind(null, record.id)} />
       ) : (
-        <div className="max-w-2xl rounded-lg border border-line bg-white p-5">
+        <div className="max-w-2xl rounded-lg border border-line bg-surface p-5">
           <Facts
             items={[
               { label: "Type", value: <ProjectKindTag kind={record.kind} /> },

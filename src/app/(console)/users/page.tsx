@@ -68,9 +68,9 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
           Search
         </button>
       </form>
-      <div className="overflow-x-auto rounded-lg border border-line bg-white">
+      <div className="overflow-x-auto rounded-lg border border-line bg-surface">
         <table className="w-full border-collapse text-sm">
-          <thead className="bg-[#f6f8fa]">
+          <thead className="bg-header">
             <tr>
               <th className={cn(thClass, "!text-center")}>Name</th>
               <th className={cn(thClass, "!text-center")}>Login ID</th>
@@ -83,7 +83,7 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
           <tbody className="divide-y divide-line">
             {users.length === 0 ? <EmptyRow colSpan={6}>No one matches that search.</EmptyRow> : null}
             {users.map((person) => (
-              <tr key={person.id} className="hover:bg-[#f7faf9]">
+              <tr key={person.id} className="hover:bg-hover">
                 <td className={cn(tdClass, "!text-center")}>
                   <Link
                     href={`/users/${person.id}`}

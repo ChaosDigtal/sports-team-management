@@ -12,7 +12,7 @@ export function WithdrawalStatusSelect({ id, status, returnTo }: { id: string; s
         name="status"
         defaultValue={status}
         aria-label={`Status for ${id}`}
-        className="h-8 rounded-md border border-line bg-white px-2 text-sm"
+        className="h-8 rounded-md border border-line bg-surface px-2 text-sm"
         onChange={(event) => event.currentTarget.form?.requestSubmit()}
       >
         {WITHDRAWAL_STATUSES.map((item) => (

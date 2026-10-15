@@ -6,6 +6,8 @@ export type AccountStatus =
   | "Suspended (Work Quality)"
   | "Suspended (No projects)"
   | "Suspended (Before Work)";
+export type CandidateStatus = "Pending" | "Active" | "Passed" | "Client No Longer Interested";
+export type AssessmentStatus = "Ready" | "Started" | "Waiting" | "Failed" | "Passed" | "On Assessment";
 export type TaskStatus = "WIP" | "Completed" | "Exited";
 export type ProjectKind = "Project" | "Survey" | "Qualification";
 
@@ -151,6 +153,63 @@ export type WeekPoint = {
   rangeLabel: string;
   earnings: number;
   current: boolean;
+};
+
+export type Candidate = {
+  id: string;
+  name: string;
+  whatsapp: string;
+  sharingPercent: number | null;
+  email: string;
+  emailPassword: string;
+  accountPassword: string;
+  timezone: string;
+  chromeRemote: string;
+  anydeskId: string;
+  anydeskPassword: string;
+  ultraviewerId: string;
+  ultraviewerPassword: string;
+  phone: string;
+  address: string;
+  dob: string;
+  gender: string;
+  race: string;
+  country: string;
+  linkedinUrl: string;
+  resumeUrl: string;
+  createdAt: string;
+  status: CandidateStatus;
+};
+
+export type Assessment = {
+  id: number;
+  candidateId: string;
+  name: string;
+  whatsapp: string;
+  anydeskId: string;
+  anydeskPassword: string;
+  startTime: string;
+  endTime: string;
+  taskId: string;
+  status: string;
+  stage: string;
+  stuck: boolean;
+  stuckError: string;
+  dob: string;
+  gender: string;
+  race: string;
+  country: string;
+  linkedinUrl: string;
+  resumeUrl: string;
+};
+
+export type AssessmentNotification = {
+  event: "started" | "updated" | "stuck" | "ended";
+  id: number;
+  "started at"?: string;
+  "ended at"?: string;
+  stage?: string;
+  error?: string;
 };
 
 export type SearchParams = Record<string, string | string[] | undefined>;

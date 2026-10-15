@@ -1,16 +1,44 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-sans: var(--font-sans-plex), "Segoe UI", sans-serif;
   --font-mono: var(--font-mono-plex), ui-monospace, monospace;
-  --color-canvas: #eef1f4;
-  --color-ink: #172033;
-  --color-muted: #5c6b80;
-  --color-line: #dce3eb;
-  --color-sidebar: #121a24;
-  --color-accent: #0b6b56;
-  --color-accent-ink: #084c3d;
-  --color-danger: #9f2430;
+  --color-canvas: #f3f6f4;
+  --color-surface: #ffffff;
+  --color-header: #f7faf8;
+  --color-hover: #e7f4ee;
+  --color-ink: #1c2430;
+  --color-muted: #5d6b78;
+  --color-line: #e3ebe6;
+  --color-sidebar: #10211c;
+  --color-accent: #0d7a5f;
+  --color-accent-ink: #0a5e48;
+  --color-danger: #b42333;
+  --color-inverse: #1c2430;
+  --color-inverse-ink: #ffffff;
+}
+
+.dark {
+  --color-canvas: #0f1613;
+  --color-surface: #17211c;
+  --color-header: #1e2b25;
+  --color-hover: #26362e;
+  --color-ink: #e9f2ec;
+  --color-muted: #93a89c;
+  --color-line: #2e4037;
+  --color-sidebar: #0a100d;
+  --color-accent: #3cba8b;
+  --color-accent-ink: #6ad4ab;
+  --color-danger: #f08a90;
+  --color-inverse: #1f6b56;
+  --color-inverse-ink: #f4fbf8;
+  color-scheme: dark;
+}
+
+html {
+  background: var(--color-canvas);
 }
 
 body {
@@ -54,16 +82,55 @@ body {
   box-shadow: inset -2px 0 0 var(--wip-edge), inset 0 2px 0 var(--wip-edge), inset 0 -2px 0 var(--wip-edge);
 }
 
+@property --stuck-edge {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: transparent;
+}
+
+@keyframes assessment-stuck {
+  0%,
+  49% {
+    --stuck-edge: #dc2626;
+  }
+  50%,
+  100% {
+    --stuck-edge: transparent;
+  }
+}
+
+.assessment-stuck {
+  animation: assessment-stuck 5s steps(1, end) infinite;
+}
+
+.assessment-stuck > td {
+  box-shadow: inset 0 2px 0 var(--stuck-edge), inset 0 -2px 0 var(--stuck-edge);
+}
+
+.assessment-stuck > td:first-child {
+  box-shadow: inset 2px 0 0 var(--stuck-edge), inset 0 2px 0 var(--stuck-edge), inset 0 -2px 0 var(--stuck-edge);
+}
+
+.assessment-stuck > td:last-child {
+  box-shadow: inset -2px 0 0 var(--stuck-edge), inset 0 2px 0 var(--stuck-edge), inset 0 -2px 0 var(--stuck-edge);
+}
+
 .metric-link {
-  background-color: #fff;
+  background-color: var(--color-surface);
   transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
 }
 
 .metric-link:hover {
-  background-color: #b7ebda;
-  border-color: #0b6b56;
-  box-shadow: 0 8px 18px rgba(11, 107, 86, 0.16);
+  background-color: #d8f3e8;
+  border-color: #0d7a5f;
+  box-shadow: 0 8px 18px rgba(13, 122, 95, 0.14);
   transform: translateY(-2px);
+}
+
+.dark .metric-link:hover {
+  background-color: #1d4336;
+  border-color: #3cba8b;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.28);
 }
 
 input[type="number"]::-webkit-outer-spin-button,

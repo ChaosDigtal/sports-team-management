@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn, softTag } from "@/lib/utils";
 
 const PALETTES = {
   account: [
@@ -35,7 +35,7 @@ export function EntityTag({ id, name, kind }: { id: string; name: string; kind: 
   const palette = PALETTES[kind];
   const index = [...id].reduce((sum, char) => sum + char.charCodeAt(0), 0) % palette.length;
   return (
-    <span className={cn("inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset", palette[index])}>
+    <span className={cn("inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset", softTag(palette[index]))}>
       {name}
     </span>
   );

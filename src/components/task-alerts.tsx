@@ -45,7 +45,7 @@ export function TaskAlerts() {
     <div className="fixed inset-x-0 top-0 z-50 flex justify-center px-3 pt-3">
       <div className="w-full max-w-xl space-y-2">
         {open.map((alert) => (
-          <div key={alert.id} className="rounded-lg border border-red-300 bg-white px-4 py-3 shadow-lg">
+          <div key={alert.id} className="rounded-lg border border-red-300 bg-surface px-4 py-3 shadow-lg">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-sm font-semibold">{alert.title}</p>

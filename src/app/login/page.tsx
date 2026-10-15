@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { one } from "@/lib/utils";
 import type { SearchParams } from "@/lib/types";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { inputClass, labelClass, primaryBtn } from "@/components/ui";
 
 export const metadata = { title: "Sign in" };
@@ -35,12 +36,15 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         </div>
         <p className="mt-auto hidden pt-16 text-sm text-white/45 lg:block">Reporting weeks use Japan Standard Time.</p>
       </section>
-      <section className="flex items-center justify-center bg-canvas px-6 py-16">
+      <section className="relative flex items-center justify-center bg-canvas px-6 py-16">
+        <div className="absolute right-6 top-6">
+          <ThemeToggle tone="surface" />
+        </div>
         <div className="w-full max-w-sm">
           <h2 className="text-2xl font-semibold tracking-tight">Sign in</h2>
           <p className="mt-2 text-sm leading-6 text-muted">Use the login ID a super admin gave you. There is no public sign-up.</p>
           {failed ? (
-            <p role="alert" className="mt-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-900">
+            <p role="alert" className="mt-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-900 dark:border-red-900 dark:bg-red-950 dark:text-red-100">
               That ID and password do not match.
             </p>
           ) : null}
