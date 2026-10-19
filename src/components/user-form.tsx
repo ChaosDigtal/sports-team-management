@@ -69,6 +69,11 @@ export function UserForm({
               <RoleOption value="member" current={daRole} label="Member" />
               <RoleOption value="platform_admin" current={daRole} label="Platform admin" />
             </div>
+            <label className="mt-3 flex items-center gap-2 text-sm">
+              <input type="checkbox" name="daOnboarding" value="on" defaultChecked={user?.daOnboarding} className="size-4 accent-accent" />
+              DA Onboarding
+            </label>
+            <span className={hintClass}>This role can open the Onboarding tab.</span>
             <p className={`${hintClass} mt-3`}>Handshake and Snorkel roles will be assigned when those workspaces open.</p>
           </fieldset>
         </div>

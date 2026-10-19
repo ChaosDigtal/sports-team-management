@@ -46,6 +46,7 @@ function mapUser(row: Row, roles: Partial<Record<PlatformId, PlatformRole>>): Se
     name: text(row.name),
     signedUpAt: text(row.signed_up_at),
     isSuperAdmin: bit(row.is_super_admin),
+    daOnboarding: bit(row.da_onboarding),
     roles,
   };
 }
@@ -65,7 +66,7 @@ function loadRoles(userId: string) {
 }
 
 export function getSessionUser(id: string): SessionUser | null {
-  const row = getDb().prepare("SELECT id, name, signed_up_at, is_super_admin FROM users WHERE id = ?").get(id) as Row | undefined;
+  const row = getDb().prepare("SELECT id, name, signed_up_at, is_super_admin, da_onboarding FROM users WHERE id = ?").get(id) as Row | undefined;
   if (!row) return null;
   return mapUser(row, loadRoles(id));
 }
@@ -116,16 +117,18 @@ export function createUser(input: {
   passwordHash: string;
   isSuperAdmin: boolean;
   daRole: PlatformRole | null;
+  daOnboarding: boolean;
   signedUpAt: string;
 }) {
   transaction(() => {
     const db = getDb();
-    db.prepare("INSERT INTO users (id, name, password_hash, signed_up_at, is_super_admin) VALUES (?, ?, ?, ?, ?)").run(
+    db.prepare("INSERT INTO users (id, name, password_hash, signed_up_at, is_super_admin, da_onboarding) VALUES (?, ?, ?, ?, ?, ?)").run(
       input.id,
       input.name,
       input.passwordHash,
       input.signedUpAt,
       input.isSuperAdmin ? 1 : 0,
+      input.daOnboarding ? 1 : 0,
     );
     if (input.daRole) {
       db.prepare("INSERT INTO user_platform_roles (user_id, platform, role) VALUES (?, 'da', ?)").run(input.id, input.daRole);
@@ -139,18 +142,25 @@ export function updateUser(input: {
   passwordHash?: string;
   isSuperAdmin: boolean;
   daRole: PlatformRole | null;
+  daOnboarding: boolean;
 }) {
   transaction(() => {
     const db = getDb();
     if (input.passwordHash) {
-      db.prepare("UPDATE users SET name = ?, is_super_admin = ?, password_hash = ? WHERE id = ?").run(
+      db.prepare("UPDATE users SET name = ?, is_super_admin = ?, da_onboarding = ?, password_hash = ? WHERE id = ?").run(
         input.name,
         input.isSuperAdmin ? 1 : 0,
+        input.daOnboarding ? 1 : 0,
         input.passwordHash,
         input.id,
       );
     } else {
-      db.prepare("UPDATE users SET name = ?, is_super_admin = ? WHERE id = ?").run(input.name, input.isSuperAdmin ? 1 : 0, input.id);
+      db.prepare("UPDATE users SET name = ?, is_super_admin = ?, da_onboarding = ? WHERE id = ?").run(
+        input.name,
+        input.isSuperAdmin ? 1 : 0,
+        input.daOnboarding ? 1 : 0,
+        input.id,
+      );
     }
     db.prepare("DELETE FROM user_platform_roles WHERE user_id = ? AND platform = 'da'").run(input.id);
     if (input.daRole) {

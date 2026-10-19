@@ -504,8 +504,9 @@ export async function saveUser(_prev: ActionState, formData: FormData): Promise<
   const daRole: PlatformRole | null =
     daRoleRaw === "platform_admin" || daRoleRaw === "member" ? daRoleRaw : null;
   let isSuperAdmin = readChecked(formData, "isSuperAdmin");
+  const daOnboarding = readChecked(formData, "daOnboarding");
   if (existing?.isSuperAdmin && countSuperAdmins() <= 1) isSuperAdmin = true;
-  if (!isSuperAdmin && !daRole) return { error: "Assign super admin or a DA role." };
+  if (!isSuperAdmin && !daRole && !daOnboarding) return { error: "Assign super admin, a DA role, or DA Onboarding." };
 
   if (!existing && password.value.length < 8) return { error: "Password needs at least 8 characters." };
   if (existing && password.value && password.value.length < 8) return { error: "Password needs at least 8 characters." };
@@ -520,6 +521,7 @@ export async function saveUser(_prev: ActionState, formData: FormData): Promise<
         passwordHash: password.value ? hashPassword(password.value) : undefined,
         isSuperAdmin,
         daRole,
+        daOnboarding,
       });
       destination = `/users/${existing.id}?notice=saved`;
     } else {
@@ -529,6 +531,7 @@ export async function saveUser(_prev: ActionState, formData: FormData): Promise<
         passwordHash: hashPassword(password.value),
         isSuperAdmin,
         daRole,
+        daOnboarding,
         signedUpAt: new Date().toISOString(),
       });
       destination = `/users/${loginId}?notice=saved`;
@@ -641,7 +644,7 @@ export async function saveAssessment(formData: FormData) {
   }
   updateAssessment(id, { startTime, endTime, taskId, status, stage });
   refresh();
-  redirect("/onboarding/assessments?notice=saved");
+  redirect(`/onboarding/assessments/${id}?notice=saved`);
 }
 
 export async function removeUser(id: string) {

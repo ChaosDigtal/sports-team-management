@@ -74,7 +74,7 @@ export function CandidatesTable({
   candidates: Candidate[];
   canSeeShare: boolean;
   filters: ReactNode;
-  search: { q: string; status: string; country: string };
+  search: { q: string; status: string; country: string; noResume: boolean; noLinkedin: boolean };
 }) {
   const storageKey = canSeeShare ? "da-candidate-columns-admin" : "da-candidate-columns-member";
   const defaults = canSeeShare ? ADMIN_DEFAULT : MEMBER_DEFAULT;
@@ -108,7 +108,7 @@ export function CandidatesTable({
     ...COLUMNS.filter((column) => column.id !== "status" && selected.includes(column.id) && (!column.managersOnly || canSeeShare)),
     ...COLUMNS.filter((column) => column.id === "status" && selected.includes("status")),
   ];
-  const filtered = Boolean(search.q || search.status || search.country);
+  const filtered = Boolean(search.q || search.status || search.country || search.noResume || search.noLinkedin);
 
   return (
     <div>
@@ -117,6 +117,8 @@ export function CandidatesTable({
         <form method="get" className="ml-auto flex shrink-0 items-center gap-2">
           {search.status ? <input type="hidden" name="status" value={search.status} /> : null}
           {search.country ? <input type="hidden" name="country" value={search.country} /> : null}
+          {search.noResume ? <input type="hidden" name="noResume" value="1" /> : null}
+          {search.noLinkedin ? <input type="hidden" name="noLinkedin" value="1" /> : null}
           {filtered ? (
             <Link href="/onboarding" className="text-sm font-medium text-accent">
               Clear

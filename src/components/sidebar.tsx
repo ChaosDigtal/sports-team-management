@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTransition, type ReactNode } from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { roleLabel } from "@/lib/access";
+import { canAccessOnboarding, roleLabel } from "@/lib/access";
 import { PLATFORMS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { setPlatform } from "@/server/actions";
@@ -61,7 +61,7 @@ export function Sidebar({ user, platform }: { user: SessionUser; platform: Platf
         </label>
       </div>
       <nav className="flex gap-1 overflow-x-auto px-2 pb-3 md:flex-1 md:flex-col md:overflow-visible md:px-3">
-        {items.filter((item) => !item.superOnly || user.isSuperAdmin).map((item) => {
+        {items.filter((item) => (!item.superOnly || user.isSuperAdmin) && (item.href !== "/onboarding" || canAccessOnboarding(user))).map((item) => {
           const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
           const Icon = item.icon;
           const onboarding = item.href === "/onboarding";

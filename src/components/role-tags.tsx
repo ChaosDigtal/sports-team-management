@@ -15,6 +15,7 @@ const TAG_CLASS: Record<string, string> = {
 export function RoleTags({ user }: { user: SessionUser }) {
   const tags: Array<{ key: string; label: string; className: string }> = [];
   if (user.isSuperAdmin) tags.push({ key: "super", label: "Super admin", className: TAG_CLASS.super });
+  if (user.daOnboarding) tags.push({ key: "da:onboarding", label: "DA Onboarding", className: "bg-indigo-50 text-indigo-800 ring-indigo-600/20" });
   for (const platform of PLATFORMS) {
     const role = user.roles[platform.id];
     if (!role) continue;

@@ -1,45 +1,41 @@
-import { timingSafeEqual } from "node:crypto";
-import { getDb, transaction } from "./db";
+import { getDb } from "./db";
 import type { AssessmentNotification } from "./types";
 
+const NOTIFY_URL = "https://www.hehehe1012.com/da-starter-assessment-get-notifications";
 const NOTIFY_SECRET = process.env.NOTIFY_SECRET ?? "896de5719d48b328931562b0dfa4da66745e92fe990638e99829497767c2e67d";
 const EVENTS = new Set(["started", "updated", "stuck", "ended"]);
 
-export function notifySecretMatches(header: string) {
-  const given = Buffer.from(header);
-  const expected = Buffer.from(NOTIFY_SECRET);
-  if (given.length !== expected.length) return false;
-  return timingSafeEqual(given, expected);
-}
-
-export function ingestNotification(input: unknown) {
-  const notification = parseNotification(input);
-  if (!notification) return null;
-  transaction(() => {
-    applyNotification(notification);
-    getDb()
-      .prepare(`INSERT INTO "DA_assessment_notifications" (payload, created_at, delivered) VALUES (?, ?, 0)`)
-      .run(JSON.stringify(notification), new Date().toISOString());
-  });
-  return notification;
-}
-
-export function takeNotifications() {
-  return transaction(() => {
-    const db = getDb();
-    const rows = db
-      .prepare(`SELECT id, payload FROM "DA_assessment_notifications" WHERE delivered = 0 ORDER BY id`)
-      .all() as Array<{ id: number; payload: string }>;
-    if (rows.length > 0) db.prepare(`UPDATE "DA_assessment_notifications" SET delivered = 1 WHERE delivered = 0`).run();
-    return rows.flatMap((row) => {
-      try {
-        const parsed = parseNotification(JSON.parse(row.payload));
-        return parsed ? [parsed] : [];
-      } catch {
-        return [];
-      }
+export async function pullNotifications() {
+  let payload: unknown;
+  try {
+    const response = await fetch(NOTIFY_URL, {
+      method: "GET",
+      headers: { Accept: "application/json", "x-notify-secret": NOTIFY_SECRET },
+      cache: "no-store",
+      signal: AbortSignal.timeout(8000),
     });
-  });
+    if (!response.ok) return [];
+    payload = await response.json();
+  } catch {
+    return [];
+  }
+  const incoming = Array.isArray(payload)
+    ? payload
+    : payload && typeof payload === "object" && Array.isArray((payload as { notifications?: unknown }).notifications)
+      ? (payload as { notifications: unknown[] }).notifications
+      : [];
+  return applyRemoteNotifications(incoming);
+}
+
+export function applyRemoteNotifications(incoming: unknown[]) {
+  const applied: AssessmentNotification[] = [];
+  for (const item of incoming) {
+    const notification = parseNotification(item);
+    if (!notification) continue;
+    if (!applyNotification(notification)) continue;
+    applied.push(notification);
+  }
+  return applied;
 }
 
 function parseNotification(input: unknown): AssessmentNotification | null {
@@ -51,6 +47,7 @@ function parseNotification(input: unknown): AssessmentNotification | null {
   return {
     event: event as AssessmentNotification["event"],
     id,
+    name: text(record.name),
     "started at": toJstLocal(text(record["started at"])),
     "ended at": toJstLocal(text(record["ended at"])),
     stage: text(record.stage),
@@ -60,39 +57,61 @@ function parseNotification(input: unknown): AssessmentNotification | null {
 
 function applyNotification(notification: AssessmentNotification) {
   const db = getDb();
-  const existing = db.prepare(`SELECT id FROM "DA_assessments" WHERE id = ?`).get(notification.id);
-  if (!existing) return;
+  const id = resolveAssessmentId(notification);
+  if (id == null) return false;
+  notification.id = id;
+  const updatedAt = new Date().toISOString();
   if (notification.event === "started") {
-    db.prepare(`UPDATE "DA_assessments" SET status = 'Started', start_time = ?, stage = '' WHERE id = ?`).run(
+    db.prepare(`UPDATE "DA_assessments" SET status = 'Started', start_time = ?, stage = '', updated_at = ? WHERE id = ?`).run(
       toJstLocal(notification["started at"]),
+      updatedAt,
       notification.id,
     );
-    return;
+    return true;
   }
   if (notification.event === "updated") {
-    db.prepare(`UPDATE "DA_assessments" SET status = 'On Assessment', stage = ?, stuck = 0, stuck_error = '' WHERE id = ?`).run(
+    db.prepare(`UPDATE "DA_assessments" SET status = 'On Assessment', stage = ?, stuck = 0, stuck_error = '', updated_at = ? WHERE id = ?`).run(
       notification.stage ?? "",
+      updatedAt,
       notification.id,
     );
-    return;
+    return true;
   }
   if (notification.event === "stuck") {
-    db.prepare(`UPDATE "DA_assessments" SET stuck = 1, stuck_error = ? WHERE id = ?`).run(notification.error ?? "", notification.id);
-    return;
+    db.prepare(`UPDATE "DA_assessments" SET stuck = 1, stuck_error = ?, updated_at = ? WHERE id = ?`).run(notification.error ?? "", updatedAt, notification.id);
+    return true;
   }
-  db.prepare(`UPDATE "DA_assessments" SET status = 'Waiting', end_time = ?, stage = '', stuck = 0, stuck_error = '' WHERE id = ?`).run(
+  db.prepare(`UPDATE "DA_assessments" SET status = 'Waiting', end_time = ?, stage = '', stuck = 0, stuck_error = '', updated_at = ? WHERE id = ?`).run(
     toJstLocal(notification["ended at"]),
+    updatedAt,
     notification.id,
   );
+  return true;
+}
+
+function resolveAssessmentId(notification: AssessmentNotification) {
+  const db = getDb();
+  const existing = db.prepare(`SELECT id FROM "DA_assessments" WHERE id = ?`).get(notification.id) as { id: number } | undefined;
+  if (existing) return existing.id;
+  const name = notification.name?.trim();
+  if (!name) return null;
+  const matches = db
+    .prepare(
+      `SELECT s.id AS id FROM "DA_assessments" s JOIN "DA_candidates" c ON c.id = s.candidate_id WHERE c.name = ? ORDER BY s.id`,
+    )
+    .all(name) as Array<{ id: number }>;
+  return matches.length === 1 ? matches[0].id : null;
 }
 
 function text(value: unknown) {
   return value == null ? "" : String(value).slice(0, 500);
 }
 
-export function toJstLocal(value: string | undefined) {
-  const raw = (value ?? "").trim();
+function toJstLocal(value: string | undefined) {
+  const raw = (value ?? "").trim().replace(/\s*JST$/i, "");
   if (!raw) return "";
+  const us = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})/);
+  if (us) return `${us[3]}-${us[1].padStart(2, "0")}-${us[2].padStart(2, "0")}T${us[4].padStart(2, "0")}:${us[5]}`;
   const wall = raw.match(/^(\d{4}-\d{2}-\d{2})[T ](\d{2}):(\d{2})/);
   if (wall && !/(?:z|[+-]\d{2}:?\d{2})$/i.test(raw)) return `${wall[1]}T${wall[2]}:${wall[3]}`;
   const date = new Date(raw);

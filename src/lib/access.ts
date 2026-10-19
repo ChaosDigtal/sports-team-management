@@ -9,13 +9,18 @@ export function canManageUsers(user: SessionUser) {
 }
 
 export function hasDaAccess(user: SessionUser) {
-  return user.isSuperAdmin || Boolean(user.roles.da);
+  return user.isSuperAdmin || Boolean(user.roles.da) || user.daOnboarding;
+}
+
+export function canAccessOnboarding(user: SessionUser) {
+  return user.daOnboarding;
 }
 
 export function roleLabel(user: SessionUser) {
   if (user.isSuperAdmin) return "Super admin";
   if (user.roles.da === "platform_admin") return "Platform admin";
   if (user.roles.da === "member") return "Member";
+  if (user.daOnboarding) return "DA Onboarding";
   return "No DA access";
 }
 
@@ -24,5 +29,6 @@ export function accessSummary(user: SessionUser) {
   if (user.isSuperAdmin) parts.push("Super admin");
   if (user.roles.da === "platform_admin") parts.push("DA platform admin");
   if (user.roles.da === "member") parts.push("DA member");
+  if (user.daOnboarding) parts.push("DA Onboarding");
   return parts.length ? parts.join(" · ") : "No role assigned";
 }

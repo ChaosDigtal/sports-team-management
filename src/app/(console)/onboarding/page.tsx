@@ -17,7 +17,9 @@ export default async function CandidatesPage({ searchParams }: { searchParams: P
   const q = one(params.q);
   const status = CANDIDATE_STATUSES.includes(one(params.status) as (typeof CANDIDATE_STATUSES)[number]) ? one(params.status) : "";
   const country = COUNTRIES.some((item) => item.id === one(params.country)) ? one(params.country) : "";
-  const candidates = listCandidates({ status, country, q }).map((candidate) => (manager ? candidate : hideShare(candidate)));
+  const noResume = one(params.noResume) === "1";
+  const noLinkedin = one(params.noLinkedin) === "1";
+  const candidates = listCandidates({ status, country, q, noResume, noLinkedin }).map((candidate) => (manager ? candidate : hideShare(candidate)));
 
   return (
     <div>
@@ -36,28 +38,24 @@ export default async function CandidatesPage({ searchParams }: { searchParams: P
       <CandidatesTable
         candidates={candidates}
         canSeeShare={manager}
-        search={{ q, status, country }}
+        search={{ q, status, country, noResume, noLinkedin }}
         filters={
           <>
             <FilterRow
               label="Status"
               current={status}
               param="status"
-              q={q}
-              country={country}
-              status={status}
+              query={{ q, status, country, noResume, noLinkedin }}
               options={[{ id: "", label: "All" }, ...CANDIDATE_STATUSES.map((item) => ({ id: item, label: item }))]}
             />
             <FilterRow
               label="Country"
               current={country}
               param="country"
-              q={q}
-              country={country}
-              status={status}
+              query={{ q, status, country, noResume, noLinkedin }}
               options={[{ id: "", label: "All" }, ...COUNTRIES.map((item) => ({ id: item.id, label: item.id }))]}
-              flush
             />
+            <ProfileFilters q={q} status={status} country={country} noResume={noResume} noLinkedin={noLinkedin} />
           </>
         }
       />
@@ -73,31 +71,21 @@ function FilterRow({
   label,
   current,
   param,
-  q,
-  status,
-  country,
+  query,
   options,
-  flush,
 }: {
   label: string;
   current: string;
   param: "status" | "country";
-  q: string;
-  status: string;
-  country: string;
+  query: CandidateQuery;
   options: Array<{ id: string; label: string }>;
-  flush?: boolean;
 }) {
   return (
-    <div className={cn("flex flex-wrap items-center gap-2", flush ? "" : "mb-2")}>
+    <div className="mb-2 flex flex-wrap items-center gap-2">
       <span className="mr-1 text-xs font-semibold uppercase tracking-wide text-muted">{label}</span>
       {options.map((option) => {
         const active = current === option.id;
-        const href = buildHref("/onboarding", {
-          q,
-          status: param === "status" ? option.id : status,
-          country: param === "country" ? option.id : country,
-        });
+        const href = candidateHref({ ...query, [param]: option.id });
         return (
           <Link
             key={option.label}
@@ -113,4 +101,40 @@ function FilterRow({
       })}
     </div>
   );
+}
+
+function ProfileFilters({ q, status, country, noResume, noLinkedin }: CandidateQuery) {
+  const chips = [
+    { key: "noResume" as const, label: "No Resume", active: noResume },
+    { key: "noLinkedin" as const, label: "No LinkedIn", active: noLinkedin },
+  ];
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <span className="mr-1 text-xs font-semibold uppercase tracking-wide text-muted">Profile</span>
+      {chips.map((chip) => (
+        <Link
+          key={chip.key}
+          href={candidateHref({ q, status, country, noResume, noLinkedin, [chip.key]: !chip.active })}
+          className={cn(
+            "rounded-full px-3 py-1 text-sm",
+            chip.active ? "bg-inverse text-inverse-ink" : "border border-line bg-surface text-muted hover:text-ink",
+          )}
+        >
+          {chip.label}
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+type CandidateQuery = { q: string; status: string; country: string; noResume: boolean; noLinkedin: boolean };
+
+function candidateHref(query: CandidateQuery) {
+  return buildHref("/onboarding", {
+    q: query.q,
+    status: query.status,
+    country: query.country,
+    noResume: query.noResume ? "1" : "",
+    noLinkedin: query.noLinkedin ? "1" : "",
+  });
 }

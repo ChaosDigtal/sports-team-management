@@ -16,6 +16,7 @@ export type SessionUser = {
   name: string;
   signedUpAt: string;
   isSuperAdmin: boolean;
+  daOnboarding: boolean;
   roles: Partial<Record<PlatformId, PlatformRole>>;
 };
 
@@ -195,6 +196,9 @@ export type Assessment = {
   stage: string;
   stuck: boolean;
   stuckError: string;
+  updatedAt: string;
+  email: string;
+  password: string;
   dob: string;
   gender: string;
   race: string;
@@ -206,6 +210,7 @@ export type Assessment = {
 export type AssessmentNotification = {
   event: "started" | "updated" | "stuck" | "ended";
   id: number;
+  name?: string;
   "started at"?: string;
   "ended at"?: string;
   stage?: string;

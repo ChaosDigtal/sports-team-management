@@ -21,7 +21,7 @@ export const CANDIDATE_STATUSES: CandidateStatus[] = ["Pending", "Active", "Pass
 export const ASSESSMENT_STATUSES: AssessmentStatus[] = ["Ready", "Started", "Waiting", "Failed", "Passed", "On Assessment"];
 
 export function assessmentLabel(status: string, stage: string) {
-  if (status === "On Assessment") return stage ? `On Assessment - ${stage}` : "On Assessment";
+  if (status === "On Assessment") return stage ? `On Assessment (${stage})` : "On Assessment";
   return status;
 }
 
