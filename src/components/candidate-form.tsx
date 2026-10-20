@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, type ReactNode } from "react";
+import { useActionState, useState, type FormEvent, type ReactNode } from "react";
+import { activeCandidateWarning } from "@/lib/candidate-active";
 import { ACCOUNT_TIMEZONES, CANDIDATE_STATUSES, CHROME_REMOTE_OPTIONS, COUNTRIES, GENDERS, RACES } from "@/lib/constants";
 import type { ActionState, Candidate } from "@/lib/types";
 import { DeleteButton } from "./delete-button";
@@ -20,10 +21,37 @@ export function CandidateForm({
   onDelete?: () => Promise<void>;
 }) {
   const [state, formAction, pending] = useActionState(action, {});
+  const [warning, setWarning] = useState("");
+  function onSubmit(event: FormEvent<HTMLFormElement>) {
+    const form = new FormData(event.currentTarget);
+    if (String(form.get("status") ?? "") !== "Active") {
+      setWarning("");
+      return;
+    }
+    const message = activeCandidateWarning({
+      name: String(form.get("name") ?? ""),
+      email: String(form.get("email") ?? ""),
+      whatsapp: String(form.get("whatsapp") ?? ""),
+      telegram: String(form.get("telegram") ?? ""),
+      chromeRemote: String(form.get("chromeRemote") ?? ""),
+      anydeskId: String(form.get("anydeskId") ?? ""),
+      anydeskPassword: String(form.get("anydeskPassword") ?? ""),
+      ultraviewerId: String(form.get("ultraviewerId") ?? ""),
+      ultraviewerPassword: String(form.get("ultraviewerPassword") ?? ""),
+      dob: String(form.get("dob") ?? ""),
+      gender: String(form.get("gender") ?? ""),
+      race: String(form.get("race") ?? ""),
+      country: String(form.get("country") ?? ""),
+      linkedinUrl: String(form.get("linkedinUrl") ?? ""),
+      resumeUrl: String(form.get("resumeUrl") ?? ""),
+    });
+    setWarning(message ?? "");
+    if (message) event.preventDefault();
+  }
   return (
     <div className="max-w-3xl">
-      <form id="candidate-form" action={formAction} className="rounded-lg border border-line bg-surface p-5">
-        <FormError message={state.error} />
+      <form id="candidate-form" action={formAction} onSubmit={onSubmit} className="rounded-lg border border-line bg-surface p-5">
+        <FormError message={warning || state.error} />
         {candidate ? <input type="hidden" name="id" value={candidate.id} /> : null}
         {candidate ? (
           <p className="mb-5 text-sm text-muted">
@@ -52,6 +80,10 @@ export function CandidateForm({
             <input className={inputClass} name="email" type="email" autoComplete="off" defaultValue={candidate?.email} />
           </Field>
           <SecretField label="Email password" name="emailPassword" defaultValue={candidate?.emailPassword} />
+          <label className="flex items-center gap-2 self-end pb-2 text-sm">
+            <input type="checkbox" name="emailForwarding" defaultChecked={candidate?.emailForwarding} className="size-4 accent-accent" />
+            Email Forwarding
+          </label>
           <SecretField label="Account password" name="accountPassword" defaultValue={candidate?.accountPassword} />
           <Field label="WhatsApp">
             <input className={inputClass} name="whatsapp" defaultValue={candidate?.whatsapp} placeholder="+1 415 555 0100" />

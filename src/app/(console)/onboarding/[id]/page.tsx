@@ -63,6 +63,7 @@ function CandidateRead({ candidate }: { candidate: ReturnType<typeof hideShare> 
             { label: "Timezone", value: timezoneLabel(candidate.timezone) },
             { label: "Email", value: blank(candidate.email) },
             { label: "Email password", value: <SecretText value={candidate.emailPassword} /> },
+            { label: "Email Forwarding", value: candidate.emailForwarding ? "Yes" : "No" },
             { label: "Account password", value: <SecretText value={candidate.accountPassword} /> },
             { label: "WhatsApp", value: blank(candidate.whatsapp) },
             { label: "Telegram", value: blank(candidate.telegram) },

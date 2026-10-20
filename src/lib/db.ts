@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS "DA_accounts" (
   sharing_percent REAL,
   email TEXT NOT NULL DEFAULT '',
   email_password TEXT NOT NULL DEFAULT '',
+  email_forwarding INTEGER NOT NULL DEFAULT 0,
   account_password TEXT NOT NULL DEFAULT '',
   timezone TEXT NOT NULL DEFAULT 'UTC-8',
   chrome_remote TEXT NOT NULL DEFAULT '',
@@ -128,6 +129,7 @@ CREATE TABLE IF NOT EXISTS "DA_candidates" (
   sharing_percent REAL,
   email TEXT NOT NULL DEFAULT '',
   email_password TEXT NOT NULL DEFAULT '',
+  email_forwarding INTEGER NOT NULL DEFAULT 0,
   account_password TEXT NOT NULL DEFAULT '',
   timezone TEXT NOT NULL DEFAULT 'UTC-8',
   chrome_remote TEXT NOT NULL DEFAULT '',
@@ -333,6 +335,7 @@ function ensureOnboarding(db: DatabaseSync) {
       sharing_percent REAL,
       email TEXT NOT NULL DEFAULT '',
       email_password TEXT NOT NULL DEFAULT '',
+      email_forwarding INTEGER NOT NULL DEFAULT 0,
       account_password TEXT NOT NULL DEFAULT '',
       timezone TEXT NOT NULL DEFAULT 'UTC-8',
       chrome_remote TEXT NOT NULL DEFAULT '',
@@ -481,6 +484,7 @@ export function getDb() {
   ensureWithdrawalSchedule(db);
   ensureOnboarding(db);
   ensureTelegram(db);
+  ensureEmailForwarding(db);
   return db;
 }
 
@@ -488,6 +492,13 @@ function ensureTelegram(db: DatabaseSync) {
   for (const table of ["DA_accounts", "DA_candidates"]) {
     const names = new Set((db.prepare(`PRAGMA table_info("${table}")`).all() as Array<{ name: string }>).map((row) => row.name));
     if (!names.has("telegram")) db.exec(`ALTER TABLE "${table}" ADD COLUMN telegram TEXT NOT NULL DEFAULT ''`);
+  }
+}
+
+function ensureEmailForwarding(db: DatabaseSync) {
+  for (const table of ["DA_accounts", "DA_candidates"]) {
+    const names = new Set((db.prepare(`PRAGMA table_info("${table}")`).all() as Array<{ name: string }>).map((row) => row.name));
+    if (!names.has("email_forwarding")) db.exec(`ALTER TABLE "${table}" ADD COLUMN email_forwarding INTEGER NOT NULL DEFAULT 0`);
   }
 }
 

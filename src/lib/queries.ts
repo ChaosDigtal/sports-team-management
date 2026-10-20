@@ -188,6 +188,7 @@ function mapAccount(row: Row): Account {
     sharingPercent: num(row.sharing_percent),
     email: text(row.email),
     emailPassword: text(row.email_password),
+    emailForwarding: Number(row.email_forwarding) === 1,
     accountPassword: text(row.account_password),
     timezone: text(row.timezone),
     chromeRemote: text(row.chrome_remote),
@@ -358,12 +359,12 @@ export function createAccount(input: AccountInput, createdAt: string) {
       .prepare(
         `
         INSERT INTO "DA_accounts" (
-          id, name, whatsapp, telegram, sharing_percent, email, email_password, account_password, timezone, chrome_remote,
+          id, name, whatsapp, telegram, sharing_percent, email, email_password, email_forwarding, account_password, timezone, chrome_remote,
           anydesk_id, anydesk_password, ultraviewer_id, ultraviewer_password,
           trainer_email, trainer_password, bitwarden_email, bitwarden_password,
           phone, address, dob, gender, race, country, linkedin_url, resume_url, weekly_target_hours,
           withdrawal_weekday, withdrawal_minutes, created_at, status, suspended_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       )
       .run(
@@ -374,6 +375,7 @@ export function createAccount(input: AccountInput, createdAt: string) {
         input.sharingPercent,
         input.email,
         input.emailPassword,
+        input.emailForwarding ? 1 : 0,
         input.accountPassword,
         input.timezone,
         input.chromeRemote,
@@ -409,7 +411,7 @@ export function updateAccount(id: string, input: AccountInput) {
     .prepare(
       `
       UPDATE "DA_accounts" SET
-        name = ?, whatsapp = ?, telegram = ?, sharing_percent = ?, email = ?, email_password = ?, account_password = ?, timezone = ?,
+        name = ?, whatsapp = ?, telegram = ?, sharing_percent = ?, email = ?, email_password = ?, email_forwarding = ?, account_password = ?, timezone = ?,
         chrome_remote = ?, anydesk_id = ?, anydesk_password = ?, ultraviewer_id = ?, ultraviewer_password = ?,
         trainer_email = ?, trainer_password = ?, bitwarden_email = ?, bitwarden_password = ?,
         phone = ?, address = ?, dob = ?, gender = ?, race = ?, country = ?, linkedin_url = ?, resume_url = ?,
@@ -424,6 +426,7 @@ export function updateAccount(id: string, input: AccountInput) {
       input.sharingPercent,
       input.email,
       input.emailPassword,
+      input.emailForwarding ? 1 : 0,
       input.accountPassword,
       input.timezone,
       input.chromeRemote,

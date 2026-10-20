@@ -69,6 +69,7 @@ function AccountRead({ account }: { account: ReturnType<typeof visibleAccount> }
             { label: "Scheduled withdrawal", value: formatWithdrawalSchedule(account.withdrawalWeekday, account.withdrawalMinutes) },
             { label: "Email", value: blank(account.email) },
             { label: "Email password", value: <SecretText value={account.emailPassword} /> },
+            { label: "Email Forwarding", value: account.emailForwarding ? "Yes" : "No" },
             { label: "Account password", value: <SecretText value={account.accountPassword} /> },
             { label: "WhatsApp", value: blank(account.whatsapp) },
             { label: "Telegram", value: blank(account.telegram) },

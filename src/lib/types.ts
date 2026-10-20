@@ -28,6 +28,7 @@ export type Account = {
   sharingPercent: number | null;
   email: string;
   emailPassword: string;
+  emailForwarding: boolean;
   accountPassword: string;
   timezone: string;
   chromeRemote: string;
@@ -165,6 +166,7 @@ export type Candidate = {
   sharingPercent: number | null;
   email: string;
   emailPassword: string;
+  emailForwarding: boolean;
   accountPassword: string;
   timezone: string;
   chromeRemote: string;

@@ -19,6 +19,7 @@ import {
   TASK_STATUSES,
   WITHDRAWAL_STATUSES,
 } from "@/lib/constants";
+import { activeCandidateWarning } from "@/lib/candidate-active";
 import { createCandidate, deleteCandidate, getCandidate, updateAssessment, updateCandidate } from "@/lib/candidates";
 import { computeEarning, round2 } from "@/lib/format";
 import { refreshProfitEstimate } from "@/lib/stats";
@@ -231,6 +232,7 @@ export async function saveAccount(_prev: ActionState, formData: FormData): Promi
     sharingPercent: fields.sharing.value,
     email: fields.email.value,
     emailPassword: fields.emailPassword.value,
+    emailForwarding: readChecked(formData, "emailForwarding"),
     accountPassword: fields.accountPassword.value,
     timezone: fields.timezone.value,
     chromeRemote: fields.chromeRemote.value,
@@ -593,6 +595,26 @@ export async function saveCandidate(_prev: ActionState, formData: FormData): Pro
   if (email.value && !email.value.includes("@")) return { error: "Email needs an @ sign." };
   if (!validUrl(linkedinUrl.value) || !validUrl(resumeUrl.value)) return { error: "Links need to start with http:// or https://." };
   if (dob.value && !/^\d{4}-\d{2}-\d{2}$/.test(dob.value)) return { error: "Date of birth needs a real date." };
+  if (status.value === "Active") {
+    const warning = activeCandidateWarning({
+      name: name.value,
+      email: email.value,
+      whatsapp: whatsapp.value,
+      telegram: telegram.value,
+      chromeRemote: chromeRemote.value,
+      anydeskId: anydeskId.value,
+      anydeskPassword: anydeskPassword.value,
+      ultraviewerId: ultraviewerId.value,
+      ultraviewerPassword: ultraviewerPassword.value,
+      dob: dob.value,
+      gender: gender.value,
+      race: race.value,
+      country: country.value,
+      linkedinUrl: linkedinUrl.value,
+      resumeUrl: resumeUrl.value,
+    });
+    if (warning) return { error: warning };
+  }
   const input = {
     name: name.value,
     whatsapp: whatsapp.value,
@@ -600,6 +622,7 @@ export async function saveCandidate(_prev: ActionState, formData: FormData): Pro
     sharingPercent,
     email: email.value,
     emailPassword: emailPassword.value,
+    emailForwarding: readChecked(formData, "emailForwarding"),
     accountPassword: accountPassword.value,
     timezone: timezone.value,
     chromeRemote: chromeRemote.value,

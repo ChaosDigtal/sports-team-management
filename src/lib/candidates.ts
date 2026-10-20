@@ -25,6 +25,7 @@ function mapCandidate(row: Row): Candidate {
     sharingPercent: num(row.sharing_percent),
     email: text(row.email),
     emailPassword: text(row.email_password),
+    emailForwarding: Number(row.email_forwarding) === 1,
     accountPassword: text(row.account_password),
     timezone: text(row.timezone),
     chromeRemote: text(row.chrome_remote),
@@ -108,10 +109,10 @@ export function createCandidate(input: CandidateInput, createdAt: string) {
       .prepare(
         `
         INSERT INTO "DA_candidates" (
-          id, name, whatsapp, telegram, sharing_percent, email, email_password, account_password, timezone, chrome_remote,
+          id, name, whatsapp, telegram, sharing_percent, email, email_password, email_forwarding, account_password, timezone, chrome_remote,
           anydesk_id, anydesk_password, ultraviewer_id, ultraviewer_password,
           phone, address, dob, gender, race, country, linkedin_url, resume_url, created_at, status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       )
       .run(
@@ -122,6 +123,7 @@ export function createCandidate(input: CandidateInput, createdAt: string) {
         input.sharingPercent,
         input.email,
         input.emailPassword,
+        input.emailForwarding ? 1 : 0,
         input.accountPassword,
         input.timezone,
         input.chromeRemote,
@@ -152,7 +154,7 @@ export function updateCandidate(id: string, input: CandidateInput) {
       .prepare(
         `
         UPDATE "DA_candidates" SET
-          name = ?, whatsapp = ?, telegram = ?, sharing_percent = ?, email = ?, email_password = ?, account_password = ?, timezone = ?,
+          name = ?, whatsapp = ?, telegram = ?, sharing_percent = ?, email = ?, email_password = ?, email_forwarding = ?, account_password = ?, timezone = ?,
           chrome_remote = ?, anydesk_id = ?, anydesk_password = ?, ultraviewer_id = ?, ultraviewer_password = ?,
           phone = ?, address = ?, dob = ?, gender = ?, race = ?, country = ?, linkedin_url = ?, resume_url = ?, status = ?
         WHERE id = ?
@@ -165,6 +167,7 @@ export function updateCandidate(id: string, input: CandidateInput) {
         input.sharingPercent,
         input.email,
         input.emailPassword,
+        input.emailForwarding ? 1 : 0,
         input.accountPassword,
         input.timezone,
         input.chromeRemote,

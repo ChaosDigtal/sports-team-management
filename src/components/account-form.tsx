@@ -104,6 +104,10 @@ export function AccountForm({
             <input className={inputClass} name="email" type="email" autoComplete="off" defaultValue={account?.email} />
           </Field>
           <SecretField label="Email password" name="emailPassword" defaultValue={account?.emailPassword} />
+          <label className="flex items-center gap-2 self-end pb-2 text-sm">
+            <input type="checkbox" name="emailForwarding" defaultChecked={account?.emailForwarding} className="size-4 accent-accent" />
+            Email Forwarding
+          </label>
           <SecretField label="Account password" name="accountPassword" defaultValue={account?.accountPassword} />
           <Field label="WhatsApp">
             <input className={inputClass} name="whatsapp" defaultValue={account?.whatsapp} placeholder="+1 415 555 0100" />

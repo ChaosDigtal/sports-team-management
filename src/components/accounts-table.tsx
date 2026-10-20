@@ -12,6 +12,7 @@ import { cn, softTag } from "@/lib/utils";
 type ColumnId =
   | "name"
   | "telegram"
+  | "emailForwarding"
   | "country"
   | "share"
   | "email"
@@ -34,7 +35,9 @@ type ColumnId =
 
 const COLUMNS: Array<{ id: ColumnId; label: string; managersOnly?: boolean }> = [
   { id: "name", label: "Name" },
+  { id: "whatsapp", label: "WhatsApp" },
   { id: "telegram", label: "Telegram" },
+  { id: "emailForwarding", label: "Email Forwarding" },
   { id: "country", label: "Country" },
   { id: "share", label: "Profit share", managersOnly: true },
   { id: "email", label: "Email" },
@@ -45,7 +48,6 @@ const COLUMNS: Array<{ id: ColumnId; label: string; managersOnly?: boolean }> = 
   { id: "anydeskId", label: "AnyDesk ID" },
   { id: "anydeskPassword", label: "AnyDesk password" },
   { id: "emailPassword", label: "Email password" },
-  { id: "whatsapp", label: "WhatsApp" },
   { id: "phone", label: "Phone" },
   { id: "ultraviewerId", label: "UltraViewer ID" },
   { id: "ultraviewerPassword", label: "UltraViewer password" },
@@ -113,8 +115,10 @@ export function AccountsTable({
   const available = COLUMNS.filter((column) => !column.managersOnly || canSeeShare);
   const visible = [
     ...COLUMNS.filter((column) => column.id === "name"),
+    ...COLUMNS.filter((column) => column.id === "whatsapp" && selected.includes("whatsapp")),
     ...COLUMNS.filter((column) => column.id === "telegram" && selected.includes("telegram")),
-    ...COLUMNS.filter((column) => column.id !== "name" && column.id !== "telegram" && column.id !== "status" && selected.includes(column.id) && (!column.managersOnly || canSeeShare)),
+    ...COLUMNS.filter((column) => column.id === "emailForwarding" && selected.includes("emailForwarding")),
+    ...COLUMNS.filter((column) => !["name", "whatsapp", "telegram", "emailForwarding", "status"].includes(column.id) && selected.includes(column.id) && (!column.managersOnly || canSeeShare)),
     ...COLUMNS.filter((column) => column.id === "status" && selected.includes("status")),
   ];
 
@@ -265,6 +269,7 @@ function Cell({ account, column, now }: { account: AccountRow; column: ColumnId;
     );
   }
   if (column === "telegram") return <span>{account.telegram || "—"}</span>;
+  if (column === "emailForwarding") return <span>{account.emailForwarding ? "Yes" : "No"}</span>;
   if (column === "country") return <CountryTag country={account.country} />;
   if (column === "share") return <span>{teamShare(account.sharingPercent)}</span>;
   if (column === "email") return <span className="break-all">{account.email || "—"}</span>;
