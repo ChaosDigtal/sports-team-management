@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { CandidateForm } from "@/components/candidate-form";
 import { SecretText } from "@/components/secret-fields";
 import { Badge, ExternalLink, Facts, Notice, PageHeader, blank, candidateTone } from "@/components/ui";
-import { isManager } from "@/lib/access";
+import { canAccessOnboarding, isManager } from "@/lib/access";
 import { requireUser } from "@/lib/auth";
 import { getCandidate } from "@/lib/candidates";
 import { chromeRemoteLabel, countryLabel, timezoneLabel } from "@/lib/constants";
@@ -26,18 +26,19 @@ export default async function CandidatePage({
   if (!candidate) notFound();
   const manager = isManager(user);
   const systemAdmin = user.isSuperAdmin;
+  const canEdit = canAccessOnboarding(user);
   const query = await searchParams;
 
   return (
     <div>
       <PageHeader title={candidate.name} description={`${candidate.id} · Created ${formatTimestamp(candidate.createdAt)}`} />
       <Notice notice={one(query.notice)} />
-      {manager ? (
+      {canEdit ? (
         <CandidateForm
           action={saveCandidate}
           candidate={systemAdmin ? candidate : hideShare(candidate)}
           showShare={systemAdmin}
-          onDelete={removeCandidate.bind(null, candidate.id)}
+          onDelete={manager ? removeCandidate.bind(null, candidate.id) : undefined}
         />
       ) : (
         <CandidateRead candidate={hideShare(candidate)} />

@@ -85,6 +85,7 @@ export function CandidatesTable({
   const [selected, setSelected] = useState<ColumnId[]>(defaults);
   const [open, setOpen] = useState(false);
   const [now, setNow] = useState<Date | null>(null);
+  const [query, setQuery] = useState(search.q);
 
   useEffect(() => {
     const raw = window.localStorage.getItem(storageKey);
@@ -101,6 +102,10 @@ export function CandidatesTable({
     return () => window.clearInterval(timer);
   }, [storageKey, canSeeShare, defaults]);
 
+  useEffect(() => {
+    setQuery(search.q);
+  }, [search.q]);
+
   function update(next: ColumnId[]) {
     const clean = sanitize(next, canSeeShare);
     setSelected(clean);
@@ -116,24 +121,32 @@ export function CandidatesTable({
     ...COLUMNS.filter((column) => !["name", "whatsapp", "telegram", "emailForwarding", "status"].includes(column.id) && selected.includes(column.id) && (!column.managersOnly || canSeeShare)),
     ...COLUMNS.filter((column) => column.id === "status" && selected.includes("status")),
   ];
-  const filtered = Boolean(search.q || search.status || search.country || search.noResume || search.noLinkedin);
+  const chipsOn = Boolean(search.status || search.country || search.noResume || search.noLinkedin);
+  const needle = query.replace(/[%_]/g, "").trim().toLowerCase();
+  const rows = needle ? candidates.filter((candidate) => candidateSearchText(candidate).includes(needle)) : candidates;
 
   return (
     <div>
       <div className="mb-3 flex flex-wrap items-end gap-x-4 gap-y-2">
         <div className="min-w-0 flex-1">{filters}</div>
-        <form method="get" className="ml-auto flex shrink-0 items-center gap-2">
-          {search.status ? <input type="hidden" name="status" value={search.status} /> : null}
-          {search.country ? <input type="hidden" name="country" value={search.country} /> : null}
-          {search.noResume ? <input type="hidden" name="noResume" value="1" /> : null}
-          {search.noLinkedin ? <input type="hidden" name="noLinkedin" value="1" /> : null}
-          {filtered ? (
+        <div className="ml-auto flex shrink-0 items-center gap-2">
+          {chipsOn ? (
             <Link href="/onboarding" className="text-sm font-medium text-accent">
               Clear
             </Link>
+          ) : query ? (
+            <button type="button" className="text-sm font-medium text-accent" onClick={() => setQuery("")}>
+              Clear
+            </button>
           ) : null}
           <div className="w-56">
-            <input className={inputClass} name="q" defaultValue={search.q} placeholder="Search" aria-label="Search candidates" />
+            <input
+              className={inputClass}
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search"
+              aria-label="Search candidates"
+            />
           </div>
           <div className="relative">
             <button type="button" className={secondaryBtn} onClick={() => setOpen((value) => !value)} aria-expanded={open}>
@@ -172,7 +185,7 @@ export function CandidatesTable({
               </div>
             ) : null}
           </div>
-        </form>
+        </div>
       </div>
       <div className="overflow-x-auto rounded-lg border border-line bg-surface">
         <table className="w-full border-collapse text-sm">
@@ -186,8 +199,8 @@ export function CandidatesTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-line">
-            {candidates.length === 0 ? <EmptyRow colSpan={visible.length}>No candidates match.</EmptyRow> : null}
-            {candidates.map((candidate) => (
+            {rows.length === 0 ? <EmptyRow colSpan={visible.length}>No candidates match.</EmptyRow> : null}
+            {rows.map((candidate) => (
               <tr key={candidate.id} className="hover:bg-hover">
                 {visible.map((column) => (
                   <td key={column.id} className={cn(tdClass, "!text-center", column.id === "share" && "tabular-nums")}>
@@ -201,6 +214,12 @@ export function CandidatesTable({
       </div>
     </div>
   );
+}
+
+function candidateSearchText(candidate: Candidate) {
+  return [candidate.id, candidate.name, candidate.whatsapp, candidate.telegram, candidate.email, candidate.anydeskId, candidate.phone, candidate.country, candidate.status]
+    .join(" ")
+    .toLowerCase();
 }
 
 function Cell({ candidate, column, now }: { candidate: Candidate; column: ColumnId; now: Date | null }) {

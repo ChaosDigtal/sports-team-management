@@ -20,7 +20,7 @@ export default async function CandidatesPage({ searchParams }: { searchParams: P
   const country = COUNTRIES.some((item) => item.id === one(params.country)) ? one(params.country) : "";
   const noResume = one(params.noResume) === "1";
   const noLinkedin = one(params.noLinkedin) === "1";
-  const candidates = listCandidates({ status, country, q, noResume, noLinkedin }).map((candidate) => (systemAdmin ? candidate : hideShare(candidate)));
+  const candidates = listCandidates({ status, country, noResume, noLinkedin }).map((candidate) => (systemAdmin ? candidate : hideShare(candidate)));
 
   return (
     <div>

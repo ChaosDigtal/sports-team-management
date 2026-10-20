@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { canManageUsers, isManager } from "@/lib/access";
+import { canAccessOnboarding, canManageUsers, isManager } from "@/lib/access";
 import { requireUser } from "@/lib/auth";
 import {
   ACCOUNT_STATUSES,
@@ -551,8 +551,9 @@ export async function saveUser(_prev: ActionState, formData: FormData): Promise<
 
 export async function saveCandidate(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const user = await requireUser();
-  if (!isManager(user)) return { error: "Only a platform admin can edit candidates." };
+  if (!canAccessOnboarding(user)) return { error: "DA Onboarding is required to edit candidates." };
   const id = readString(formData, "id", 20).value;
+  if (!id && !isManager(user)) return { error: "Only a platform admin can create candidates." };
   const name = readString(formData, "name", 80);
   const whatsapp = readString(formData, "whatsapp", 40);
   const telegram = readString(formData, "telegram", 80);

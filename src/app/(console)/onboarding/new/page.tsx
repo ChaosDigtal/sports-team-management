@@ -9,7 +9,7 @@ export const metadata = { title: "New candidate" };
 export default async function NewCandidatePage() {
   const user = await requireUser();
   if (!isManager(user)) {
-    return <AccessNote title="Candidates are managed by platform admins" body="You can open candidate profiles from the list." />;
+    return <AccessNote title="Creating candidates is limited" body="You can edit candidate profiles from the list. A platform admin creates and deletes them." />;
   }
   return (
     <div>
