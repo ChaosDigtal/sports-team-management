@@ -198,6 +198,7 @@ function mapAccount(row: Row): Account {
     ultraviewerPassword: text(row.ultraviewer_password),
     trainerEmail: text(row.trainer_email),
     trainerPassword: text(row.trainer_password),
+    ubuntuPassword: text(row.ubuntu_password),
     bitwardenEmail: text(row.bitwarden_email),
     bitwardenPassword: text(row.bitwarden_password),
     phone: text(row.phone),
@@ -210,6 +211,9 @@ function mapAccount(row: Row): Account {
     withdrawalWeekday: integerIn(row.withdrawal_weekday, 0, 6, 4),
     withdrawalMinutes: integerIn(row.withdrawal_minutes, 0, 1439, defaultWithdrawalMinutes(text(row.timezone))),
     linkedinUrl: text(row.linkedin_url),
+    linkedinEmail: text(row.linkedin_email),
+    linkedinPassword: text(row.linkedin_password),
+    laptopPin: text(row.laptop_pin),
     resumeUrl: text(row.resume_url),
     createdAt: text(row.created_at),
     status: text(row.status) as AccountStatus,
@@ -243,6 +247,7 @@ const ACCOUNT_SEARCH_COLUMNS = [
   "a.ultraviewer_password",
   "a.trainer_email",
   "a.trainer_password",
+  "a.ubuntu_password",
   "a.bitwarden_email",
   "a.bitwarden_password",
   "a.phone",
@@ -252,6 +257,9 @@ const ACCOUNT_SEARCH_COLUMNS = [
   "a.race",
   "a.country",
   "a.linkedin_url",
+  "a.linkedin_email",
+  "a.linkedin_password",
+  "a.laptop_pin",
   "a.resume_url",
   "a.status",
   "CAST(a.sharing_percent AS TEXT)",
@@ -361,10 +369,10 @@ export function createAccount(input: AccountInput, createdAt: string) {
         INSERT INTO "DA_accounts" (
           id, name, whatsapp, telegram, sharing_percent, email, email_password, email_forwarding, account_password, timezone, chrome_remote,
           anydesk_id, anydesk_password, ultraviewer_id, ultraviewer_password,
-          trainer_email, trainer_password, bitwarden_email, bitwarden_password,
-          phone, address, dob, gender, race, country, linkedin_url, resume_url, weekly_target_hours,
+          trainer_email, trainer_password, ubuntu_password, bitwarden_email, bitwarden_password,
+          phone, address, dob, gender, race, country, linkedin_url, linkedin_email, linkedin_password, laptop_pin, resume_url, weekly_target_hours,
           withdrawal_weekday, withdrawal_minutes, created_at, status, suspended_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       )
       .run(
@@ -385,6 +393,7 @@ export function createAccount(input: AccountInput, createdAt: string) {
         input.ultraviewerPassword,
         input.trainerEmail,
         input.trainerPassword,
+        input.ubuntuPassword,
         input.bitwardenEmail,
         input.bitwardenPassword,
         input.phone,
@@ -394,6 +403,9 @@ export function createAccount(input: AccountInput, createdAt: string) {
         input.race,
         input.country,
         input.linkedinUrl,
+        input.linkedinEmail,
+        input.linkedinPassword,
+        input.laptopPin,
         input.resumeUrl,
         input.weeklyTargetHours,
         input.withdrawalWeekday,
@@ -413,8 +425,8 @@ export function updateAccount(id: string, input: AccountInput) {
       UPDATE "DA_accounts" SET
         name = ?, whatsapp = ?, telegram = ?, sharing_percent = ?, email = ?, email_password = ?, email_forwarding = ?, account_password = ?, timezone = ?,
         chrome_remote = ?, anydesk_id = ?, anydesk_password = ?, ultraviewer_id = ?, ultraviewer_password = ?,
-        trainer_email = ?, trainer_password = ?, bitwarden_email = ?, bitwarden_password = ?,
-        phone = ?, address = ?, dob = ?, gender = ?, race = ?, country = ?, linkedin_url = ?, resume_url = ?,
+        trainer_email = ?, trainer_password = ?, ubuntu_password = ?, bitwarden_email = ?, bitwarden_password = ?,
+        phone = ?, address = ?, dob = ?, gender = ?, race = ?, country = ?, linkedin_url = ?, linkedin_email = ?, linkedin_password = ?, laptop_pin = ?, resume_url = ?,
         weekly_target_hours = ?, withdrawal_weekday = ?, withdrawal_minutes = ?, status = ?, suspended_at = ?
       WHERE id = ?
     `,
@@ -436,6 +448,7 @@ export function updateAccount(id: string, input: AccountInput) {
       input.ultraviewerPassword,
       input.trainerEmail,
       input.trainerPassword,
+      input.ubuntuPassword,
       input.bitwardenEmail,
       input.bitwardenPassword,
       input.phone,
@@ -445,6 +458,9 @@ export function updateAccount(id: string, input: AccountInput) {
       input.race,
       input.country,
       input.linkedinUrl,
+      input.linkedinEmail,
+      input.linkedinPassword,
+      input.laptopPin,
       input.resumeUrl,
       input.weeklyTargetHours,
       input.withdrawalWeekday,

@@ -40,6 +40,9 @@ function mapCandidate(row: Row): Candidate {
     race: text(row.race),
     country: text(row.country),
     linkedinUrl: text(row.linkedin_url),
+    linkedinEmail: text(row.linkedin_email),
+    linkedinPassword: text(row.linkedin_password),
+    laptopPin: text(row.laptop_pin),
     resumeUrl: text(row.resume_url),
     createdAt: text(row.created_at),
     laptopStatus: row.laptop_status === "Online" ? "Online" : "Offline",
@@ -62,7 +65,7 @@ export function listCandidates(filters?: { status?: string; country?: string; q?
   if (filters?.noLinkedin) where.push("TRIM(linkedin_url) = ''");
   const q = (filters?.q ?? "").replace(/[%_]/g, "").trim();
   if (q) {
-    const columns = ["id", "name", "whatsapp", "telegram", "email", "anydesk_id", "phone", "country", "status"];
+    const columns = ["id", "name", "whatsapp", "telegram", "email", "anydesk_id", "phone", "country", "status", "linkedin_email", "laptop_pin"];
     where.push(`(${columns.map((column) => `${column} LIKE ?`).join(" OR ")})`);
     for (let index = 0; index < columns.length; index += 1) params.push(`%${q}%`);
   }
@@ -112,8 +115,8 @@ export function createCandidate(input: CandidateInput, createdAt: string) {
         INSERT INTO "DA_candidates" (
           id, name, whatsapp, telegram, sharing_percent, email, email_password, email_forwarding, account_password, timezone, chrome_remote,
           anydesk_id, anydesk_password, ultraviewer_id, ultraviewer_password,
-          phone, address, dob, gender, race, country, linkedin_url, resume_url, created_at, laptop_status, status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          phone, address, dob, gender, race, country, linkedin_url, linkedin_email, linkedin_password, laptop_pin, resume_url, created_at, laptop_status, status
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       )
       .run(
@@ -139,6 +142,9 @@ export function createCandidate(input: CandidateInput, createdAt: string) {
         input.race,
         input.country,
         input.linkedinUrl,
+        input.linkedinEmail,
+        input.linkedinPassword,
+        input.laptopPin,
         input.resumeUrl,
         createdAt,
         input.laptopStatus,
@@ -158,7 +164,7 @@ export function updateCandidate(id: string, input: CandidateInput) {
         UPDATE "DA_candidates" SET
           name = ?, whatsapp = ?, telegram = ?, sharing_percent = ?, email = ?, email_password = ?, email_forwarding = ?, account_password = ?, timezone = ?,
           chrome_remote = ?, anydesk_id = ?, anydesk_password = ?, ultraviewer_id = ?, ultraviewer_password = ?,
-          phone = ?, address = ?, dob = ?, gender = ?, race = ?, country = ?, linkedin_url = ?, resume_url = ?, laptop_status = ?, status = ?
+          phone = ?, address = ?, dob = ?, gender = ?, race = ?, country = ?, linkedin_url = ?, linkedin_email = ?, linkedin_password = ?, laptop_pin = ?, resume_url = ?, laptop_status = ?, status = ?
         WHERE id = ?
       `,
       )
@@ -184,6 +190,9 @@ export function updateCandidate(id: string, input: CandidateInput) {
         input.race,
         input.country,
         input.linkedinUrl,
+        input.linkedinEmail,
+        input.linkedinPassword,
+        input.laptopPin,
         input.resumeUrl,
         input.laptopStatus,
         input.status,

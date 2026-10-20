@@ -87,6 +87,7 @@ function readAccount(formData: FormData) {
   const ultraviewerPassword = readString(formData, "ultraviewerPassword", 200);
   const trainerEmail = readString(formData, "trainerEmail", 120);
   const trainerPassword = readString(formData, "trainerPassword", 200);
+  const ubuntuPassword = readString(formData, "ubuntuPassword", 200);
   const bitwardenEmail = readString(formData, "bitwardenEmail", 120);
   const bitwardenPassword = readString(formData, "bitwardenPassword", 200);
   const phone = readString(formData, "phone", 40);
@@ -96,6 +97,9 @@ function readAccount(formData: FormData) {
   const race = readString(formData, "race", 80);
   const country = readString(formData, "country", 8);
   const linkedinUrl = readString(formData, "linkedinUrl", 300);
+  const linkedinEmail = readString(formData, "linkedinEmail", 120);
+  const linkedinPassword = readString(formData, "linkedinPassword", 200);
+  const laptopPin = readString(formData, "laptopPin", 40);
   const resumeUrl = readString(formData, "resumeUrl", 300);
   const status = readString(formData, "status", 40);
   const suspendedAt = readString(formData, "suspendedAt", 40);
@@ -118,6 +122,7 @@ function readAccount(formData: FormData) {
     ultraviewerPassword,
     trainerEmail,
     trainerPassword,
+    ubuntuPassword,
     bitwardenEmail,
     bitwardenPassword,
     phone,
@@ -127,6 +132,9 @@ function readAccount(formData: FormData) {
     race,
     country,
     linkedinUrl,
+    linkedinEmail,
+    linkedinPassword,
+    laptopPin,
     resumeUrl,
     status,
     suspendedAt,
@@ -166,6 +174,7 @@ export async function saveAccount(_prev: ActionState, formData: FormData): Promi
     fields.ultraviewerPassword,
     fields.trainerEmail,
     fields.trainerPassword,
+    fields.ubuntuPassword,
     fields.bitwardenEmail,
     fields.bitwardenPassword,
     fields.phone,
@@ -175,6 +184,9 @@ export async function saveAccount(_prev: ActionState, formData: FormData): Promi
     fields.race,
     fields.country,
     fields.linkedinUrl,
+    fields.linkedinEmail,
+    fields.linkedinPassword,
+    fields.laptopPin,
     fields.resumeUrl,
     fields.status,
     fields.suspendedAt,
@@ -201,6 +213,7 @@ export async function saveAccount(_prev: ActionState, formData: FormData): Promi
   if (fields.email.value && !fields.email.value.includes("@")) return { error: "Email needs an @ sign." };
   if (fields.trainerEmail.value && !fields.trainerEmail.value.includes("@")) return { error: "AI Datatrainer email needs an @ sign." };
   if (fields.bitwardenEmail.value && !fields.bitwardenEmail.value.includes("@")) return { error: "Bitwarden email needs an @ sign." };
+  if (fields.linkedinEmail.value && !fields.linkedinEmail.value.includes("@")) return { error: "LinkedIn email needs an @ sign." };
   if (!validUrl(fields.linkedinUrl.value) || !validUrl(fields.resumeUrl.value)) {
     return { error: "Links need to start with http:// or https://." };
   }
@@ -243,6 +256,7 @@ export async function saveAccount(_prev: ActionState, formData: FormData): Promi
     ultraviewerPassword: fields.ultraviewerPassword.value,
     trainerEmail: fields.trainerEmail.value,
     trainerPassword: fields.trainerPassword.value,
+    ubuntuPassword: fields.ubuntuPassword.value,
     bitwardenEmail: fields.bitwardenEmail.value,
     bitwardenPassword: fields.bitwardenPassword.value,
     phone: fields.phone.value,
@@ -255,6 +269,9 @@ export async function saveAccount(_prev: ActionState, formData: FormData): Promi
     withdrawalWeekday: weekday,
     withdrawalMinutes: clock ?? defaultWithdrawalMinutes(fields.timezone.value),
     linkedinUrl: fields.linkedinUrl.value,
+    linkedinEmail: fields.linkedinEmail.value,
+    linkedinPassword: fields.linkedinPassword.value,
+    laptopPin: fields.laptopPin.value,
     resumeUrl: fields.resumeUrl.value,
     status: fields.status.value as AccountStatus,
     suspendedAt: suspended,
@@ -574,10 +591,13 @@ export async function saveCandidate(_prev: ActionState, formData: FormData): Pro
   const race = readString(formData, "race", 80);
   const country = readString(formData, "country", 8);
   const linkedinUrl = readString(formData, "linkedinUrl", 300);
+  const linkedinEmail = readString(formData, "linkedinEmail", 120);
+  const linkedinPassword = readString(formData, "linkedinPassword", 200);
+  const laptopPin = readString(formData, "laptopPin", 40);
   const resumeUrl = readString(formData, "resumeUrl", 300);
   const status = readString(formData, "status", 40);
   const laptopStatus = readString(formData, "laptopStatus", 20);
-  const fields = [name, whatsapp, telegram, email, emailPassword, accountPassword, timezone, chromeRemote, anydeskId, anydeskPassword, ultraviewerId, ultraviewerPassword, phone, address, dob, gender, race, country, linkedinUrl, resumeUrl, status, laptopStatus];
+  const fields = [name, whatsapp, telegram, email, emailPassword, accountPassword, timezone, chromeRemote, anydeskId, anydeskPassword, ultraviewerId, ultraviewerPassword, phone, address, dob, gender, race, country, linkedinUrl, linkedinEmail, linkedinPassword, laptopPin, resumeUrl, status, laptopStatus];
   if (fields.some((field) => !field.ok)) return { error: "One of the fields is too long." };
   if (!name.value) return { error: "Add a candidate name." };
   const existing = id ? getCandidate(id) : null;
@@ -600,6 +620,7 @@ export async function saveCandidate(_prev: ActionState, formData: FormData): Pro
   if (race.value && !RACES.includes(race.value)) return { error: "Choose a race." };
   if (country.value && !COUNTRIES.some((item) => item.id === country.value)) return { error: "Choose a country." };
   if (email.value && !email.value.includes("@")) return { error: "Email needs an @ sign." };
+  if (linkedinEmail.value && !linkedinEmail.value.includes("@")) return { error: "LinkedIn email needs an @ sign." };
   if (!validUrl(linkedinUrl.value) || !validUrl(resumeUrl.value)) return { error: "Links need to start with http:// or https://." };
   if (dob.value && !/^\d{4}-\d{2}-\d{2}$/.test(dob.value)) return { error: "Date of birth needs a real date." };
   if (status.value === "Active") {
@@ -644,6 +665,9 @@ export async function saveCandidate(_prev: ActionState, formData: FormData): Pro
     race: race.value,
     country: country.value,
     linkedinUrl: linkedinUrl.value,
+    linkedinEmail: linkedinEmail.value,
+    linkedinPassword: linkedinPassword.value,
+    laptopPin: laptopPin.value,
     resumeUrl: resumeUrl.value,
     laptopStatus: laptopStatus.value as LaptopStatus,
     status: status.value as CandidateStatus,

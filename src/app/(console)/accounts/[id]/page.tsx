@@ -73,6 +73,7 @@ function AccountRead({ account }: { account: ReturnType<typeof visibleAccount> }
             { label: "Account password", value: <SecretText value={account.accountPassword} /> },
             { label: "WhatsApp", value: blank(account.whatsapp) },
             { label: "Telegram", value: blank(account.telegram) },
+            { label: "Laptop PIN", value: <SecretText value={account.laptopPin} /> },
             { label: "Phone", value: blank(account.phone) },
             { label: "Suspended at", value: account.suspendedAt ? formatWhen(account.suspendedAt, account.timezone) : "—" },
           ]}
@@ -82,6 +83,7 @@ function AccountRead({ account }: { account: ReturnType<typeof visibleAccount> }
           items={[
             { label: "Email", value: blank(account.trainerEmail) },
             { label: "Password", value: <SecretText value={account.trainerPassword} /> },
+            { label: "Ubuntu password", value: <SecretText value={account.ubuntuPassword} /> },
             { label: "Bitwarden email", value: blank(account.bitwardenEmail) },
             { label: "Bitwarden master password", value: <SecretText value={account.bitwardenPassword} /> },
           ]}
@@ -109,6 +111,8 @@ function AccountRead({ account }: { account: ReturnType<typeof visibleAccount> }
             { label: "Country", value: account.country ? countryLabel(account.country) : "—" },
             { label: "Address", value: blank(account.address) },
             { label: "LinkedIn", value: <ExternalLink href={account.linkedinUrl} /> },
+            { label: "LinkedIn email", value: blank(account.linkedinEmail) },
+            { label: "LinkedIn password", value: <SecretText value={account.linkedinPassword} /> },
             { label: "Resume", value: <ExternalLink href={account.resumeUrl} /> },
           ]}
         />

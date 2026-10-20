@@ -115,6 +115,7 @@ export function AccountForm({
           <Field label="Telegram">
             <input className={inputClass} name="telegram" defaultValue={account?.telegram} placeholder="@username" autoComplete="off" />
           </Field>
+          <SecretField label="Laptop PIN" name="laptopPin" defaultValue={account?.laptopPin} />
           <Field label="Phone">
             <input className={inputClass} name="phone" defaultValue={account?.phone} />
           </Field>
@@ -135,6 +136,7 @@ export function AccountForm({
                 <input className={inputClass} name="trainerEmail" type="email" autoComplete="off" defaultValue={account?.trainerEmail} />
               </Field>
               <SecretField label="Password" name="trainerPassword" defaultValue={account?.trainerPassword} />
+              <SecretField label="Ubuntu password" name="ubuntuPassword" defaultValue={account?.ubuntuPassword} />
               <Field label="Bitwarden email">
                 <input className={inputClass} name="bitwardenEmail" type="email" autoComplete="off" defaultValue={account?.bitwardenEmail} />
               </Field>
@@ -197,6 +199,10 @@ export function AccountForm({
           <Field label="LinkedIn URL">
             <input className={inputClass} name="linkedinUrl" type="url" defaultValue={account?.linkedinUrl} placeholder="https://" />
           </Field>
+          <Field label="LinkedIn email">
+            <input className={inputClass} name="linkedinEmail" type="email" autoComplete="off" defaultValue={account?.linkedinEmail} />
+          </Field>
+          <SecretField label="LinkedIn password" name="linkedinPassword" defaultValue={account?.linkedinPassword} />
           <Field label="Resume URL">
             <input className={inputClass} name="resumeUrl" type="url" defaultValue={account?.resumeUrl} placeholder="https://" />
           </Field>

@@ -100,6 +100,7 @@ export function CandidateForm({
               ))}
             </select>
           </Field>
+          <SecretField label="Laptop PIN" name="laptopPin" defaultValue={candidate?.laptopPin} />
           <Field label="Phone">
             <input className={inputClass} name="phone" defaultValue={candidate?.phone} />
           </Field>
@@ -166,6 +167,10 @@ export function CandidateForm({
           <Field label="LinkedIn URL">
             <input className={inputClass} name="linkedinUrl" type="url" defaultValue={candidate?.linkedinUrl} placeholder="https://" />
           </Field>
+          <Field label="LinkedIn email">
+            <input className={inputClass} name="linkedinEmail" type="email" autoComplete="off" defaultValue={candidate?.linkedinEmail} />
+          </Field>
+          <SecretField label="LinkedIn password" name="linkedinPassword" defaultValue={candidate?.linkedinPassword} />
           <Field label="Resume URL">
             <input className={inputClass} name="resumeUrl" type="url" defaultValue={candidate?.resumeUrl} placeholder="https://" />
           </Field>

@@ -47,6 +47,7 @@ CREATE TABLE IF NOT EXISTS "DA_accounts" (
   ultraviewer_password TEXT NOT NULL DEFAULT '',
   trainer_email TEXT NOT NULL DEFAULT '',
   trainer_password TEXT NOT NULL DEFAULT '',
+  ubuntu_password TEXT NOT NULL DEFAULT '',
   bitwarden_email TEXT NOT NULL DEFAULT '',
   bitwarden_password TEXT NOT NULL DEFAULT '',
   phone TEXT NOT NULL DEFAULT '',
@@ -56,6 +57,9 @@ CREATE TABLE IF NOT EXISTS "DA_accounts" (
   race TEXT NOT NULL DEFAULT '',
   country TEXT NOT NULL DEFAULT '',
   linkedin_url TEXT NOT NULL DEFAULT '',
+  linkedin_email TEXT NOT NULL DEFAULT '',
+  linkedin_password TEXT NOT NULL DEFAULT '',
+  laptop_pin TEXT NOT NULL DEFAULT '',
   resume_url TEXT NOT NULL DEFAULT '',
   weekly_target_hours REAL DEFAULT 40,
   withdrawal_weekday INTEGER NOT NULL DEFAULT 4,
@@ -144,6 +148,9 @@ CREATE TABLE IF NOT EXISTS "DA_candidates" (
   race TEXT NOT NULL DEFAULT '',
   country TEXT NOT NULL DEFAULT '',
   linkedin_url TEXT NOT NULL DEFAULT '',
+  linkedin_email TEXT NOT NULL DEFAULT '',
+  linkedin_password TEXT NOT NULL DEFAULT '',
+  laptop_pin TEXT NOT NULL DEFAULT '',
   resume_url TEXT NOT NULL DEFAULT '',
   created_at TEXT NOT NULL,
   laptop_status TEXT NOT NULL DEFAULT 'Offline',
@@ -351,6 +358,9 @@ function ensureOnboarding(db: DatabaseSync) {
       race TEXT NOT NULL DEFAULT '',
       country TEXT NOT NULL DEFAULT '',
       linkedin_url TEXT NOT NULL DEFAULT '',
+      linkedin_email TEXT NOT NULL DEFAULT '',
+      linkedin_password TEXT NOT NULL DEFAULT '',
+      laptop_pin TEXT NOT NULL DEFAULT '',
       resume_url TEXT NOT NULL DEFAULT '',
       created_at TEXT NOT NULL,
       laptop_status TEXT NOT NULL DEFAULT 'Offline',
@@ -488,6 +498,7 @@ export function getDb() {
   ensureTelegram(db);
   ensureEmailForwarding(db);
   ensureCandidateWorkflow(db);
+  ensureProfileCredentials(db);
   return db;
 }
 
@@ -502,6 +513,22 @@ function ensureCandidateWorkflow(db: DatabaseSync) {
   const names = new Set((db.prepare(`PRAGMA table_info("DA_candidates")`).all() as Array<{ name: string }>).map((row) => row.name));
   if (!names.has("laptop_status")) db.exec(`ALTER TABLE "DA_candidates" ADD COLUMN laptop_status TEXT NOT NULL DEFAULT 'Offline'`);
   db.exec(`UPDATE "DA_candidates" SET status = 'Incomplete' WHERE status = 'Pending'`);
+}
+
+function ensureProfileCredentials(db: DatabaseSync) {
+  const columns: Array<[string, string]> = [
+    ["linkedin_email", "linkedin_email TEXT NOT NULL DEFAULT ''"],
+    ["linkedin_password", "linkedin_password TEXT NOT NULL DEFAULT ''"],
+    ["laptop_pin", "laptop_pin TEXT NOT NULL DEFAULT ''"],
+  ];
+  for (const table of ["DA_accounts", "DA_candidates"]) {
+    const names = new Set((db.prepare(`PRAGMA table_info("${table}")`).all() as Array<{ name: string }>).map((row) => row.name));
+    for (const [name, definition] of columns) {
+      if (!names.has(name)) db.exec(`ALTER TABLE "${table}" ADD COLUMN ${definition}`);
+    }
+  }
+  const accounts = new Set((db.prepare(`PRAGMA table_info("DA_accounts")`).all() as Array<{ name: string }>).map((row) => row.name));
+  if (!accounts.has("ubuntu_password")) db.exec(`ALTER TABLE "DA_accounts" ADD COLUMN ubuntu_password TEXT NOT NULL DEFAULT ''`);
 }
 
 function ensureEmailForwarding(db: DatabaseSync) {

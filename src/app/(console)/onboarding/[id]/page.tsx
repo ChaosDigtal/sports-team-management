@@ -70,6 +70,7 @@ function CandidateRead({ candidate }: { candidate: ReturnType<typeof hideShare> 
             { label: "WhatsApp", value: blank(candidate.whatsapp) },
             { label: "Telegram", value: blank(candidate.telegram) },
             { label: "Laptop Status", value: blank(candidate.laptopStatus) },
+            { label: "Laptop PIN", value: <SecretText value={candidate.laptopPin} /> },
             { label: "Phone", value: blank(candidate.phone) },
           ]}
         />
@@ -92,6 +93,8 @@ function CandidateRead({ candidate }: { candidate: ReturnType<typeof hideShare> 
             { label: "Country", value: countryLabel(candidate.country) },
             { label: "Address", value: blank(candidate.address) },
             { label: "LinkedIn", value: candidate.linkedinUrl ? <ExternalLink href={candidate.linkedinUrl} /> : "—" },
+            { label: "LinkedIn email", value: blank(candidate.linkedinEmail) },
+            { label: "LinkedIn password", value: <SecretText value={candidate.linkedinPassword} /> },
             { label: "Resume", value: candidate.resumeUrl ? <ExternalLink href={candidate.resumeUrl} /> : "—" },
           ]}
         />

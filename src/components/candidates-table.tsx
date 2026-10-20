@@ -237,7 +237,7 @@ export function CandidatesTable({
 }
 
 function candidateSearchText(candidate: Candidate) {
-  return [candidate.id, candidate.name, candidate.whatsapp, candidate.telegram, candidate.email, candidate.anydeskId, candidate.phone, candidate.country, candidate.status]
+  return [candidate.id, candidate.name, candidate.whatsapp, candidate.telegram, candidate.email, candidate.linkedinEmail, candidate.laptopPin, candidate.anydeskId, candidate.phone, candidate.country, candidate.status]
     .join(" ")
     .toLowerCase();
 }

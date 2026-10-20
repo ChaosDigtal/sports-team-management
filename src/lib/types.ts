@@ -39,6 +39,7 @@ export type Account = {
   ultraviewerPassword: string;
   trainerEmail: string;
   trainerPassword: string;
+  ubuntuPassword: string;
   bitwardenEmail: string;
   bitwardenPassword: string;
   phone: string;
@@ -51,6 +52,9 @@ export type Account = {
   withdrawalWeekday: number;
   withdrawalMinutes: number;
   linkedinUrl: string;
+  linkedinEmail: string;
+  linkedinPassword: string;
+  laptopPin: string;
   resumeUrl: string;
   createdAt: string;
   status: AccountStatus;
@@ -182,6 +186,9 @@ export type Candidate = {
   race: string;
   country: string;
   linkedinUrl: string;
+  linkedinEmail: string;
+  linkedinPassword: string;
+  laptopPin: string;
   resumeUrl: string;
   createdAt: string;
   laptopStatus: LaptopStatus;
