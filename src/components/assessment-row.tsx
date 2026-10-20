@@ -2,12 +2,21 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { LaptopStatusSelect } from "@/components/laptop-status-select";
 import { assessmentLabel, countryName } from "@/lib/constants";
 import { formatDateTime } from "@/lib/format";
-import type { Assessment } from "@/lib/types";
-import { Badge, assessmentTone } from "./ui";
+import type { Assessment, LaptopStatus } from "@/lib/types";
+import { Badge, assessmentTone, personNameClass } from "./ui";
 
-export function AssessmentCells({ row }: { row: Assessment }) {
+export function AssessmentCells({
+  row,
+  canEditLaptop,
+  onLaptop,
+}: {
+  row: Assessment;
+  canEditLaptop: boolean;
+  onLaptop: (candidateId: string, laptopStatus: LaptopStatus) => void;
+}) {
   return (
     <>
       <td className="px-4 py-3 text-center tabular-nums">
@@ -22,13 +31,17 @@ export function AssessmentCells({ row }: { row: Assessment }) {
         </span>
       </td>
       <td className="px-4 py-3 text-center">
-        <Link href={`/onboarding/${row.candidateId}`} className="font-semibold text-accent underline decoration-accent/50 decoration-2 underline-offset-2">
+        <Link href={`/onboarding/${row.candidateId}`} className={personNameClass(row.candidateStatus === "Active")}>
           {row.name}
         </Link>
       </td>
       <td className="px-4 py-3 text-center break-all">{row.email || "—"}</td>
       <td className="px-4 py-3 text-center break-all font-mono text-xs">{row.password || "—"}</td>
       <td className="px-4 py-3 text-center">{row.whatsapp || "—"}</td>
+      <td className="px-4 py-3 text-center">
+        <LaptopStatusSelect candidateId={row.candidateId} value={row.laptopStatus} disabled={!canEditLaptop} onChange={(laptopStatus) => onLaptop(row.candidateId, laptopStatus)} />
+      </td>
+      <td className="px-4 py-3 text-center">{row.emailForwarding ? "Yes" : "No"}</td>
       <td className="px-4 py-3 text-center font-mono text-xs">{row.anydeskId || "—"}</td>
       <td className="px-4 py-3 text-center break-all font-mono text-xs">{row.anydeskPassword || "—"}</td>
       <td className="px-4 py-3 text-center tabular-nums">{showTime(row.startTime)}</td>

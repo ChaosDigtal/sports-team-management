@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getUserAuth } from "@/lib/queries";
 import { verifyPassword } from "@/lib/passwords";
+import { redirectUrl } from "@/lib/request-origin";
 import { SESSION_COOKIE, sessionCookieOptions, signSession } from "@/lib/session-token";
 
 export async function POST(request: Request) {
@@ -10,9 +11,9 @@ export async function POST(request: Request) {
   const user = id ? getUserAuth(id) : null;
   const valid = user ? verifyPassword(password, user.passwordHash) : false;
   if (!user || !valid) {
-    return NextResponse.redirect(new URL("/login?error=1", request.url), { status: 303 });
+    return NextResponse.redirect(redirectUrl(request, "/login?error=1"), { status: 303 });
   }
-  const response = NextResponse.redirect(new URL("/dashboard", request.url), { status: 303 });
+  const response = NextResponse.redirect(redirectUrl(request, "/dashboard"), { status: 303 });
   response.cookies.set(SESSION_COOKIE, await signSession(user.id), sessionCookieOptions());
   return response;
 }

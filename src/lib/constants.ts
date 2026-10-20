@@ -1,4 +1,4 @@
-import type { AccountStatus, AssessmentStatus, CandidateStatus, PlatformId, ProjectKind, TaskStatus, WithdrawalStatus } from "./types";
+import type { AccountStatus, AssessmentStatus, CandidateStatus, LaptopStatus, PlatformId, ProjectKind, TaskStatus, WithdrawalStatus } from "./types";
 
 export const PLATFORMS: Array<{ id: PlatformId; label: string; state: "live" | "soon" }> = [
   { id: "da", label: "DA", state: "live" },
@@ -17,7 +17,8 @@ export function isSuspendedStatus(status: string) {
   return status.startsWith("Suspended");
 }
 
-export const CANDIDATE_STATUSES: CandidateStatus[] = ["Pending", "Active", "Passed", "Client No Longer Interested"];
+export const CANDIDATE_STATUSES: CandidateStatus[] = ["Incomplete", "In Review", "Active", "Passed", "Client No Longer Interested"];
+export const LAPTOP_STATUSES: LaptopStatus[] = ["Online", "Offline"];
 export const ASSESSMENT_STATUSES: AssessmentStatus[] = ["Ready", "Started", "Waiting", "Failed", "Passed", "On Assessment"];
 
 export function assessmentLabel(status: string, stage: string) {

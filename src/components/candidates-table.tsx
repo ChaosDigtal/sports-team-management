@@ -2,16 +2,18 @@
 
 import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
-import { Badge, EmptyRow, candidateTone, inputClass, secondaryBtn, tdClass, thClass } from "@/components/ui";
+import { LaptopStatusSelect } from "@/components/laptop-status-select";
+import { Badge, EmptyRow, candidateTone, inputClass, personNameClass, secondaryBtn, tdClass, thClass } from "@/components/ui";
 import { chromeRemoteLabel } from "@/lib/constants";
 import { teamShare } from "@/lib/format";
 import { formatAccountTime, isWorkingAccountTime } from "@/lib/time";
-import type { Candidate } from "@/lib/types";
+import type { Candidate, LaptopStatus } from "@/lib/types";
 import { cn, softTag } from "@/lib/utils";
 
 type ColumnId =
   | "name"
   | "telegram"
+  | "laptopStatus"
   | "emailForwarding"
   | "country"
   | "share"
@@ -35,6 +37,7 @@ const COLUMNS: Array<{ id: ColumnId; label: string; managersOnly?: boolean }> = 
   { id: "name", label: "Name" },
   { id: "whatsapp", label: "WhatsApp" },
   { id: "telegram", label: "Telegram" },
+  { id: "laptopStatus", label: "Laptop Status" },
   { id: "emailForwarding", label: "Email Forwarding" },
   { id: "country", label: "Country" },
   { id: "share", label: "Profit share", managersOnly: true },
@@ -56,6 +59,7 @@ const COLUMNS: Array<{ id: ColumnId; label: string; managersOnly?: boolean }> = 
 
 const ADMIN_DEFAULT: ColumnId[] = [
   "name",
+  "laptopStatus",
   "country",
   "share",
   "email",
@@ -72,11 +76,13 @@ const MEMBER_DEFAULT: ColumnId[] = ADMIN_DEFAULT.filter((id) => id !== "share");
 export function CandidatesTable({
   candidates,
   canSeeShare,
+  canEditLaptop,
   filters,
   search,
 }: {
   candidates: Candidate[];
   canSeeShare: boolean;
+  canEditLaptop: boolean;
   filters: ReactNode;
   search: { q: string; status: string; country: string; noResume: boolean; noLinkedin: boolean };
 }) {
@@ -86,13 +92,14 @@ export function CandidatesTable({
   const [open, setOpen] = useState(false);
   const [now, setNow] = useState<Date | null>(null);
   const [query, setQuery] = useState(search.q);
+  const [items, setItems] = useState(candidates);
 
   useEffect(() => {
     const raw = window.localStorage.getItem(storageKey);
     if (raw) {
       try {
         const parsed = JSON.parse(raw) as unknown;
-        if (Array.isArray(parsed)) setSelected(sanitize(parsed, canSeeShare));
+        if (Array.isArray(parsed)) setSelected(withLaptop(sanitize(parsed, canSeeShare)));
       } catch {
         setSelected(defaults);
       }
@@ -106,6 +113,10 @@ export function CandidatesTable({
     setQuery(search.q);
   }, [search.q]);
 
+  useEffect(() => {
+    setItems(candidates);
+  }, [candidates]);
+
   function update(next: ColumnId[]) {
     const clean = sanitize(next, canSeeShare);
     setSelected(clean);
@@ -117,13 +128,14 @@ export function CandidatesTable({
     ...COLUMNS.filter((column) => column.id === "name"),
     ...COLUMNS.filter((column) => column.id === "whatsapp" && selected.includes("whatsapp")),
     ...COLUMNS.filter((column) => column.id === "telegram" && selected.includes("telegram")),
+    ...COLUMNS.filter((column) => column.id === "laptopStatus" && selected.includes("laptopStatus")),
     ...COLUMNS.filter((column) => column.id === "emailForwarding" && selected.includes("emailForwarding")),
-    ...COLUMNS.filter((column) => !["name", "whatsapp", "telegram", "emailForwarding", "status"].includes(column.id) && selected.includes(column.id) && (!column.managersOnly || canSeeShare)),
+    ...COLUMNS.filter((column) => !["name", "whatsapp", "telegram", "laptopStatus", "emailForwarding", "status"].includes(column.id) && selected.includes(column.id) && (!column.managersOnly || canSeeShare)),
     ...COLUMNS.filter((column) => column.id === "status" && selected.includes("status")),
   ];
   const chipsOn = Boolean(search.status || search.country || search.noResume || search.noLinkedin);
   const needle = query.replace(/[%_]/g, "").trim().toLowerCase();
-  const rows = needle ? candidates.filter((candidate) => candidateSearchText(candidate).includes(needle)) : candidates;
+  const rows = needle ? items.filter((candidate) => candidateSearchText(candidate).includes(needle)) : items;
 
   return (
     <div>
@@ -201,10 +213,18 @@ export function CandidatesTable({
           <tbody className="divide-y divide-line">
             {rows.length === 0 ? <EmptyRow colSpan={visible.length}>No candidates match.</EmptyRow> : null}
             {rows.map((candidate) => (
-              <tr key={candidate.id} className="hover:bg-hover">
+              <tr key={candidate.id} className={cn("hover:bg-hover", candidate.status === "In Review" && "candidate-in-review")}>
                 {visible.map((column) => (
                   <td key={column.id} className={cn(tdClass, "!text-center", column.id === "share" && "tabular-nums")}>
-                    <Cell candidate={candidate} column={column.id} now={now} />
+                    <Cell
+                      candidate={candidate}
+                      column={column.id}
+                      now={now}
+                      canEditLaptop={canEditLaptop}
+                      onLaptop={(laptopStatus) =>
+                        setItems((current) => current.map((item) => (item.id === candidate.id ? { ...item, laptopStatus } : item)))
+                      }
+                    />
                   </td>
                 ))}
               </tr>
@@ -222,13 +242,33 @@ function candidateSearchText(candidate: Candidate) {
     .toLowerCase();
 }
 
-function Cell({ candidate, column, now }: { candidate: Candidate; column: ColumnId; now: Date | null }) {
+function withLaptop(columns: ColumnId[]) {
+  if (columns.includes("laptopStatus")) return columns;
+  const next = [...columns];
+  const name = next.indexOf("name");
+  next.splice(name === -1 ? 0 : name + 1, 0, "laptopStatus");
+  return next;
+}
+
+function Cell({
+  candidate,
+  column,
+  now,
+  canEditLaptop,
+  onLaptop,
+}: {
+  candidate: Candidate;
+  column: ColumnId;
+  now: Date | null;
+  canEditLaptop: boolean;
+  onLaptop: (laptopStatus: LaptopStatus) => void;
+}) {
   if (column === "name") {
     return (
       <>
         <Link
           href={`/onboarding/${candidate.id}`}
-          className="font-semibold text-accent underline decoration-accent/50 decoration-2 underline-offset-2 hover:text-accent-ink hover:decoration-accent"
+          className={personNameClass(candidate.status === "Active")}
         >
           {candidate.name}
         </Link>
@@ -237,6 +277,9 @@ function Cell({ candidate, column, now }: { candidate: Candidate; column: Column
     );
   }
   if (column === "telegram") return <span>{candidate.telegram || "—"}</span>;
+  if (column === "laptopStatus") {
+    return <LaptopStatusSelect candidateId={candidate.id} value={candidate.laptopStatus} disabled={!canEditLaptop} onChange={onLaptop} />;
+  }
   if (column === "emailForwarding") return <span>{candidate.emailForwarding ? "Yes" : "No"}</span>;
   if (column === "country") return <CountryTag country={candidate.country} />;
   if (column === "share") return <span>{teamShare(candidate.sharingPercent)}</span>;

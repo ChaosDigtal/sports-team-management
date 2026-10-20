@@ -3,12 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { canAccessOnboarding, canManageUsers, isManager } from "@/lib/access";
+import { canAccessOnboarding, canEditLaptopStatus, canManageUsers, candidateStatusChoices, isManager } from "@/lib/access";
 import { requireUser } from "@/lib/auth";
 import {
   ACCOUNT_STATUSES,
   ASSESSMENT_STATUSES,
   CANDIDATE_STATUSES,
+  LAPTOP_STATUSES,
   isSuspendedStatus,
   ACCOUNT_TIMEZONES,
   CHROME_REMOTE_OPTIONS,
@@ -20,7 +21,7 @@ import {
   WITHDRAWAL_STATUSES,
 } from "@/lib/constants";
 import { activeCandidateWarning } from "@/lib/candidate-active";
-import { createCandidate, deleteCandidate, getCandidate, updateAssessment, updateCandidate } from "@/lib/candidates";
+import { createCandidate, deleteCandidate, getCandidate, setCandidateLaptopStatus, updateAssessment, updateCandidate } from "@/lib/candidates";
 import { computeEarning, round2 } from "@/lib/format";
 import { refreshProfitEstimate } from "@/lib/stats";
 import { defaultWithdrawalMinutes } from "@/lib/time";
@@ -51,7 +52,7 @@ import {
   updateWithdrawalStatus,
 } from "@/lib/queries";
 import { elapsedHours, zonedLocalToUtc } from "@/lib/time";
-import type { AccountStatus, ActionState, CandidateStatus, PlatformRole, ProjectKind, TaskStatus, WithdrawalStatus } from "@/lib/types";
+import type { AccountStatus, ActionState, CandidateStatus, LaptopStatus, PlatformRole, ProjectKind, TaskStatus, WithdrawalStatus } from "@/lib/types";
 
 function refresh() {
   revalidatePath("/", "layout");
@@ -575,7 +576,8 @@ export async function saveCandidate(_prev: ActionState, formData: FormData): Pro
   const linkedinUrl = readString(formData, "linkedinUrl", 300);
   const resumeUrl = readString(formData, "resumeUrl", 300);
   const status = readString(formData, "status", 40);
-  const fields = [name, whatsapp, telegram, email, emailPassword, accountPassword, timezone, chromeRemote, anydeskId, anydeskPassword, ultraviewerId, ultraviewerPassword, phone, address, dob, gender, race, country, linkedinUrl, resumeUrl, status];
+  const laptopStatus = readString(formData, "laptopStatus", 20);
+  const fields = [name, whatsapp, telegram, email, emailPassword, accountPassword, timezone, chromeRemote, anydeskId, anydeskPassword, ultraviewerId, ultraviewerPassword, phone, address, dob, gender, race, country, linkedinUrl, resumeUrl, status, laptopStatus];
   if (fields.some((field) => !field.ok)) return { error: "One of the fields is too long." };
   if (!name.value) return { error: "Add a candidate name." };
   const existing = id ? getCandidate(id) : null;
@@ -589,6 +591,10 @@ export async function saveCandidate(_prev: ActionState, formData: FormData): Pro
   }
   if (!ACCOUNT_TIMEZONES.some((zone) => zone.id === timezone.value)) return { error: "Choose a timezone." };
   if (!CANDIDATE_STATUSES.includes(status.value as CandidateStatus)) return { error: "Choose a status." };
+  if (!LAPTOP_STATUSES.includes(laptopStatus.value as LaptopStatus)) return { error: "Choose a laptop status." };
+  if (!candidateStatusChoices(user, existing?.status).includes(status.value as CandidateStatus)) {
+    return { error: "You can change Incomplete to In Review. Active and Client No Longer Interested need a platform admin." };
+  }
   if (!CHROME_REMOTE_OPTIONS.some((option) => option.value === chromeRemote.value)) return { error: "Choose a Chrome Remote Desktop login." };
   if (gender.value && !GENDERS.includes(gender.value)) return { error: "Choose a gender." };
   if (race.value && !RACES.includes(race.value)) return { error: "Choose a race." };
@@ -639,6 +645,7 @@ export async function saveCandidate(_prev: ActionState, formData: FormData): Pro
     country: country.value,
     linkedinUrl: linkedinUrl.value,
     resumeUrl: resumeUrl.value,
+    laptopStatus: laptopStatus.value as LaptopStatus,
     status: status.value as CandidateStatus,
   };
   let destination = "";
@@ -654,6 +661,15 @@ export async function saveCandidate(_prev: ActionState, formData: FormData): Pro
   }
   refresh();
   redirect(destination);
+}
+
+export async function saveLaptopStatus(candidateId: string, laptopStatus: string) {
+  const user = await requireUser();
+  if (!canEditLaptopStatus(user)) return;
+  if (!LAPTOP_STATUSES.includes(laptopStatus as LaptopStatus)) return;
+  if (!getCandidate(candidateId)) return;
+  setCandidateLaptopStatus(candidateId, laptopStatus as LaptopStatus);
+  refresh();
 }
 
 export async function removeCandidate(id: string) {

@@ -1,6 +1,6 @@
 import { CandidateForm } from "@/components/candidate-form";
 import { AccessNote, PageHeader } from "@/components/ui";
-import { isManager } from "@/lib/access";
+import { candidateStatusChoices, isManager } from "@/lib/access";
 import { requireUser } from "@/lib/auth";
 import { saveCandidate } from "@/server/actions";
 
@@ -14,7 +14,7 @@ export default async function NewCandidatePage() {
   return (
     <div>
       <PageHeader title="New candidate" description="A person being onboarded onto DA. Setting status to Active adds a Ready assessment." />
-      <CandidateForm action={saveCandidate} showShare={user.isSuperAdmin} />
+      <CandidateForm action={saveCandidate} showShare={user.isSuperAdmin} statusOptions={candidateStatusChoices(user)} />
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { CandidatesTable } from "@/components/candidates-table";
 import { Notice, PageHeader, primaryBtn } from "@/components/ui";
-import { isManager } from "@/lib/access";
+import { canEditLaptopStatus, isManager } from "@/lib/access";
 import { requireUser } from "@/lib/auth";
 import { listCandidates } from "@/lib/candidates";
 import { CANDIDATE_STATUSES, COUNTRIES } from "@/lib/constants";
@@ -39,6 +39,7 @@ export default async function CandidatesPage({ searchParams }: { searchParams: P
       <CandidatesTable
         candidates={candidates}
         canSeeShare={systemAdmin}
+        canEditLaptop={canEditLaptopStatus(user)}
         search={{ q, status, country, noResume, noLinkedin }}
         filters={
           <>

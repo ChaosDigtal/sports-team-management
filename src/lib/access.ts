@@ -1,4 +1,5 @@
-import type { SessionUser } from "./types";
+import { CANDIDATE_STATUSES } from "./constants";
+import type { CandidateStatus, SessionUser } from "./types";
 
 export function isManager(user: SessionUser) {
   return user.isSuperAdmin || user.roles.da === "platform_admin";
@@ -14,6 +15,16 @@ export function hasDaAccess(user: SessionUser) {
 
 export function canAccessOnboarding(user: SessionUser) {
   return user.daOnboarding;
+}
+
+export function canEditLaptopStatus(user: SessionUser) {
+  return user.isSuperAdmin || user.daOnboarding;
+}
+
+export function candidateStatusChoices(user: SessionUser, current?: CandidateStatus): CandidateStatus[] {
+  if (isManager(user)) return [...CANDIDATE_STATUSES];
+  if (current === "Incomplete") return ["Incomplete", "In Review"];
+  return current ? [current] : ["Incomplete"];
 }
 
 export function roleLabel(user: SessionUser) {

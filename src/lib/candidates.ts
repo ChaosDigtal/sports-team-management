@@ -1,6 +1,6 @@
 import { randomInt } from "node:crypto";
 import { getDb, nextId, transaction } from "./db";
-import type { Assessment, Candidate, CandidateStatus } from "./types";
+import type { Assessment, Candidate, CandidateStatus, LaptopStatus } from "./types";
 
 type Row = Record<string, unknown>;
 
@@ -42,6 +42,7 @@ function mapCandidate(row: Row): Candidate {
     linkedinUrl: text(row.linkedin_url),
     resumeUrl: text(row.resume_url),
     createdAt: text(row.created_at),
+    laptopStatus: row.laptop_status === "Online" ? "Online" : "Offline",
     status: text(row.status) as CandidateStatus,
   };
 }
@@ -111,8 +112,8 @@ export function createCandidate(input: CandidateInput, createdAt: string) {
         INSERT INTO "DA_candidates" (
           id, name, whatsapp, telegram, sharing_percent, email, email_password, email_forwarding, account_password, timezone, chrome_remote,
           anydesk_id, anydesk_password, ultraviewer_id, ultraviewer_password,
-          phone, address, dob, gender, race, country, linkedin_url, resume_url, created_at, status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          phone, address, dob, gender, race, country, linkedin_url, resume_url, created_at, laptop_status, status
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       )
       .run(
@@ -140,6 +141,7 @@ export function createCandidate(input: CandidateInput, createdAt: string) {
         input.linkedinUrl,
         input.resumeUrl,
         createdAt,
+        input.laptopStatus,
         input.status,
       );
     if (input.status === "Active") insertReady(id);
@@ -156,7 +158,7 @@ export function updateCandidate(id: string, input: CandidateInput) {
         UPDATE "DA_candidates" SET
           name = ?, whatsapp = ?, telegram = ?, sharing_percent = ?, email = ?, email_password = ?, email_forwarding = ?, account_password = ?, timezone = ?,
           chrome_remote = ?, anydesk_id = ?, anydesk_password = ?, ultraviewer_id = ?, ultraviewer_password = ?,
-          phone = ?, address = ?, dob = ?, gender = ?, race = ?, country = ?, linkedin_url = ?, resume_url = ?, status = ?
+          phone = ?, address = ?, dob = ?, gender = ?, race = ?, country = ?, linkedin_url = ?, resume_url = ?, laptop_status = ?, status = ?
         WHERE id = ?
       `,
       )
@@ -183,12 +185,13 @@ export function updateCandidate(id: string, input: CandidateInput) {
         input.country,
         input.linkedinUrl,
         input.resumeUrl,
+        input.laptopStatus,
         input.status,
         id,
       );
     const previous = existing?.status;
-    const leavesActive = previous === "Active" && (input.status === "Pending" || input.status === "Client No Longer Interested");
-    const becomesActive = input.status === "Active" && (previous === "Pending" || previous === "Client No Longer Interested");
+    const leavesActive = previous === "Active" && (input.status === "Incomplete" || input.status === "In Review" || input.status === "Client No Longer Interested");
+    const becomesActive = input.status === "Active" && (previous === "Incomplete" || previous === "In Review" || previous === "Client No Longer Interested");
     if (leavesActive) removeReady(id);
     if (becomesActive) insertReady(id);
   });
@@ -207,7 +210,8 @@ const ASSESSMENT_SELECT = `
     c.anydesk_id AS anydesk_id, c.anydesk_password AS anydesk_password,
     s.start_time AS start_time, s.end_time AS end_time, s.task_id AS task_id, s.status AS status, s.stage AS stage,
     s.stuck AS stuck, s.stuck_error AS stuck_error, s.password AS password, s.updated_at AS updated_at, c.email AS email,
-    c.dob AS dob, c.gender AS gender, c.race AS race, c.country AS country, c.linkedin_url AS linkedin_url, c.resume_url AS resume_url
+    c.dob AS dob, c.gender AS gender, c.race AS race, c.country AS country, c.linkedin_url AS linkedin_url, c.resume_url AS resume_url,
+    c.email_forwarding AS email_forwarding, c.laptop_status AS laptop_status, c.status AS candidate_status
   FROM "DA_assessments" s
   JOIN "DA_candidates" c ON c.id = s.candidate_id
 `;
@@ -236,7 +240,14 @@ function mapAssessment(row: Row): Assessment {
     country: text(row.country),
     linkedinUrl: text(row.linkedin_url),
     resumeUrl: text(row.resume_url),
+    emailForwarding: Number(row.email_forwarding) === 1,
+    laptopStatus: row.laptop_status === "Online" ? "Online" : "Offline",
+    candidateStatus: text(row.candidate_status) as CandidateStatus,
   };
+}
+
+export function setCandidateLaptopStatus(id: string, laptopStatus: LaptopStatus) {
+  getDb().prepare(`UPDATE "DA_candidates" SET laptop_status = ? WHERE id = ?`).run(laptopStatus, id);
 }
 
 export function listAssessments() {

@@ -6,7 +6,8 @@ export type AccountStatus =
   | "Suspended (Work Quality)"
   | "Suspended (No projects)"
   | "Suspended (Before Work)";
-export type CandidateStatus = "Pending" | "Active" | "Passed" | "Client No Longer Interested";
+export type CandidateStatus = "Incomplete" | "In Review" | "Active" | "Passed" | "Client No Longer Interested";
+export type LaptopStatus = "Online" | "Offline";
 export type AssessmentStatus = "Ready" | "Started" | "Waiting" | "Failed" | "Passed" | "On Assessment";
 export type TaskStatus = "WIP" | "Completed" | "Exited";
 export type ProjectKind = "Project" | "Survey" | "Qualification";
@@ -183,6 +184,7 @@ export type Candidate = {
   linkedinUrl: string;
   resumeUrl: string;
   createdAt: string;
+  laptopStatus: LaptopStatus;
   status: CandidateStatus;
 };
 
@@ -209,6 +211,9 @@ export type Assessment = {
   country: string;
   linkedinUrl: string;
   resumeUrl: string;
+  emailForwarding: boolean;
+  laptopStatus: LaptopStatus;
+  candidateStatus: CandidateStatus;
 };
 
 export type AssessmentNotification = {

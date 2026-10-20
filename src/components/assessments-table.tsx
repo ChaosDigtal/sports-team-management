@@ -7,9 +7,19 @@ import { EmptyRow, thClass } from "@/components/ui";
 import type { Assessment, AssessmentNotification } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-const columns = ["ID", "Name", "Email", "Password", "WhatsApp", "AnyDesk ID", "AnyDesk password", "Start time", "End time", "Update time", "Task ID", "Status"];
+const columns = ["ID", "Name", "Email", "Password", "WhatsApp", "Laptop Status", "Email Forwarding", "AnyDesk ID", "AnyDesk password", "Start time", "End time", "Update time", "Task ID", "Status"];
 
-export function AssessmentsTable({ rows, filter, name }: { rows: Assessment[]; filter: string; name: string }) {
+export function AssessmentsTable({
+  rows,
+  filter,
+  name,
+  canEditLaptop,
+}: {
+  rows: Assessment[];
+  filter: string;
+  name: string;
+  canEditLaptop: boolean;
+}) {
   const [items, setItems] = useState(rows);
 
   useEffect(() => {
@@ -64,7 +74,13 @@ export function AssessmentsTable({ rows, filter, name }: { rows: Assessment[]; f
           {visible.length === 0 ? <EmptyRow colSpan={columns.length}>{filter || name ? "No assessments match." : "No assessments yet."}</EmptyRow> : null}
           {visible.map((row) => (
             <tr key={row.id} className={cn("hover:bg-hover", row.stuck && "assessment-stuck")} title={row.stuck ? row.stuckError : undefined}>
-              <AssessmentCells row={row} />
+              <AssessmentCells
+                row={row}
+                canEditLaptop={canEditLaptop}
+                onLaptop={(candidateId, laptopStatus) =>
+                  setItems((current) => current.map((item) => (item.candidateId === candidateId ? { ...item, laptopStatus } : item)))
+                }
+              />
             </tr>
           ))}
         </tbody>

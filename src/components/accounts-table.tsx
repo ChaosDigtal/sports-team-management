@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
-import { Badge, EmptyRow, accountTone, inputClass, secondaryBtn, tdClass, thClass } from "@/components/ui";
+import { Badge, EmptyRow, accountTone, inputClass, personNameClass, secondaryBtn, tdClass, thClass } from "@/components/ui";
 import { chromeRemoteLabel } from "@/lib/constants";
 import { teamShare } from "@/lib/format";
 import { formatAccountTime, isWorkingAccountTime } from "@/lib/time";
@@ -260,7 +260,7 @@ function Cell({ account, column, now }: { account: AccountRow; column: ColumnId;
       <>
         <Link
           href={`/accounts/${account.id}`}
-          className="font-semibold text-accent underline decoration-accent/50 decoration-2 underline-offset-2 hover:text-accent-ink hover:decoration-accent"
+          className={personNameClass(account.status === "Active")}
         >
           {account.name}
         </Link>

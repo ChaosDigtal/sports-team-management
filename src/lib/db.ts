@@ -146,7 +146,8 @@ CREATE TABLE IF NOT EXISTS "DA_candidates" (
   linkedin_url TEXT NOT NULL DEFAULT '',
   resume_url TEXT NOT NULL DEFAULT '',
   created_at TEXT NOT NULL,
-  status TEXT NOT NULL DEFAULT 'Pending'
+  laptop_status TEXT NOT NULL DEFAULT 'Offline',
+  status TEXT NOT NULL DEFAULT 'Incomplete'
 );
 
 CREATE TABLE IF NOT EXISTS "DA_assessments" (
@@ -352,7 +353,8 @@ function ensureOnboarding(db: DatabaseSync) {
       linkedin_url TEXT NOT NULL DEFAULT '',
       resume_url TEXT NOT NULL DEFAULT '',
       created_at TEXT NOT NULL,
-      status TEXT NOT NULL DEFAULT 'Pending'
+      laptop_status TEXT NOT NULL DEFAULT 'Offline',
+      status TEXT NOT NULL DEFAULT 'Incomplete'
     );
     CREATE TABLE IF NOT EXISTS "DA_assessments" (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -485,6 +487,7 @@ export function getDb() {
   ensureOnboarding(db);
   ensureTelegram(db);
   ensureEmailForwarding(db);
+  ensureCandidateWorkflow(db);
   return db;
 }
 
@@ -493,6 +496,12 @@ function ensureTelegram(db: DatabaseSync) {
     const names = new Set((db.prepare(`PRAGMA table_info("${table}")`).all() as Array<{ name: string }>).map((row) => row.name));
     if (!names.has("telegram")) db.exec(`ALTER TABLE "${table}" ADD COLUMN telegram TEXT NOT NULL DEFAULT ''`);
   }
+}
+
+function ensureCandidateWorkflow(db: DatabaseSync) {
+  const names = new Set((db.prepare(`PRAGMA table_info("DA_candidates")`).all() as Array<{ name: string }>).map((row) => row.name));
+  if (!names.has("laptop_status")) db.exec(`ALTER TABLE "DA_candidates" ADD COLUMN laptop_status TEXT NOT NULL DEFAULT 'Offline'`);
+  db.exec(`UPDATE "DA_candidates" SET status = 'Incomplete' WHERE status = 'Pending'`);
 }
 
 function ensureEmailForwarding(db: DatabaseSync) {

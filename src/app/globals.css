@@ -99,19 +99,23 @@ body {
   }
 }
 
-.assessment-stuck {
+.assessment-stuck,
+.candidate-in-review {
   animation: assessment-stuck 5s steps(1, end) infinite;
 }
 
-.assessment-stuck > td {
+.assessment-stuck > td,
+.candidate-in-review > td {
   box-shadow: inset 0 2px 0 var(--stuck-edge), inset 0 -2px 0 var(--stuck-edge);
 }
 
-.assessment-stuck > td:first-child {
+.assessment-stuck > td:first-child,
+.candidate-in-review > td:first-child {
   box-shadow: inset 2px 0 0 var(--stuck-edge), inset 0 2px 0 var(--stuck-edge), inset 0 -2px 0 var(--stuck-edge);
 }
 
-.assessment-stuck > td:last-child {
+.assessment-stuck > td:last-child,
+.candidate-in-review > td:last-child {
   box-shadow: inset -2px 0 0 var(--stuck-edge), inset 0 2px 0 var(--stuck-edge), inset 0 -2px 0 var(--stuck-edge);
 }
 

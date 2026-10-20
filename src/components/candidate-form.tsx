@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useActionState, useState, type FormEvent, type ReactNode } from "react";
 import { activeCandidateWarning } from "@/lib/candidate-active";
-import { ACCOUNT_TIMEZONES, CANDIDATE_STATUSES, CHROME_REMOTE_OPTIONS, COUNTRIES, GENDERS, RACES } from "@/lib/constants";
-import type { ActionState, Candidate } from "@/lib/types";
+import { ACCOUNT_TIMEZONES, CANDIDATE_STATUSES, CHROME_REMOTE_OPTIONS, COUNTRIES, GENDERS, LAPTOP_STATUSES, RACES } from "@/lib/constants";
+import type { ActionState, Candidate, CandidateStatus } from "@/lib/types";
 import { DeleteButton } from "./delete-button";
 import { SecretField } from "./secret-fields";
 import { FormError, hintClass, inputClass, labelClass, primaryBtn, secondaryBtn } from "./ui";
@@ -13,11 +13,13 @@ export function CandidateForm({
   action,
   candidate,
   showShare = false,
+  statusOptions = CANDIDATE_STATUSES,
   onDelete,
 }: {
   action: (prev: ActionState, formData: FormData) => Promise<ActionState>;
   candidate?: Candidate;
   showShare?: boolean;
+  statusOptions?: CandidateStatus[];
   onDelete?: () => Promise<void>;
 }) {
   const [state, formAction, pending] = useActionState(action, {});
@@ -91,12 +93,19 @@ export function CandidateForm({
           <Field label="Telegram">
             <input className={inputClass} name="telegram" defaultValue={candidate?.telegram} placeholder="@username" autoComplete="off" />
           </Field>
+          <Field label="Laptop Status">
+            <select className={inputClass} name="laptopStatus" defaultValue={candidate?.laptopStatus ?? "Offline"}>
+              {LAPTOP_STATUSES.map((status) => (
+                <option key={status}>{status}</option>
+              ))}
+            </select>
+          </Field>
           <Field label="Phone">
             <input className={inputClass} name="phone" defaultValue={candidate?.phone} />
           </Field>
           <Field label="Status">
-            <select className={inputClass} name="status" defaultValue={candidate?.status ?? "Pending"}>
-              {CANDIDATE_STATUSES.map((status) => (
+            <select className={inputClass} name="status" defaultValue={candidate?.status ?? "Incomplete"}>
+              {statusOptions.map((status) => (
                 <option key={status}>{status}</option>
               ))}
             </select>

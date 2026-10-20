@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { CandidateForm } from "@/components/candidate-form";
 import { SecretText } from "@/components/secret-fields";
 import { Badge, ExternalLink, Facts, Notice, PageHeader, blank, candidateTone } from "@/components/ui";
-import { canAccessOnboarding, isManager } from "@/lib/access";
+import { canAccessOnboarding, candidateStatusChoices, isManager } from "@/lib/access";
 import { requireUser } from "@/lib/auth";
 import { getCandidate } from "@/lib/candidates";
 import { chromeRemoteLabel, countryLabel, timezoneLabel } from "@/lib/constants";
@@ -38,6 +38,7 @@ export default async function CandidatePage({
           action={saveCandidate}
           candidate={systemAdmin ? candidate : hideShare(candidate)}
           showShare={systemAdmin}
+          statusOptions={candidateStatusChoices(user, candidate.status)}
           onDelete={manager ? removeCandidate.bind(null, candidate.id) : undefined}
         />
       ) : (
@@ -68,6 +69,7 @@ function CandidateRead({ candidate }: { candidate: ReturnType<typeof hideShare> 
             { label: "Account password", value: <SecretText value={candidate.accountPassword} /> },
             { label: "WhatsApp", value: blank(candidate.whatsapp) },
             { label: "Telegram", value: blank(candidate.telegram) },
+            { label: "Laptop Status", value: blank(candidate.laptopStatus) },
             { label: "Phone", value: blank(candidate.phone) },
           ]}
         />

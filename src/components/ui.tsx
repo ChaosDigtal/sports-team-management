@@ -50,7 +50,14 @@ export function accountTone(status: string): Tone {
 export function candidateTone(status: string): Tone {
   if (status === "Active" || status === "Passed") return "ok";
   if (status === "Client No Longer Interested") return "danger";
+  if (status === "In Review") return "info";
   return "warn";
+}
+
+export function personNameClass(active: boolean) {
+  return active
+    ? "font-semibold text-green-900 underline decoration-green-900/40 decoration-2 underline-offset-2 hover:text-green-950 dark:text-green-400 dark:decoration-green-400/50"
+    : "font-semibold text-red-900 underline decoration-red-900/40 decoration-2 underline-offset-2 hover:text-red-950 dark:text-red-400 dark:decoration-red-400/50";
 }
 
 export function assessmentTone(status: string): Tone {
