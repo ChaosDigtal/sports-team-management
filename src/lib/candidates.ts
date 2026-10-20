@@ -21,6 +21,7 @@ function mapCandidate(row: Row): Candidate {
     id: text(row.id),
     name: text(row.name),
     whatsapp: text(row.whatsapp),
+    telegram: text(row.telegram),
     sharingPercent: num(row.sharing_percent),
     email: text(row.email),
     emailPassword: text(row.email_password),
@@ -59,7 +60,7 @@ export function listCandidates(filters?: { status?: string; country?: string; q?
   if (filters?.noLinkedin) where.push("TRIM(linkedin_url) = ''");
   const q = (filters?.q ?? "").replace(/[%_]/g, "").trim();
   if (q) {
-    const columns = ["id", "name", "whatsapp", "email", "anydesk_id", "phone", "country", "status"];
+    const columns = ["id", "name", "whatsapp", "telegram", "email", "anydesk_id", "phone", "country", "status"];
     where.push(`(${columns.map((column) => `${column} LIKE ?`).join(" OR ")})`);
     for (let index = 0; index < columns.length; index += 1) params.push(`%${q}%`);
   }
@@ -107,16 +108,17 @@ export function createCandidate(input: CandidateInput, createdAt: string) {
       .prepare(
         `
         INSERT INTO "DA_candidates" (
-          id, name, whatsapp, sharing_percent, email, email_password, account_password, timezone, chrome_remote,
+          id, name, whatsapp, telegram, sharing_percent, email, email_password, account_password, timezone, chrome_remote,
           anydesk_id, anydesk_password, ultraviewer_id, ultraviewer_password,
           phone, address, dob, gender, race, country, linkedin_url, resume_url, created_at, status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       )
       .run(
         id,
         input.name,
         input.whatsapp,
+        input.telegram,
         input.sharingPercent,
         input.email,
         input.emailPassword,
@@ -150,7 +152,7 @@ export function updateCandidate(id: string, input: CandidateInput) {
       .prepare(
         `
         UPDATE "DA_candidates" SET
-          name = ?, whatsapp = ?, sharing_percent = ?, email = ?, email_password = ?, account_password = ?, timezone = ?,
+          name = ?, whatsapp = ?, telegram = ?, sharing_percent = ?, email = ?, email_password = ?, account_password = ?, timezone = ?,
           chrome_remote = ?, anydesk_id = ?, anydesk_password = ?, ultraviewer_id = ?, ultraviewer_password = ?,
           phone = ?, address = ?, dob = ?, gender = ?, race = ?, country = ?, linkedin_url = ?, resume_url = ?, status = ?
         WHERE id = ?
@@ -159,6 +161,7 @@ export function updateCandidate(id: string, input: CandidateInput) {
       .run(
         input.name,
         input.whatsapp,
+        input.telegram,
         input.sharingPercent,
         input.email,
         input.emailPassword,

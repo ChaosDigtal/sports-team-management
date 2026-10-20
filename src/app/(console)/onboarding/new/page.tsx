@@ -14,7 +14,7 @@ export default async function NewCandidatePage() {
   return (
     <div>
       <PageHeader title="New candidate" description="A person being onboarded onto DA. Setting status to Active adds a Ready assessment." />
-      <CandidateForm action={saveCandidate} />
+      <CandidateForm action={saveCandidate} showShare={user.isSuperAdmin} />
     </div>
   );
 }

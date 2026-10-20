@@ -108,6 +108,9 @@ export function AccountForm({
           <Field label="WhatsApp">
             <input className={inputClass} name="whatsapp" defaultValue={account?.whatsapp} placeholder="+1 415 555 0100" />
           </Field>
+          <Field label="Telegram">
+            <input className={inputClass} name="telegram" defaultValue={account?.telegram} placeholder="@username" autoComplete="off" />
+          </Field>
           <Field label="Phone">
             <input className={inputClass} name="phone" defaultValue={account?.phone} />
           </Field>

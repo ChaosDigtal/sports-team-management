@@ -11,10 +11,12 @@ import { FormError, hintClass, inputClass, labelClass, primaryBtn, secondaryBtn 
 export function CandidateForm({
   action,
   candidate,
+  showShare = false,
   onDelete,
 }: {
   action: (prev: ActionState, formData: FormData) => Promise<ActionState>;
   candidate?: Candidate;
+  showShare?: boolean;
   onDelete?: () => Promise<void>;
 }) {
   const [state, formAction, pending] = useActionState(action, {});
@@ -32,9 +34,11 @@ export function CandidateForm({
           <Field label="Name">
             <input className={inputClass} name="name" defaultValue={candidate?.name} required />
           </Field>
-          <Field label="Profit share %" hint="Portion of earnings kept as profit.">
-            <input className={inputClass} name="sharingPercent" type="number" min="0" max="100" step="0.1" defaultValue={candidate?.sharingPercent ?? ""} />
-          </Field>
+          {showShare ? (
+            <Field label="Profit share %" hint="Portion of earnings kept as profit.">
+              <input className={inputClass} name="sharingPercent" type="number" min="0" max="100" step="0.1" defaultValue={candidate?.sharingPercent ?? ""} />
+            </Field>
+          ) : null}
           <Field label="Timezone">
             <select className={inputClass} name="timezone" defaultValue={candidate?.timezone ?? "UTC-8"}>
               {ACCOUNT_TIMEZONES.map((item) => (
@@ -51,6 +55,9 @@ export function CandidateForm({
           <SecretField label="Account password" name="accountPassword" defaultValue={candidate?.accountPassword} />
           <Field label="WhatsApp">
             <input className={inputClass} name="whatsapp" defaultValue={candidate?.whatsapp} placeholder="+1 415 555 0100" />
+          </Field>
+          <Field label="Telegram">
+            <input className={inputClass} name="telegram" defaultValue={candidate?.telegram} placeholder="@username" autoComplete="off" />
           </Field>
           <Field label="Phone">
             <input className={inputClass} name="phone" defaultValue={candidate?.phone} />

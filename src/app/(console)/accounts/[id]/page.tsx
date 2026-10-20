@@ -71,6 +71,7 @@ function AccountRead({ account }: { account: ReturnType<typeof visibleAccount> }
             { label: "Email password", value: <SecretText value={account.emailPassword} /> },
             { label: "Account password", value: <SecretText value={account.accountPassword} /> },
             { label: "WhatsApp", value: blank(account.whatsapp) },
+            { label: "Telegram", value: blank(account.telegram) },
             { label: "Phone", value: blank(account.phone) },
             { label: "Suspended at", value: account.suspendedAt ? formatWhen(account.suspendedAt, account.timezone) : "—" },
           ]}

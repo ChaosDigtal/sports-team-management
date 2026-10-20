@@ -13,13 +13,14 @@ export const metadata = { title: "Candidates" };
 export default async function CandidatesPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const user = await requireUser();
   const manager = isManager(user);
+  const systemAdmin = user.isSuperAdmin;
   const params = await searchParams;
   const q = one(params.q);
   const status = CANDIDATE_STATUSES.includes(one(params.status) as (typeof CANDIDATE_STATUSES)[number]) ? one(params.status) : "";
   const country = COUNTRIES.some((item) => item.id === one(params.country)) ? one(params.country) : "";
   const noResume = one(params.noResume) === "1";
   const noLinkedin = one(params.noLinkedin) === "1";
-  const candidates = listCandidates({ status, country, q, noResume, noLinkedin }).map((candidate) => (manager ? candidate : hideShare(candidate)));
+  const candidates = listCandidates({ status, country, q, noResume, noLinkedin }).map((candidate) => (systemAdmin ? candidate : hideShare(candidate)));
 
   return (
     <div>
@@ -37,7 +38,7 @@ export default async function CandidatesPage({ searchParams }: { searchParams: P
       <Notice notice={one(params.notice)} />
       <CandidatesTable
         candidates={candidates}
-        canSeeShare={manager}
+        canSeeShare={systemAdmin}
         search={{ q, status, country, noResume, noLinkedin }}
         filters={
           <>

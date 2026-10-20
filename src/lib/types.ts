@@ -24,6 +24,7 @@ export type Account = {
   id: string;
   name: string;
   whatsapp: string;
+  telegram: string;
   sharingPercent: number | null;
   email: string;
   emailPassword: string;
@@ -160,6 +161,7 @@ export type Candidate = {
   id: string;
   name: string;
   whatsapp: string;
+  telegram: string;
   sharingPercent: number | null;
   email: string;
   emailPassword: string;

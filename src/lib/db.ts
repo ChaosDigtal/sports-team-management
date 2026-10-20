@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS "DA_accounts" (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
   whatsapp TEXT NOT NULL DEFAULT '',
+  telegram TEXT NOT NULL DEFAULT '',
   sharing_percent REAL,
   email TEXT NOT NULL DEFAULT '',
   email_password TEXT NOT NULL DEFAULT '',
@@ -123,6 +124,7 @@ CREATE TABLE IF NOT EXISTS "DA_candidates" (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
   whatsapp TEXT NOT NULL DEFAULT '',
+  telegram TEXT NOT NULL DEFAULT '',
   sharing_percent REAL,
   email TEXT NOT NULL DEFAULT '',
   email_password TEXT NOT NULL DEFAULT '',
@@ -327,6 +329,7 @@ function ensureOnboarding(db: DatabaseSync) {
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
       whatsapp TEXT NOT NULL DEFAULT '',
+      telegram TEXT NOT NULL DEFAULT '',
       sharing_percent REAL,
       email TEXT NOT NULL DEFAULT '',
       email_password TEXT NOT NULL DEFAULT '',
@@ -477,7 +480,15 @@ export function getDb() {
   ensureTaskWithdrawalColumn(db);
   ensureWithdrawalSchedule(db);
   ensureOnboarding(db);
+  ensureTelegram(db);
   return db;
+}
+
+function ensureTelegram(db: DatabaseSync) {
+  for (const table of ["DA_accounts", "DA_candidates"]) {
+    const names = new Set((db.prepare(`PRAGMA table_info("${table}")`).all() as Array<{ name: string }>).map((row) => row.name));
+    if (!names.has("telegram")) db.exec(`ALTER TABLE "${table}" ADD COLUMN telegram TEXT NOT NULL DEFAULT ''`);
+  }
 }
 
 export function transaction<T>(run: () => T) {

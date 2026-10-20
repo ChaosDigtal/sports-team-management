@@ -11,6 +11,7 @@ import { cn, softTag } from "@/lib/utils";
 
 type ColumnId =
   | "name"
+  | "telegram"
   | "country"
   | "share"
   | "email"
@@ -31,6 +32,7 @@ type ColumnId =
 
 const COLUMNS: Array<{ id: ColumnId; label: string; managersOnly?: boolean }> = [
   { id: "name", label: "Name" },
+  { id: "telegram", label: "Telegram" },
   { id: "country", label: "Country" },
   { id: "share", label: "Profit share", managersOnly: true },
   { id: "email", label: "Email" },
@@ -105,7 +107,9 @@ export function CandidatesTable({
 
   const available = COLUMNS.filter((column) => !column.managersOnly || canSeeShare);
   const visible = [
-    ...COLUMNS.filter((column) => column.id !== "status" && selected.includes(column.id) && (!column.managersOnly || canSeeShare)),
+    ...COLUMNS.filter((column) => column.id === "name"),
+    ...COLUMNS.filter((column) => column.id === "telegram" && selected.includes("telegram")),
+    ...COLUMNS.filter((column) => column.id !== "name" && column.id !== "telegram" && column.id !== "status" && selected.includes(column.id) && (!column.managersOnly || canSeeShare)),
     ...COLUMNS.filter((column) => column.id === "status" && selected.includes("status")),
   ];
   const filtered = Boolean(search.q || search.status || search.country || search.noResume || search.noLinkedin);
@@ -209,6 +213,7 @@ function Cell({ candidate, column, now }: { candidate: Candidate; column: Column
       </>
     );
   }
+  if (column === "telegram") return <span>{candidate.telegram || "—"}</span>;
   if (column === "country") return <CountryTag country={candidate.country} />;
   if (column === "share") return <span>{teamShare(candidate.sharingPercent)}</span>;
   if (column === "email") return <span className="break-all">{candidate.email || "—"}</span>;

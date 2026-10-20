@@ -11,6 +11,7 @@ import { cn, softTag } from "@/lib/utils";
 
 type ColumnId =
   | "name"
+  | "telegram"
   | "country"
   | "share"
   | "email"
@@ -33,6 +34,7 @@ type ColumnId =
 
 const COLUMNS: Array<{ id: ColumnId; label: string; managersOnly?: boolean }> = [
   { id: "name", label: "Name" },
+  { id: "telegram", label: "Telegram" },
   { id: "country", label: "Country" },
   { id: "share", label: "Profit share", managersOnly: true },
   { id: "email", label: "Email" },
@@ -110,7 +112,9 @@ export function AccountsTable({
 
   const available = COLUMNS.filter((column) => !column.managersOnly || canSeeShare);
   const visible = [
-    ...COLUMNS.filter((column) => column.id !== "status" && selected.includes(column.id) && (!column.managersOnly || canSeeShare)),
+    ...COLUMNS.filter((column) => column.id === "name"),
+    ...COLUMNS.filter((column) => column.id === "telegram" && selected.includes("telegram")),
+    ...COLUMNS.filter((column) => column.id !== "name" && column.id !== "telegram" && column.id !== "status" && selected.includes(column.id) && (!column.managersOnly || canSeeShare)),
     ...COLUMNS.filter((column) => column.id === "status" && selected.includes("status")),
   ];
 
@@ -260,6 +264,7 @@ function Cell({ account, column, now }: { account: AccountRow; column: ColumnId;
       </>
     );
   }
+  if (column === "telegram") return <span>{account.telegram || "—"}</span>;
   if (column === "country") return <CountryTag country={account.country} />;
   if (column === "share") return <span>{teamShare(account.sharingPercent)}</span>;
   if (column === "email") return <span className="break-all">{account.email || "—"}</span>;

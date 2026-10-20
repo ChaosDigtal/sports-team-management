@@ -25,6 +25,7 @@ export default async function CandidatePage({
   const candidate = getCandidate(id);
   if (!candidate) notFound();
   const manager = isManager(user);
+  const systemAdmin = user.isSuperAdmin;
   const query = await searchParams;
 
   return (
@@ -32,7 +33,12 @@ export default async function CandidatePage({
       <PageHeader title={candidate.name} description={`${candidate.id} · Created ${formatTimestamp(candidate.createdAt)}`} />
       <Notice notice={one(query.notice)} />
       {manager ? (
-        <CandidateForm action={saveCandidate} candidate={candidate} onDelete={removeCandidate.bind(null, candidate.id)} />
+        <CandidateForm
+          action={saveCandidate}
+          candidate={systemAdmin ? candidate : hideShare(candidate)}
+          showShare={systemAdmin}
+          onDelete={removeCandidate.bind(null, candidate.id)}
+        />
       ) : (
         <CandidateRead candidate={hideShare(candidate)} />
       )}
@@ -40,9 +46,8 @@ export default async function CandidatePage({
   );
 }
 
-function hideShare(candidate: Candidate) {
-  const { sharingPercent: _sharingPercent, ...rest } = candidate;
-  return rest;
+function hideShare(candidate: Candidate): Candidate {
+  return { ...candidate, sharingPercent: null };
 }
 
 function CandidateRead({ candidate }: { candidate: ReturnType<typeof hideShare> }) {
@@ -60,6 +65,7 @@ function CandidateRead({ candidate }: { candidate: ReturnType<typeof hideShare> 
             { label: "Email password", value: <SecretText value={candidate.emailPassword} /> },
             { label: "Account password", value: <SecretText value={candidate.accountPassword} /> },
             { label: "WhatsApp", value: blank(candidate.whatsapp) },
+            { label: "Telegram", value: blank(candidate.telegram) },
             { label: "Phone", value: blank(candidate.phone) },
           ]}
         />

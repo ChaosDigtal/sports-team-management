@@ -73,6 +73,7 @@ export async function setPlatform(platform: string) {
 function readAccount(formData: FormData) {
   const name = readString(formData, "name", 80);
   const whatsapp = readString(formData, "whatsapp", 40);
+  const telegram = readString(formData, "telegram", 80);
   const email = readString(formData, "email", 120);
   const emailPassword = readString(formData, "emailPassword", 200);
   const accountPassword = readString(formData, "accountPassword", 200);
@@ -103,6 +104,7 @@ function readAccount(formData: FormData) {
   return {
     name,
     whatsapp,
+    telegram,
     email,
     emailPassword,
     accountPassword,
@@ -150,6 +152,7 @@ export async function saveAccount(_prev: ActionState, formData: FormData): Promi
   const textFields = [
     fields.name,
     fields.whatsapp,
+    fields.telegram,
     fields.email,
     fields.emailPassword,
     fields.accountPassword,
@@ -224,6 +227,7 @@ export async function saveAccount(_prev: ActionState, formData: FormData): Promi
   const input = {
     name: fields.name.value,
     whatsapp: fields.whatsapp.value,
+    telegram: fields.telegram.value,
     sharingPercent: fields.sharing.value,
     email: fields.email.value,
     emailPassword: fields.emailPassword.value,
@@ -549,6 +553,7 @@ export async function saveCandidate(_prev: ActionState, formData: FormData): Pro
   const id = readString(formData, "id", 20).value;
   const name = readString(formData, "name", 80);
   const whatsapp = readString(formData, "whatsapp", 40);
+  const telegram = readString(formData, "telegram", 80);
   const email = readString(formData, "email", 120);
   const emailPassword = readString(formData, "emailPassword", 200);
   const accountPassword = readString(formData, "accountPassword", 200);
@@ -567,11 +572,18 @@ export async function saveCandidate(_prev: ActionState, formData: FormData): Pro
   const linkedinUrl = readString(formData, "linkedinUrl", 300);
   const resumeUrl = readString(formData, "resumeUrl", 300);
   const status = readString(formData, "status", 40);
-  const sharing = readNumber(formData, "sharingPercent");
-  const fields = [name, whatsapp, email, emailPassword, accountPassword, timezone, chromeRemote, anydeskId, anydeskPassword, ultraviewerId, ultraviewerPassword, phone, address, dob, gender, race, country, linkedinUrl, resumeUrl, status];
-  if (fields.some((field) => !field.ok) || !sharing.ok) return { error: "One of the fields is too long." };
+  const fields = [name, whatsapp, telegram, email, emailPassword, accountPassword, timezone, chromeRemote, anydeskId, anydeskPassword, ultraviewerId, ultraviewerPassword, phone, address, dob, gender, race, country, linkedinUrl, resumeUrl, status];
+  if (fields.some((field) => !field.ok)) return { error: "One of the fields is too long." };
   if (!name.value) return { error: "Add a candidate name." };
-  if (sharing.value != null && (sharing.value < 0 || sharing.value > 100)) return { error: "Profit share has to be between 0 and 100." };
+  const existing = id ? getCandidate(id) : null;
+  if (id && !existing) return { error: "That candidate no longer exists." };
+  let sharingPercent = existing?.sharingPercent ?? null;
+  if (user.isSuperAdmin) {
+    const sharing = readNumber(formData, "sharingPercent");
+    if (!sharing.ok) return { error: "One of the fields is too long." };
+    if (sharing.value != null && (sharing.value < 0 || sharing.value > 100)) return { error: "Profit share has to be between 0 and 100." };
+    sharingPercent = sharing.value;
+  }
   if (!ACCOUNT_TIMEZONES.some((zone) => zone.id === timezone.value)) return { error: "Choose a timezone." };
   if (!CANDIDATE_STATUSES.includes(status.value as CandidateStatus)) return { error: "Choose a status." };
   if (!CHROME_REMOTE_OPTIONS.some((option) => option.value === chromeRemote.value)) return { error: "Choose a Chrome Remote Desktop login." };
@@ -584,7 +596,8 @@ export async function saveCandidate(_prev: ActionState, formData: FormData): Pro
   const input = {
     name: name.value,
     whatsapp: whatsapp.value,
-    sharingPercent: sharing.value,
+    telegram: telegram.value,
+    sharingPercent,
     email: email.value,
     emailPassword: emailPassword.value,
     accountPassword: accountPassword.value,
@@ -607,7 +620,6 @@ export async function saveCandidate(_prev: ActionState, formData: FormData): Pro
   let destination = "";
   try {
     if (id) {
-      if (!getCandidate(id)) return { error: "That candidate no longer exists." };
       updateCandidate(id, input);
       destination = `/onboarding/${id}?notice=saved`;
     } else {
