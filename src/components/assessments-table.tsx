@@ -7,7 +7,7 @@ import { EmptyRow, thClass } from "@/components/ui";
 import type { Assessment, AssessmentNotification } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-const columns = ["ID", "Name", "Email", "Password", "WhatsApp", "Laptop Status", "Email Forwarding", "AnyDesk ID", "AnyDesk password", "Start time", "End time", "Update time", "Task ID", "Status"];
+const columns = ["ID", "Name", "Referral Link", "Email", "Password", "WhatsApp", "Laptop Status", "Email Forwarding", "AnyDesk ID", "AnyDesk password", "Start time", "End time", "Update time", "Task ID", "Status"];
 
 export function AssessmentsTable({
   rows,

@@ -35,6 +35,9 @@ export function AssessmentCells({
           {row.name}
         </Link>
       </td>
+      <td className="px-4 py-3 text-center">
+        <ReferralLinkCell link={row.referralLink} />
+      </td>
       <td className="px-4 py-3 text-center break-all">{row.email || "—"}</td>
       <td className="px-4 py-3 text-center break-all font-mono text-xs">{row.password || "—"}</td>
       <td className="px-4 py-3 text-center">{row.whatsapp || "—"}</td>
@@ -52,6 +55,39 @@ export function AssessmentCells({
         <Badge tone={assessmentTone(row.status)}>{assessmentLabel(row.status, row.stage)}</Badge>
       </td>
     </>
+  );
+}
+
+function ReferralLinkCell({ link }: { link: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <span className="inline-flex max-w-56 items-center justify-center gap-1.5">
+      {link ? (
+        <a href={link} target="_blank" rel="noreferrer" className="truncate text-accent underline decoration-accent/40 underline-offset-2">
+          {link}
+        </a>
+      ) : (
+        <span>—</span>
+      )}
+      <button
+        type="button"
+        className="inline-flex size-7 shrink-0 items-center justify-center rounded-md text-muted hover:bg-hover hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
+        aria-label={copied ? "Copied referral link" : "Copy referral link"}
+        title={copied ? "Copied" : "Copy referral link"}
+        disabled={!link}
+        onClick={async () => {
+          try {
+            await navigator.clipboard.writeText(link);
+            setCopied(true);
+            window.setTimeout(() => setCopied(false), 2500);
+          } catch {
+            setCopied(false);
+          }
+        }}
+      >
+        {copied ? <TickIcon /> : <CopyIcon />}
+      </button>
+    </span>
   );
 }
 

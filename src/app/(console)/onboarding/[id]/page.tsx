@@ -96,6 +96,7 @@ function CandidateRead({ candidate }: { candidate: ReturnType<typeof hideShare> 
             { label: "LinkedIn email", value: blank(candidate.linkedinEmail) },
             { label: "LinkedIn password", value: <SecretText value={candidate.linkedinPassword} /> },
             { label: "Resume", value: candidate.resumeUrl ? <ExternalLink href={candidate.resumeUrl} /> : "—" },
+            { label: "Referral Link", value: candidate.referralLink ? <ExternalLink href={candidate.referralLink} /> : "—" },
           ]}
         />
       </section>

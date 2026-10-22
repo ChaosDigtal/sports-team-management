@@ -152,6 +152,7 @@ CREATE TABLE IF NOT EXISTS "DA_candidates" (
   linkedin_password TEXT NOT NULL DEFAULT '',
   laptop_pin TEXT NOT NULL DEFAULT '',
   resume_url TEXT NOT NULL DEFAULT '',
+  referral_link TEXT NOT NULL DEFAULT '',
   created_at TEXT NOT NULL,
   laptop_status TEXT NOT NULL DEFAULT 'Offline',
   status TEXT NOT NULL DEFAULT 'Incomplete'
@@ -362,6 +363,7 @@ function ensureOnboarding(db: DatabaseSync) {
       linkedin_password TEXT NOT NULL DEFAULT '',
       laptop_pin TEXT NOT NULL DEFAULT '',
       resume_url TEXT NOT NULL DEFAULT '',
+      referral_link TEXT NOT NULL DEFAULT '',
       created_at TEXT NOT NULL,
       laptop_status TEXT NOT NULL DEFAULT 'Offline',
       status TEXT NOT NULL DEFAULT 'Incomplete'
@@ -529,6 +531,8 @@ function ensureProfileCredentials(db: DatabaseSync) {
   }
   const accounts = new Set((db.prepare(`PRAGMA table_info("DA_accounts")`).all() as Array<{ name: string }>).map((row) => row.name));
   if (!accounts.has("ubuntu_password")) db.exec(`ALTER TABLE "DA_accounts" ADD COLUMN ubuntu_password TEXT NOT NULL DEFAULT ''`);
+  const candidates = new Set((db.prepare(`PRAGMA table_info("DA_candidates")`).all() as Array<{ name: string }>).map((row) => row.name));
+  if (!candidates.has("referral_link")) db.exec(`ALTER TABLE "DA_candidates" ADD COLUMN referral_link TEXT NOT NULL DEFAULT ''`);
 }
 
 function ensureEmailForwarding(db: DatabaseSync) {

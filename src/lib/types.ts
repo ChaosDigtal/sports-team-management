@@ -190,6 +190,7 @@ export type Candidate = {
   linkedinPassword: string;
   laptopPin: string;
   resumeUrl: string;
+  referralLink: string;
   createdAt: string;
   laptopStatus: LaptopStatus;
   status: CandidateStatus;
@@ -218,6 +219,7 @@ export type Assessment = {
   country: string;
   linkedinUrl: string;
   resumeUrl: string;
+  referralLink: string;
   emailForwarding: boolean;
   laptopStatus: LaptopStatus;
   candidateStatus: CandidateStatus;

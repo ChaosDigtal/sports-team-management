@@ -174,6 +174,9 @@ export function CandidateForm({
           <Field label="Resume URL">
             <input className={inputClass} name="resumeUrl" type="url" defaultValue={candidate?.resumeUrl} placeholder="https://" />
           </Field>
+          <Field label="Referral Link" className="sm:col-span-2">
+            <input className={inputClass} name="referralLink" type="url" defaultValue={candidate?.referralLink} placeholder="https://" />
+          </Field>
         </Section>
       </form>
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3">

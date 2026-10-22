@@ -44,6 +44,7 @@ function mapCandidate(row: Row): Candidate {
     linkedinPassword: text(row.linkedin_password),
     laptopPin: text(row.laptop_pin),
     resumeUrl: text(row.resume_url),
+    referralLink: text(row.referral_link),
     createdAt: text(row.created_at),
     laptopStatus: row.laptop_status === "Online" ? "Online" : "Offline",
     status: text(row.status) as CandidateStatus,
@@ -65,7 +66,7 @@ export function listCandidates(filters?: { status?: string; country?: string; q?
   if (filters?.noLinkedin) where.push("TRIM(linkedin_url) = ''");
   const q = (filters?.q ?? "").replace(/[%_]/g, "").trim();
   if (q) {
-    const columns = ["id", "name", "whatsapp", "telegram", "email", "anydesk_id", "phone", "country", "status", "linkedin_email", "laptop_pin"];
+    const columns = ["id", "name", "whatsapp", "telegram", "email", "anydesk_id", "phone", "country", "status", "linkedin_email", "laptop_pin", "referral_link"];
     where.push(`(${columns.map((column) => `${column} LIKE ?`).join(" OR ")})`);
     for (let index = 0; index < columns.length; index += 1) params.push(`%${q}%`);
   }
@@ -115,8 +116,8 @@ export function createCandidate(input: CandidateInput, createdAt: string) {
         INSERT INTO "DA_candidates" (
           id, name, whatsapp, telegram, sharing_percent, email, email_password, email_forwarding, account_password, timezone, chrome_remote,
           anydesk_id, anydesk_password, ultraviewer_id, ultraviewer_password,
-          phone, address, dob, gender, race, country, linkedin_url, linkedin_email, linkedin_password, laptop_pin, resume_url, created_at, laptop_status, status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          phone, address, dob, gender, race, country, linkedin_url, linkedin_email, linkedin_password, laptop_pin, resume_url, referral_link, created_at, laptop_status, status
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       )
       .run(
@@ -146,6 +147,7 @@ export function createCandidate(input: CandidateInput, createdAt: string) {
         input.linkedinPassword,
         input.laptopPin,
         input.resumeUrl,
+        input.referralLink,
         createdAt,
         input.laptopStatus,
         input.status,
@@ -164,7 +166,7 @@ export function updateCandidate(id: string, input: CandidateInput) {
         UPDATE "DA_candidates" SET
           name = ?, whatsapp = ?, telegram = ?, sharing_percent = ?, email = ?, email_password = ?, email_forwarding = ?, account_password = ?, timezone = ?,
           chrome_remote = ?, anydesk_id = ?, anydesk_password = ?, ultraviewer_id = ?, ultraviewer_password = ?,
-          phone = ?, address = ?, dob = ?, gender = ?, race = ?, country = ?, linkedin_url = ?, linkedin_email = ?, linkedin_password = ?, laptop_pin = ?, resume_url = ?, laptop_status = ?, status = ?
+          phone = ?, address = ?, dob = ?, gender = ?, race = ?, country = ?, linkedin_url = ?, linkedin_email = ?, linkedin_password = ?, laptop_pin = ?, resume_url = ?, referral_link = ?, laptop_status = ?, status = ?
         WHERE id = ?
       `,
       )
@@ -194,6 +196,7 @@ export function updateCandidate(id: string, input: CandidateInput) {
         input.linkedinPassword,
         input.laptopPin,
         input.resumeUrl,
+        input.referralLink,
         input.laptopStatus,
         input.status,
         id,
@@ -220,7 +223,7 @@ const ASSESSMENT_SELECT = `
     s.start_time AS start_time, s.end_time AS end_time, s.task_id AS task_id, s.status AS status, s.stage AS stage,
     s.stuck AS stuck, s.stuck_error AS stuck_error, s.password AS password, s.updated_at AS updated_at, c.email AS email,
     c.dob AS dob, c.gender AS gender, c.race AS race, c.country AS country, c.linkedin_url AS linkedin_url, c.resume_url AS resume_url,
-    c.email_forwarding AS email_forwarding, c.laptop_status AS laptop_status, c.status AS candidate_status
+    c.email_forwarding AS email_forwarding, c.laptop_status AS laptop_status, c.status AS candidate_status, c.referral_link AS referral_link
   FROM "DA_assessments" s
   JOIN "DA_candidates" c ON c.id = s.candidate_id
 `;
@@ -249,6 +252,7 @@ function mapAssessment(row: Row): Assessment {
     country: text(row.country),
     linkedinUrl: text(row.linkedin_url),
     resumeUrl: text(row.resume_url),
+    referralLink: text(row.referral_link),
     emailForwarding: Number(row.email_forwarding) === 1,
     laptopStatus: row.laptop_status === "Online" ? "Online" : "Offline",
     candidateStatus: text(row.candidate_status) as CandidateStatus,

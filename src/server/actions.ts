@@ -595,9 +595,10 @@ export async function saveCandidate(_prev: ActionState, formData: FormData): Pro
   const linkedinPassword = readString(formData, "linkedinPassword", 200);
   const laptopPin = readString(formData, "laptopPin", 40);
   const resumeUrl = readString(formData, "resumeUrl", 300);
+  const referralLink = readString(formData, "referralLink", 300);
   const status = readString(formData, "status", 40);
   const laptopStatus = readString(formData, "laptopStatus", 20);
-  const fields = [name, whatsapp, telegram, email, emailPassword, accountPassword, timezone, chromeRemote, anydeskId, anydeskPassword, ultraviewerId, ultraviewerPassword, phone, address, dob, gender, race, country, linkedinUrl, linkedinEmail, linkedinPassword, laptopPin, resumeUrl, status, laptopStatus];
+  const fields = [name, whatsapp, telegram, email, emailPassword, accountPassword, timezone, chromeRemote, anydeskId, anydeskPassword, ultraviewerId, ultraviewerPassword, phone, address, dob, gender, race, country, linkedinUrl, linkedinEmail, linkedinPassword, laptopPin, resumeUrl, referralLink, status, laptopStatus];
   if (fields.some((field) => !field.ok)) return { error: "One of the fields is too long." };
   if (!name.value) return { error: "Add a candidate name." };
   const existing = id ? getCandidate(id) : null;
@@ -621,7 +622,7 @@ export async function saveCandidate(_prev: ActionState, formData: FormData): Pro
   if (country.value && !COUNTRIES.some((item) => item.id === country.value)) return { error: "Choose a country." };
   if (email.value && !email.value.includes("@")) return { error: "Email needs an @ sign." };
   if (linkedinEmail.value && !linkedinEmail.value.includes("@")) return { error: "LinkedIn email needs an @ sign." };
-  if (!validUrl(linkedinUrl.value) || !validUrl(resumeUrl.value)) return { error: "Links need to start with http:// or https://." };
+  if (!validUrl(linkedinUrl.value) || !validUrl(resumeUrl.value) || !validUrl(referralLink.value)) return { error: "Links need to start with http:// or https://." };
   if (dob.value && !/^\d{4}-\d{2}-\d{2}$/.test(dob.value)) return { error: "Date of birth needs a real date." };
   if (status.value === "Active") {
     const warning = activeCandidateWarning({
@@ -669,6 +670,7 @@ export async function saveCandidate(_prev: ActionState, formData: FormData): Pro
     linkedinPassword: linkedinPassword.value,
     laptopPin: laptopPin.value,
     resumeUrl: resumeUrl.value,
+    referralLink: referralLink.value,
     laptopStatus: laptopStatus.value as LaptopStatus,
     status: status.value as CandidateStatus,
   };
