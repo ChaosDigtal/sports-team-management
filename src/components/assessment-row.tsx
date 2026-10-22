@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { writeClipboard } from "@/components/copyable";
 import { LaptopStatusSelect } from "@/components/laptop-status-select";
 import { assessmentLabel, countryName } from "@/lib/constants";
 import { formatDateTime } from "@/lib/format";
@@ -77,7 +78,7 @@ function ReferralLinkCell({ link }: { link: string }) {
         disabled={!link}
         onClick={async () => {
           try {
-            await navigator.clipboard.writeText(link);
+            await writeClipboard(link);
             setCopied(true);
             window.setTimeout(() => setCopied(false), 2500);
           } catch {
@@ -101,7 +102,7 @@ function CopyProfileButton({ row }: { row: Assessment }) {
       title={copied ? "Copied" : "Copy profile"}
       onClick={async () => {
         try {
-          await navigator.clipboard.writeText(profileLine(row));
+          await writeClipboard(profileLine(row));
           setCopied(true);
           window.setTimeout(() => setCopied(false), 2500);
         } catch {

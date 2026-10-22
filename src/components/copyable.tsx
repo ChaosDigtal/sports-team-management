@@ -87,7 +87,11 @@ export function CopyIconButton({
           return;
         }
         if (!value) return;
-        await writeClipboard(value);
+        try {
+          await writeClipboard(value);
+        } catch {
+          return;
+        }
         setCopiedState(true);
         window.setTimeout(() => setCopiedState(false), 1200);
       }}
@@ -97,20 +101,45 @@ export function CopyIconButton({
   );
 }
 
-async function writeClipboard(value: string) {
-  if (navigator.clipboard?.writeText) {
-    await navigator.clipboard.writeText(value);
-    return;
+export async function writeClipboard(value: string) {
+  if (window.isSecureContext && navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(value);
+      return;
+    } catch {
+      // A rejected clipboard call drops the click gesture, so still try the fallback.
+    }
   }
   const area = document.createElement("textarea");
   area.value = value;
   area.setAttribute("readonly", "");
   area.style.position = "fixed";
-  area.style.left = "-9999px";
+  area.style.top = "0";
+  area.style.left = "0";
+  area.style.width = "1px";
+  area.style.height = "1px";
+  area.style.opacity = "0";
   document.body.appendChild(area);
+  const selection = document.getSelection();
+  const previous = selection && selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+  area.focus();
   area.select();
-  document.execCommand("copy");
-  area.remove();
+  area.setSelectionRange(0, value.length);
+  let ok = false;
+  try {
+    ok = document.execCommand("copy");
+  } finally {
+    area.remove();
+    if (previous && selection) {
+      selection.removeAllRanges();
+      try {
+        selection.addRange(previous);
+      } catch {
+        // The previous range can be detached after the temporary field is removed.
+      }
+    }
+  }
+  if (!ok) throw new Error("copy failed");
 }
 
 function CopyIcon() {
