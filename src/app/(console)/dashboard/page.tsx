@@ -2,11 +2,11 @@ import Link from "next/link";
 import { AllTimeLeaderboard, WeekLeaderboard } from "@/components/leaderboards";
 import { RefreshEstimateButton } from "@/components/refresh-estimate";
 import { PageHeader } from "@/components/ui";
-import { isManager } from "@/lib/access";
+import { isDaMember, isManager } from "@/lib/access";
 import { requireUser } from "@/lib/auth";
 import { formatDateTime, formatHours, formatMoney } from "@/lib/format";
 import { countActiveAccounts } from "@/lib/queries";
-import { allScope, leaderboards, readProfitEstimate, summarize, userScope } from "@/lib/stats";
+import { allScope, creatorScope, leaderboards, readProfitEstimate, summarize, userScope } from "@/lib/stats";
 import { one } from "@/lib/utils";
 import { refreshEstimatedProfit } from "@/server/actions";
 import type { SearchParams } from "@/lib/types";
@@ -21,9 +21,10 @@ const ALL_SORTS = ["rank", "user", "earnings", "profit", "hours", "gold", "silve
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const user = await requireUser();
   const manager = isManager(user);
+  const member = !manager && isDaMember(user);
   const params = await searchParams;
-  const summary = summarize(manager ? allScope() : userScope(user.id));
-  const accounts = countActiveAccounts(manager ? undefined : user.id);
+  const summary = summarize(manager ? allScope() : member ? creatorScope(user.id) : userScope(user.id));
+  const accounts = countActiveAccounts(manager ? undefined : user.id, member ? "created_by" : "user_id");
   const boards = leaderboards();
   const estimate = user.isSuperAdmin ? readProfitEstimate() : null;
   const week = boards.week.map((row) => ({ ...row, earnings: manager ? row.earnings : null }));

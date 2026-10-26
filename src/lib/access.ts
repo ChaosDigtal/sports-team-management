@@ -5,6 +5,10 @@ export function isManager(user: SessionUser) {
   return user.isSuperAdmin || user.roles.da === "platform_admin";
 }
 
+export function isDaMember(user: SessionUser) {
+  return user.roles.da === "member";
+}
+
 export function canManageUsers(user: SessionUser) {
   return isManager(user);
 }

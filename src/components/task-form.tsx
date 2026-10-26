@@ -22,6 +22,8 @@ export function TaskForm({
   startLocal,
   endLocal,
   canManage,
+  canChooseWork = canManage,
+  assigneeName,
   onDelete,
 }: {
   action: (prev: ActionState, formData: FormData) => Promise<ActionState>;
@@ -32,6 +34,8 @@ export function TaskForm({
   startLocal: string;
   endLocal: string;
   canManage: boolean;
+  canChooseWork?: boolean;
+  assigneeName?: string;
   onDelete?: () => Promise<void>;
 }) {
   const [state, formAction, pending] = useActionState(action, {});
@@ -75,7 +79,7 @@ export function TaskForm({
           </p>
         ) : null}
         <div className="grid gap-4 sm:grid-cols-2">
-          {canManage ? (
+          {canChooseWork ? (
             <label>
               <span className={labelClass}>Account</span>
               <select
@@ -111,9 +115,9 @@ export function TaskForm({
               </select>
             </label>
           ) : (
-            <ReadOnly label="Assignee" value={task?.userName} />
+            <ReadOnly label="Assignee" value={task?.userName || assigneeName} />
           )}
-          {canManage ? (
+          {canChooseWork ? (
             <label>
               <span className={labelClass}>Project</span>
               <select className={inputClass} name="projectId" defaultValue={task?.projectId ?? projects[0]?.id}>

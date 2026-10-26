@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { AccountForm } from "@/components/account-form";
 import { SecretText } from "@/components/secret-fields";
 import { AccessNote, Badge, ExternalLink, Facts, Notice, PageHeader, accountTone, blank } from "@/components/ui";
-import { isManager } from "@/lib/access";
+import { isDaMember, isManager } from "@/lib/access";
 import { requireUser } from "@/lib/auth";
 import { chromeRemoteLabel, countryLabel, timezoneLabel } from "@/lib/constants";
 import { formatDay, formatHours, formatTimestamp, formatWhen, formatWithdrawalSchedule } from "@/lib/format";
@@ -26,7 +26,7 @@ export default async function AccountPage({
   const account = getAccount(id);
   if (!account) notFound();
   const manager = isManager(user);
-  if (!manager && !userWorksOnAccount(user.id, id)) {
+  if (!manager && !userWorksOnAccount(user.id, id, isDaMember(user) ? "created_by" : "user_id")) {
     return <AccessNote title="Outside your accounts" body="This account is not on your logged tasks." />;
   }
   const query = await searchParams;

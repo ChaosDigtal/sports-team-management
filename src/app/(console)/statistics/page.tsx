@@ -3,7 +3,7 @@ import { FilterSelect } from "@/components/filter-select";
 import { PeriodCharts } from "@/components/period-chart";
 import { ShareTable } from "@/components/share-table";
 import { inputClass, labelClass, Notice, PageHeader, Panel, primaryBtn, secondaryBtn } from "@/components/ui";
-import { isManager } from "@/lib/access";
+import { isDaMember, isManager } from "@/lib/access";
 import { requireUser } from "@/lib/auth";
 import { formatHours, formatMoney } from "@/lib/format";
 import { listAccountOptions, listPeopleOptions, listProjectOptions } from "@/lib/queries";
@@ -12,6 +12,7 @@ import {
   allScope,
   chartPoints,
   payoutSummary,
+  creatorScope,
   projectScope,
   selectionTotals,
   statsByAccount,
@@ -38,6 +39,7 @@ const tabs = [
 export default async function StatisticsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const user = await requireUser();
   const manager = isManager(user);
+  const member = !manager && isDaMember(user);
   const params = await searchParams;
   const requested = one(params.view);
   const view = !manager ? "user" : tabs.some((tab) => tab.id === requested) ? requested : "account";
@@ -126,6 +128,7 @@ export default async function StatisticsPage({ searchParams }: { searchParams: P
           personName={person.name}
           people={people}
           manager={manager}
+          ownCreated={member}
           accountSort={accountSort}
           accountDir={accountDir}
           projectSort={projectSort}
@@ -340,6 +343,7 @@ function UserView({
   personName,
   people,
   manager,
+  ownCreated,
   accountSort,
   accountDir,
   projectSort,
@@ -351,6 +355,7 @@ function UserView({
   personName: string;
   people: Array<{ id: string; name: string }>;
   manager: boolean;
+  ownCreated: boolean;
   accountSort: StatSort;
   accountDir: StatDir;
   projectSort: StatSort;
@@ -358,7 +363,7 @@ function UserView({
   from: string;
   to: string;
 }) {
-  const scope = withRange(userScope(personId), from, to);
+  const scope = withRange(ownCreated ? creatorScope(personId) : userScope(personId), from, to);
   const totals = selectionTotals(scope);
   const query = { view: "user", user: personId, accountSort, accountDir, projectSort, projectDir, from, to };
   return (

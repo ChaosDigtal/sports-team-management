@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { TaskForm } from "@/components/task-form";
 import { AccessNote, Notice, PageHeader } from "@/components/ui";
-import { isManager } from "@/lib/access";
+import { isDaMember, isManager } from "@/lib/access";
 import { requireUser } from "@/lib/auth";
 import { getTask, listAccountOptions, listPeopleOptions, listProjectOptions } from "@/lib/queries";
 import { toDatetimeLocalValue } from "@/lib/time";
@@ -23,7 +23,12 @@ export default async function TaskPage({
   const task = getTask(id);
   if (!task) notFound();
   const manager = isManager(user);
-  if (!manager && task.userId !== user.id) {
+  const member = !manager && isDaMember(user);
+  const owns = task.createdBy === user.id;
+  if (member && !owns) {
+    return <AccessNote title="Created by someone else" body="You can open the tasks you created." />;
+  }
+  if (!manager && !member && task.userId !== user.id) {
     return <AccessNote title="Assigned to someone else" body="You can update the tasks on your own login." />;
   }
   const query = await searchParams;
@@ -40,7 +45,9 @@ export default async function TaskPage({
         startLocal={toDatetimeLocalValue(task.startTime, task.accountTimezone)}
         endLocal={toDatetimeLocalValue(task.endTime, task.accountTimezone)}
         canManage={manager}
-        onDelete={manager ? removeTask.bind(null, task.id) : undefined}
+        canChooseWork={manager || owns}
+        assigneeName={user.name}
+        onDelete={manager || owns ? removeTask.bind(null, task.id) : undefined}
       />
     </div>
   );

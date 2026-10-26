@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { EmptyRow, Notice, PageHeader, inputClass, primaryBtn, ProjectKindTag, secondaryBtn, tdClass, thClass, YesNo } from "@/components/ui";
-import { isManager } from "@/lib/access";
+import { isDaMember, isManager } from "@/lib/access";
 import { requireUser } from "@/lib/auth";
 import { PROJECT_KINDS } from "@/lib/constants";
 import { formatDuration, formatDurationRange } from "@/lib/format";
@@ -13,12 +13,13 @@ export const metadata = { title: "Projects" };
 export default async function ProjectsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const user = await requireUser();
   const manager = isManager(user);
+  const member = !manager && isDaMember(user);
   const params = await searchParams;
   const q = one(params.q);
   const kind = PROJECT_KINDS.includes(one(params.type) as (typeof PROJECT_KINDS)[number]) ? one(params.type) : "";
   const sort = one(params.sort) === "max" ? "max" : "name";
   const dir = one(params.dir) === "desc" ? "desc" : "asc";
-  const projects = listProjects(manager ? undefined : user.id, { kind, q, sort, dir });
+  const projects = listProjects(manager ? undefined : user.id, { kind, q, sort, dir, owner: member ? "created_by" : "user_id" });
 
   return (
     <div>

@@ -98,7 +98,8 @@ CREATE TABLE IF NOT EXISTS "DA_tasks" (
   rate REAL,
   earning REAL,
   status TEXT NOT NULL DEFAULT 'WIP',
-  withdrawal_id TEXT NOT NULL DEFAULT ''
+  withdrawal_id TEXT NOT NULL DEFAULT '',
+  created_by TEXT NOT NULL DEFAULT ''
 );
 
 CREATE INDEX IF NOT EXISTS idx_da_tasks_account ON "DA_tasks"(account_id);
@@ -299,6 +300,11 @@ function migrateCatalog(db: DatabaseSync) {
   ensureTaskWithdrawalColumn(db);
 }
 
+function ensureTaskCreatorColumn(db: DatabaseSync) {
+  const names = new Set((db.prepare(`PRAGMA table_info("DA_tasks")`).all() as Array<{ name: string }>).map((row) => row.name));
+  if (!names.has("created_by")) db.exec(`ALTER TABLE "DA_tasks" ADD COLUMN created_by TEXT NOT NULL DEFAULT ''`);
+}
+
 function ensureTaskWithdrawalColumn(db: DatabaseSync) {
   const taskNames = new Set(
     (db.prepare(`PRAGMA table_info("DA_tasks")`).all() as Array<{ name: string }>).map((row) => row.name),
@@ -495,6 +501,7 @@ export function getDb() {
     globalForDb.__teamDbVersion = DB_VERSION;
   }
   ensureTaskWithdrawalColumn(db);
+  ensureTaskCreatorColumn(db);
   ensureWithdrawalSchedule(db);
   ensureOnboarding(db);
   ensureTelegram(db);

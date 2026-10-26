@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { AccountsTable } from "@/components/accounts-table";
 import { Notice, PageHeader, primaryBtn } from "@/components/ui";
-import { isManager } from "@/lib/access";
+import { isDaMember, isManager } from "@/lib/access";
 import { requireUser } from "@/lib/auth";
 import { ACCOUNT_STATUSES, COUNTRIES } from "@/lib/constants";
 import { listAccounts } from "@/lib/queries";
@@ -13,11 +13,12 @@ export const metadata = { title: "Accounts" };
 export default async function AccountsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const user = await requireUser();
   const manager = isManager(user);
+  const member = !manager && isDaMember(user);
   const params = await searchParams;
   const q = one(params.q);
   const status = ACCOUNT_STATUSES.includes(one(params.status) as (typeof ACCOUNT_STATUSES)[number]) ? one(params.status) : "";
   const country = COUNTRIES.some((item) => item.id === one(params.country)) ? one(params.country) : "";
-  const accounts = listAccounts(manager ? undefined : user.id, { status, country, q });
+  const accounts = listAccounts(manager ? undefined : user.id, { status, country, q }, member ? "created_by" : "user_id");
 
   return (
     <div>

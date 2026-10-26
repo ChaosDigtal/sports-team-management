@@ -31,6 +31,10 @@ export function userScope(userId: string): Scope {
   return { where: "t.user_id = ?", params: [userId] };
 }
 
+export function creatorScope(userId: string): Scope {
+  return { where: "t.created_by = ?", params: [userId] };
+}
+
 export function allScope(): Scope {
   return { where: "1 = 1", params: [] };
 }

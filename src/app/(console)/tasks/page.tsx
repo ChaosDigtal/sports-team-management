@@ -2,7 +2,7 @@ import Link from "next/link";
 import { TasksTable } from "@/components/tasks-table";
 import { FilterSelect } from "@/components/filter-select";
 import { Notice, PageHeader, primaryBtn, secondaryBtn, inputClass, labelClass } from "@/components/ui";
-import { isManager } from "@/lib/access";
+import { isDaMember, isManager } from "@/lib/access";
 import { requireUser } from "@/lib/auth";
 import { TASK_STATUSES } from "@/lib/constants";
 import { listAccountOptions, listPeopleOptions, listProjectOptions, listTasks } from "@/lib/queries";
@@ -16,12 +16,13 @@ const TASK_SORTS = ["id", "started", "ended", "earnings", "rate"] as const;
 export default async function TasksPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const user = await requireUser();
   const manager = isManager(user);
+  const member = !manager && isDaMember(user);
   const params = await searchParams;
   const accountId = one(params.account);
   const projectId = one(params.project);
   const status = TASK_STATUSES.includes(one(params.status) as TaskStatus) ? one(params.status) : "";
   const q = one(params.q);
-  const personId = manager ? one(params.user) : user.id;
+  const personId = manager ? one(params.user) : member ? "" : user.id;
   const requestedSort = one(params.sort);
   const sort = TASK_SORTS.includes(requestedSort as (typeof TASK_SORTS)[number]) ? requestedSort : "started";
   const visibleSort = !manager && sort === "earnings" ? "started" : sort;
@@ -30,6 +31,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
     accountId: accountId || undefined,
     projectId: projectId || undefined,
     userId: personId || undefined,
+    createdBy: member ? user.id : undefined,
     status: status || undefined,
     q,
     sort: visibleSort as (typeof TASK_SORTS)[number],
@@ -52,9 +54,9 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
     <div>
       <PageHeader
         title="Tasks"
-        description={manager ? "Work logged on DA accounts." : "Your DA tasks. Update times, logged time, and status as you go."}
+        description={manager ? "Work logged on DA accounts." : member ? "Tasks you created. You can add, update, and delete them." : "Your DA tasks. Update times, logged time, and status as you go."}
         actions={
-          manager ? (
+          manager || member ? (
             <Link href="/tasks/new" className={primaryBtn}>
               New task
             </Link>

@@ -100,6 +100,7 @@ export type Task = {
   rate: number | null;
   earning: number | null;
   status: TaskStatus;
+  createdBy: string;
   accountName: string;
   accountTimezone: string;
   userName: string;

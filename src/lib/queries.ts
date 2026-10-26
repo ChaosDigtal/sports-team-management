@@ -227,8 +227,8 @@ function integerIn(value: unknown, min: number, max: number, fallback: number) {
   return parsed;
 }
 
-function accountScope(scopeUserId?: string) {
-  return scopeUserId ? "AND t.user_id = ?" : "";
+function accountScope(scopeUserId?: string, owner: "user_id" | "created_by" = "user_id") {
+  return scopeUserId ? `AND t.${owner} = ?` : "";
 }
 
 const ACCOUNT_SEARCH_COLUMNS = [
@@ -268,13 +268,14 @@ const ACCOUNT_SEARCH_COLUMNS = [
 export function listAccounts(
   scopeUserId?: string,
   filters?: { status?: string; country?: string; q?: string },
+  owner: "user_id" | "created_by" = "user_id",
 ): AccountRow[] {
-  const scope = accountScope(scopeUserId);
+  const scope = accountScope(scopeUserId, owner);
   const where: string[] = [];
   const params: string[] = [];
   if (scopeUserId) params.push(scopeUserId, scopeUserId);
   if (scopeUserId) {
-    where.push(`EXISTS (SELECT 1 FROM "DA_tasks" t WHERE t.account_id = a.id AND t.user_id = ?)`);
+    where.push(`EXISTS (SELECT 1 FROM "DA_tasks" t WHERE t.account_id = a.id AND t.${owner} = ?)`);
     params.push(scopeUserId);
   }
   if (filters?.status) {
@@ -304,7 +305,7 @@ export function listAccounts(
     `,
     )
     .all(...params) as Row[];
-  const week = weekHoursByAccount(scopeUserId);
+  const week = weekHoursByAccount(scopeUserId, owner);
   return rows.map((row) => {
     const id = text(row.id);
     const hours = week.get(id);
@@ -319,7 +320,7 @@ export function listAccounts(
   });
 }
 
-function weekHoursByAccount(scopeUserId?: string) {
+function weekHoursByAccount(scopeUserId?: string, owner: "user_id" | "created_by" = "user_id") {
   const bounds = weekBounds(weekStartKey(new Date()));
   const params: string[] = [bounds.start.toISOString(), bounds.end.toISOString()];
   if (scopeUserId) params.push(scopeUserId);
@@ -332,7 +333,7 @@ function weekHoursByAccount(scopeUserId?: string) {
       FROM "DA_tasks" t
       JOIN "DA_projects" p ON p.id = t.project_id
       WHERE t.start_time >= ? AND t.start_time <= ?
-      ${scopeUserId ? "AND t.user_id = ?" : ""}
+      ${scopeUserId ? `AND t.${owner} = ?` : ""}
       GROUP BY t.account_id, kind
     `,
     )
@@ -353,8 +354,8 @@ export function getAccount(id: string) {
   return row ? mapAccount(row) : null;
 }
 
-export function userWorksOnAccount(userId: string, accountId: string) {
-  const row = getDb().prepare(`SELECT 1 AS ok FROM "DA_tasks" WHERE user_id = ? AND account_id = ? LIMIT 1`).get(userId, accountId) as Row | undefined;
+export function userWorksOnAccount(userId: string, accountId: string, owner: "user_id" | "created_by" = "user_id") {
+  const row = getDb().prepare(`SELECT 1 AS ok FROM "DA_tasks" WHERE ${owner} = ? AND account_id = ? LIMIT 1`).get(userId, accountId) as Row | undefined;
   return Boolean(row);
 }
 
@@ -496,14 +497,15 @@ function mapProject(row: Row): Project {
 
 export function listProjects(
   scopeUserId?: string,
-  options?: { kind?: string; q?: string; sort?: "name" | "max"; dir?: "asc" | "desc" },
+  options?: { kind?: string; q?: string; sort?: "name" | "max"; dir?: "asc" | "desc"; owner?: "user_id" | "created_by" },
 ): ProjectRow[] {
-  const scope = accountScope(scopeUserId);
+  const owner = options?.owner ?? "user_id";
+  const scope = accountScope(scopeUserId, owner);
   const params: string[] = [];
   if (scopeUserId) params.push(scopeUserId, scopeUserId);
   const where: string[] = [];
   if (scopeUserId) {
-    where.push(`EXISTS (SELECT 1 FROM "DA_tasks" t WHERE t.project_id = p.id AND t.user_id = ?)`);
+    where.push(`EXISTS (SELECT 1 FROM "DA_tasks" t WHERE t.project_id = p.id AND t.${owner} = ?)`);
     params.push(scopeUserId);
   }
   if (options?.kind) {
@@ -542,8 +544,8 @@ export function listProjects(
   });
 }
 
-export function getProject(id: string, scopeUserId?: string) {
-  return listProjects(scopeUserId).find((project) => project.id === id) ?? null;
+export function getProject(id: string, scopeUserId?: string, owner: "user_id" | "created_by" = "user_id") {
+  return listProjects(scopeUserId, { owner }).find((project) => project.id === id) ?? null;
 }
 
 export function getProjectRecord(id: string) {
@@ -551,8 +553,8 @@ export function getProjectRecord(id: string) {
   return row ? mapProject(row) : null;
 }
 
-export function userWorksOnProject(userId: string, projectId: string) {
-  const row = getDb().prepare(`SELECT 1 AS ok FROM "DA_tasks" WHERE user_id = ? AND project_id = ? LIMIT 1`).get(userId, projectId) as Row | undefined;
+export function userWorksOnProject(userId: string, projectId: string, owner: "user_id" | "created_by" = "user_id") {
+  const row = getDb().prepare(`SELECT 1 AS ok FROM "DA_tasks" WHERE ${owner} = ? AND project_id = ? LIMIT 1`).get(userId, projectId) as Row | undefined;
   return Boolean(row);
 }
 
@@ -637,6 +639,7 @@ function mapTask(row: Row): Task {
     rate: num(row.rate),
     earning: num(row.earning),
     status: text(row.status) as TaskStatus,
+    createdBy: text(row.created_by),
     accountName: text(row.account_name),
     accountTimezone: text(row.account_timezone),
     userName: text(row.user_name),
@@ -662,6 +665,7 @@ export function listTasks(filters: {
   accountId?: string;
   projectId?: string;
   userId?: string;
+  createdBy?: string;
   status?: string;
   q?: string;
   limit?: number;
@@ -681,6 +685,10 @@ export function listTasks(filters: {
   if (filters.userId) {
     where.push("t.user_id = ?");
     params.push(filters.userId);
+  }
+  if (filters.createdBy) {
+    where.push("t.created_by = ?");
+    params.push(filters.createdBy);
   }
   if (filters.status) {
     where.push("t.status = ?");
@@ -743,6 +751,7 @@ export type TaskInput = {
   rate: number | null;
   earning: number | null;
   status: TaskStatus;
+  createdBy: string;
 };
 
 export function createTask(input: TaskInput) {
@@ -753,8 +762,8 @@ export function createTask(input: TaskInput) {
         `
         INSERT INTO "DA_tasks" (
           id, account_id, user_id, project_id, timezone, start_time, end_time,
-          elapsed_hours, logged_hours, rate, earning, status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          elapsed_hours, logged_hours, rate, earning, status, created_by
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       )
       .run(
@@ -770,6 +779,7 @@ export function createTask(input: TaskInput) {
         input.rate,
         input.earning,
         input.status,
+        input.createdBy,
       );
     return id;
   });
@@ -867,7 +877,7 @@ export function projectsWorked(userId: string) {
   );
 }
 
-export function countActiveAccounts(scopeUserId?: string) {
+export function countActiveAccounts(scopeUserId?: string, owner: "user_id" | "created_by" = "user_id") {
   if (!scopeUserId) {
     const row = getDb().prepare(`SELECT COUNT(*) AS n FROM "DA_accounts" WHERE status = 'Active'`).get() as Row;
     return num0(row.n);
@@ -878,7 +888,7 @@ export function countActiveAccounts(scopeUserId?: string) {
       SELECT COUNT(DISTINCT a.id) AS n
       FROM "DA_accounts" a
       JOIN "DA_tasks" t ON t.account_id = a.id
-      WHERE t.user_id = ? AND a.status = 'Active'
+      WHERE t.${owner} = ? AND a.status = 'Active'
     `,
     )
     .get(scopeUserId) as Row;

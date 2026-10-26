@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { ProjectForm } from "@/components/project-form";
 import { AccessNote, Facts, Notice, PageHeader, ProjectKindTag, YesNo } from "@/components/ui";
-import { isManager } from "@/lib/access";
+import { isDaMember, isManager } from "@/lib/access";
 import { requireUser } from "@/lib/auth";
 import { formatDuration, formatDurationRange, formatHours, formatMoney } from "@/lib/format";
 import { getProject, getProjectRecord, userWorksOnProject } from "@/lib/queries";
@@ -23,10 +23,10 @@ export default async function ProjectPage({
   const record = getProjectRecord(id);
   if (!record) notFound();
   const manager = isManager(user);
-  if (!manager && !userWorksOnProject(user.id, id)) {
+  if (!manager && !userWorksOnProject(user.id, id, isDaMember(user) ? "created_by" : "user_id")) {
     return <AccessNote title="Outside your projects" body="This project is not on your logged tasks." />;
   }
-  const project = getProject(id, manager ? undefined : user.id);
+  const project = getProject(id, manager ? undefined : user.id, isDaMember(user) ? "created_by" : "user_id");
   const query = await searchParams;
 
   return (

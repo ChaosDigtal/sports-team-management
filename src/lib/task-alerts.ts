@@ -1,4 +1,4 @@
-import { isManager } from "./access";
+import { isDaMember, isManager } from "./access";
 import { formatDuration } from "./format";
 import { listTasks } from "./queries";
 import { openMinutes } from "./time";
@@ -13,7 +13,13 @@ export type TaskAlert = {
 
 export function listTaskAlerts(user: SessionUser, now = new Date()): TaskAlert[] {
   const manager = isManager(user);
-  const tasks = listTasks({ userId: manager ? undefined : user.id, status: "WIP", limit: 500 });
+  const member = !manager && isDaMember(user);
+  const tasks = listTasks({
+    userId: manager || member ? undefined : user.id,
+    createdBy: member ? user.id : undefined,
+    status: "WIP",
+    limit: 500,
+  });
   const alerts: TaskAlert[] = [];
   for (const task of tasks) {
     const elapsed = openMinutes(task.startTime, now);

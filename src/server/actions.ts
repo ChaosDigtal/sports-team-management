@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { canAccessOnboarding, canEditLaptopStatus, canManageUsers, candidateStatusChoices, isManager } from "@/lib/access";
+import { canAccessOnboarding, canEditLaptopStatus, canManageUsers, candidateStatusChoices, isDaMember, isManager } from "@/lib/access";
 import { requireUser } from "@/lib/auth";
 import {
   ACCOUNT_STATUSES,
@@ -383,14 +383,18 @@ export async function saveTask(_prev: ActionState, formData: FormData): Promise<
   const existing = id ? getTask(id) : null;
   if (id && !existing) return { error: "That task no longer exists." };
   const manager = isManager(user);
-  if (!manager && (!existing || existing.userId !== user.id)) {
+  const member = isDaMember(user);
+  if (!manager && member && existing && existing.createdBy !== user.id) {
+    return { error: "You can update tasks you created." };
+  }
+  if (!manager && !member && (!existing || existing.userId !== user.id)) {
     return { error: "You can update your own tasks." };
   }
-  if (!existing && !manager) return { error: "A platform admin creates tasks." };
+  if (!existing && !manager && !member) return { error: "A platform admin creates tasks." };
 
-  const accountId = manager ? readString(formData, "accountId", 20).value : existing!.accountId;
-  const userId = manager ? readString(formData, "userId", 40).value : existing!.userId;
-  const projectId = manager ? readString(formData, "projectId", 20).value : existing!.projectId;
+  const accountId = manager || member ? readString(formData, "accountId", 20).value : existing!.accountId;
+  const userId = manager ? readString(formData, "userId", 40).value : member ? user.id : existing!.userId;
+  const projectId = manager || member ? readString(formData, "projectId", 20).value : existing!.projectId;
   const account = getAccount(accountId);
   const timezone = account?.timezone || existing?.accountTimezone || "UTC";
   const startLocal = readString(formData, "startTime", 20).value;
@@ -449,6 +453,7 @@ export async function saveTask(_prev: ActionState, formData: FormData): Promise<
     rate,
     earning: taskStatus === "Exited" ? null : computeEarning(loggedHours, rate),
     status: taskStatus,
+    createdBy: user.id,
   };
 
   let destination = "";
@@ -498,7 +503,10 @@ export async function setWithdrawalStatus(formData: FormData) {
 
 export async function removeTask(id: string) {
   const user = await requireUser();
-  if (!isManager(user)) redirect("/tasks");
+  const task = getTask(id);
+  if (!task) redirect("/tasks");
+  const owns = isDaMember(user) && task.createdBy === user.id;
+  if (!isManager(user) && !owns) redirect("/tasks");
   deleteTask(id);
   refresh();
   redirect("/tasks?notice=deleted");
