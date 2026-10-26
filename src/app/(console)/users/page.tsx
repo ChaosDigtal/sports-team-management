@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { FilterSelect } from "@/components/filter-select";
 import { RoleTags } from "@/components/role-tags";
-import { EmptyRow, Notice, PageHeader, primaryBtn, secondaryBtn, tdClass, thClass, inputClass, labelClass } from "@/components/ui";
+import { EmptyRow, NoCell, NoHead, Notice, PageHeader, primaryBtn, secondaryBtn, tdClass, thClass, inputClass, labelClass } from "@/components/ui";
 import { canManageUsers, isManager } from "@/lib/access";
 import { requireUser } from "@/lib/auth";
 import { formatTimestamp } from "@/lib/format";
@@ -72,6 +72,7 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
         <table className="w-full border-collapse text-sm">
           <thead className="bg-header">
             <tr>
+              <NoHead />
               <th className={cn(thClass, "!text-center")}>Name</th>
               <th className={cn(thClass, "!text-center")}>Login ID</th>
               <th className={cn(thClass, "!text-center")}>Access</th>
@@ -81,9 +82,10 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
             </tr>
           </thead>
           <tbody className="divide-y divide-line">
-            {users.length === 0 ? <EmptyRow colSpan={6}>No one matches that search.</EmptyRow> : null}
-            {users.map((person) => (
+            {users.length === 0 ? <EmptyRow colSpan={7}>No one matches that search.</EmptyRow> : null}
+            {users.map((person, index) => (
               <tr key={person.id} className="hover:bg-hover">
+                <NoCell value={index + 1} />
                 <td className={cn(tdClass, "!text-center")}>
                   <Link
                     href={`/users/${person.id}`}

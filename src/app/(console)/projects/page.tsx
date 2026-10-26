@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { EmptyRow, Notice, PageHeader, inputClass, primaryBtn, ProjectKindTag, secondaryBtn, tdClass, thClass, YesNo } from "@/components/ui";
+import { EmptyRow, NoCell, NoHead, Notice, PageHeader, inputClass, primaryBtn, ProjectKindTag, secondaryBtn, tdClass, thClass, YesNo } from "@/components/ui";
 import { isDaMember, isManager } from "@/lib/access";
 import { requireUser } from "@/lib/auth";
 import { PROJECT_KINDS } from "@/lib/constants";
@@ -71,6 +71,7 @@ export default async function ProjectsPage({ searchParams }: { searchParams: Pro
         <table className="w-full border-collapse text-sm">
           <thead className="bg-header">
             <tr>
+              <NoHead />
               <th className={cn(thClass, "!text-center")}>
                 <SortLink label="Name" column="name" sort={sort} dir={dir} kind={kind} q={q} />
               </th>
@@ -85,9 +86,10 @@ export default async function ProjectsPage({ searchParams }: { searchParams: Pro
             </tr>
           </thead>
           <tbody className="divide-y divide-line">
-            {projects.length === 0 ? <EmptyRow colSpan={7}>No projects match.</EmptyRow> : null}
-            {projects.map((project) => (
+            {projects.length === 0 ? <EmptyRow colSpan={8}>No projects match.</EmptyRow> : null}
+            {projects.map((project, index) => (
               <tr key={project.id} className="hover:bg-hover">
+                <NoCell value={index + 1} />
                 <td className={cn(tdClass, "!text-center")}>
                   <Link
                     href={`/projects/${project.id}`}

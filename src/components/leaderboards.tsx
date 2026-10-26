@@ -3,7 +3,7 @@ import { EntityTag } from "@/components/entity-tag";
 import { formatHours, formatMoney } from "@/lib/format";
 import type { AllTimeLeader, WeekLeader } from "@/lib/stats";
 import { buildHref, cn } from "@/lib/utils";
-import { EmptyRow, Panel, tdClass, thClass } from "./ui";
+import { EmptyRow, NoCell, NoHead, Panel, tdClass, thClass } from "./ui";
 
 type Dir = "asc" | "desc";
 type WeekSort = "rank" | "user" | "earnings" | "hours";
@@ -27,13 +27,14 @@ export function WeekLeaderboard({
   query: Record<string, string>;
 }) {
   const ordered = [...rows].sort((a, b) => compare(weekValue(a, sort), weekValue(b, sort), dir) || a.name.localeCompare(b.name));
-  const columns = 3 + (showEarnings ? 1 : 0);
+  const columns = 4 + (showEarnings ? 1 : 0);
   return (
     <Panel title="This week" caption="Sunday through Saturday, Japan Standard Time. Rank is by earnings.">
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-sm">
           <thead className="bg-header">
             <tr>
+              <NoHead />
               <SortTh label="Rank" column="rank" sort={sort} dir={dir} query={query} sortKey="weekSort" dirKey="weekDir" />
               <SortTh label="User" column="user" sort={sort} dir={dir} query={query} sortKey="weekSort" dirKey="weekDir" />
               {showEarnings ? (
@@ -44,8 +45,9 @@ export function WeekLeaderboard({
           </thead>
           <tbody className="divide-y divide-line">
             {ordered.length === 0 ? <EmptyRow colSpan={columns}>No one is on the roster yet.</EmptyRow> : null}
-            {ordered.map((row) => (
+            {ordered.map((row, index) => (
               <tr key={row.id} className="hover:bg-hover">
+                <NoCell value={index + 1} />
                 <td className={cn(tdClass, "!text-center")}>
                   <RankMark rank={row.rank} />
                 </td>
@@ -83,13 +85,14 @@ export function AllTimeLeaderboard({
   query: Record<string, string>;
 }) {
   const ordered = [...rows].sort((a, b) => compare(allValue(a, sort), allValue(b, sort), dir) || a.name.localeCompare(b.name));
-  const columns = 6 + (showEarnings ? 1 : 0) + (showProfit ? 1 : 0);
+  const columns = 7 + (showEarnings ? 1 : 0) + (showProfit ? 1 : 0);
   return (
     <Panel title="All time" caption="Medals are awarded when a week ends, by hours worked that week. Rank is by total hours.">
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-sm">
           <thead className="bg-header">
             <tr>
+              <NoHead />
               <SortTh label="Rank" column="rank" sort={sort} dir={dir} query={query} sortKey="allSort" dirKey="allDir" />
               <SortTh label="User" column="user" sort={sort} dir={dir} query={query} sortKey="allSort" dirKey="allDir" />
               {showEarnings ? (
@@ -107,8 +110,9 @@ export function AllTimeLeaderboard({
           </thead>
           <tbody className="divide-y divide-line">
             {ordered.length === 0 ? <EmptyRow colSpan={columns}>No one is on the roster yet.</EmptyRow> : null}
-            {ordered.map((row) => (
+            {ordered.map((row, index) => (
               <tr key={row.id} className="hover:bg-hover">
+                <NoCell value={index + 1} />
                 <td className={cn(tdClass, "!text-center")}>
                   <RankMark rank={row.rank} />
                 </td>

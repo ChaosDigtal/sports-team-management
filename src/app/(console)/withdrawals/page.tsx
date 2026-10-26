@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { EntityTag } from "@/components/entity-tag";
 import { FilterSelect } from "@/components/filter-select";
 import { WithdrawalStatusSelect } from "@/components/withdrawal-status";
-import { EmptyRow, inputClass, labelClass, Notice, PageHeader, secondaryBtn, tdClass, thClass } from "@/components/ui";
+import { EmptyRow, inputClass, labelClass, NoCell, NoHead, Notice, PageHeader, secondaryBtn, tdClass, thClass } from "@/components/ui";
 import { requireUser } from "@/lib/auth";
 import { WITHDRAWAL_STATUSES } from "@/lib/constants";
 import { formatDateTime, formatMoney, teamShare } from "@/lib/format";
@@ -81,6 +81,7 @@ export default async function WithdrawalsPage({ searchParams }: { searchParams: 
         <table className="w-full border-collapse text-sm">
           <thead className="bg-header">
             <tr>
+              <NoHead />
               <th className={cn(thClass, "!text-center")}>ID</th>
               <th className={cn(thClass, "!text-center")}>Account</th>
               <th className={cn(thClass, "!text-center")}>Amount</th>
@@ -91,9 +92,10 @@ export default async function WithdrawalsPage({ searchParams }: { searchParams: 
             </tr>
           </thead>
           <tbody className="divide-y divide-line">
-            {rows.length === 0 ? <EmptyRow colSpan={7}>No withdrawals match.</EmptyRow> : null}
-            {rows.map((row) => (
+            {rows.length === 0 ? <EmptyRow colSpan={8}>No withdrawals match.</EmptyRow> : null}
+            {rows.map((row, index) => (
               <tr key={row.id} className="hover:bg-hover">
+                <NoCell value={index + 1} />
                 <td className={cn(tdClass, "!text-center font-mono text-xs")}>{row.id}</td>
                 <td className={cn(tdClass, "!text-center")}>
                   <Link href={`/accounts/${row.accountId}`}>

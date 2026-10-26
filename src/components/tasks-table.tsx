@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Badge, EmptyRow, taskTone, tdClass, thClass } from "@/components/ui";
+import { Badge, EmptyRow, NoCell, NoHead, taskTone, tdClass, thClass } from "@/components/ui";
 import { formatDuration, formatLogged, formatMoney, formatWhen } from "@/lib/format";
 import { formatAccountTime, isWorkingAccountTime, openMinutes } from "@/lib/time";
 import type { Task } from "@/lib/types";
@@ -51,13 +51,14 @@ export function TasksTable({
     const timer = window.setInterval(() => setNow(new Date()), 1000);
     return () => window.clearInterval(timer);
   }, []);
-  const columns = 11 + (canSeeEarnings ? 1 : 0) + (canSeePayout ? 1 : 0);
+  const columns = 12 + (canSeeEarnings ? 1 : 0) + (canSeePayout ? 1 : 0);
 
   return (
     <div className="overflow-x-auto rounded-lg border border-line bg-surface">
       <table className="w-full border-collapse text-sm">
         <thead className="bg-header">
           <tr>
+            <NoHead />
             <SortTh label="Task" column="id" sort={sort} dir={dir} filters={filters} />
             <th className={cn(thClass, "!text-center")}>Account</th>
             <th className={cn(thClass, "!text-center")}>Assignee</th>
@@ -75,12 +76,13 @@ export function TasksTable({
         </thead>
         <tbody className="divide-y divide-line">
           {tasks.length === 0 ? <EmptyRow colSpan={columns}>No tasks match.</EmptyRow> : null}
-          {tasks.map((task) => {
+          {tasks.map((task, index) => {
             const elapsed = task.status === "WIP" ? (now ? openMinutes(task.startTime, now) : null) : (task.elapsedHours ?? 0) * 60;
             const over = elapsed != null && task.status === "WIP" && task.maxAllowedMinutes != null && elapsed > task.maxAllowedMinutes;
             const outside = task.status === "WIP" && now != null && !isWorkingAccountTime(now, task.accountTimezone);
             return (
               <tr key={task.id} className={cn(over ? "bg-red-200 hover:bg-red-200 dark:bg-red-950 dark:text-red-100 dark:hover:bg-red-950" : "hover:bg-hover", outside && "task-wip-outside")}>
+                <NoCell value={index + 1} />
                 <td className={cn(tdClass, "!text-center")}>
                   <Link
                     href={`/tasks/${task.id}`}

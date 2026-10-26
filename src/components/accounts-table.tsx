@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
-import { Badge, EmptyRow, accountTone, inputClass, personNameClass, secondaryBtn, tdClass, thClass } from "@/components/ui";
+import { Badge, EmptyRow, NoCell, NoHead, accountTone, inputClass, personNameClass, secondaryBtn, tdClass, thClass } from "@/components/ui";
 import { chromeRemoteLabel } from "@/lib/constants";
 import { teamShare } from "@/lib/format";
 import { formatAccountTime, isWorkingAccountTime } from "@/lib/time";
@@ -184,6 +184,7 @@ export function AccountsTable({
         <table className="w-full border-collapse text-sm">
           <thead className="bg-header">
             <tr>
+              <NoHead />
               {visible.map((column) => (
                 <th key={column.id} className={cn(thClass, "!text-center")}>
                   {column.label}
@@ -192,9 +193,10 @@ export function AccountsTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-line">
-            {accounts.length === 0 ? <EmptyRow colSpan={visible.length}>No accounts match.</EmptyRow> : null}
-            {accounts.map((account) => (
+            {accounts.length === 0 ? <EmptyRow colSpan={visible.length + 1}>No accounts match.</EmptyRow> : null}
+            {accounts.map((account, index) => (
               <tr key={account.id} className="hover:bg-hover">
+                <NoCell value={index + 1} />
                 {visible.map((column) => (
                   <td key={column.id} className={cn(tdClass, "!text-center", column.id === "share" && "tabular-nums")}>
                     <Cell account={account} column={column.id} now={now} />

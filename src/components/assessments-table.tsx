@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AssessmentCells } from "@/components/assessment-row";
-import { EmptyRow, thClass } from "@/components/ui";
+import { EmptyRow, NoCell, NoHead, thClass } from "@/components/ui";
 import type { Assessment, AssessmentNotification } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -63,6 +63,7 @@ export function AssessmentsTable({
       <table className="w-full border-collapse text-sm">
         <thead className="bg-header">
           <tr>
+            <NoHead />
             {columns.map((column) => (
               <th key={column} className={cn(thClass, "!text-center")}>
                 {column}
@@ -71,9 +72,10 @@ export function AssessmentsTable({
           </tr>
         </thead>
         <tbody className="divide-y divide-line">
-          {visible.length === 0 ? <EmptyRow colSpan={columns.length}>{filter || name ? "No assessments match." : "No assessments yet."}</EmptyRow> : null}
-          {visible.map((row) => (
+          {visible.length === 0 ? <EmptyRow colSpan={columns.length + 1}>{filter || name ? "No assessments match." : "No assessments yet."}</EmptyRow> : null}
+          {visible.map((row, index) => (
             <tr key={row.id} className={cn("hover:bg-hover", row.stuck && "assessment-stuck")} title={row.stuck ? row.stuckError : undefined}>
+              <NoCell value={index + 1} />
               <AssessmentCells
                 row={row}
                 canEditLaptop={canEditLaptop}

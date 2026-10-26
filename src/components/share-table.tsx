@@ -3,7 +3,7 @@ import { EntityTag } from "@/components/entity-tag";
 import { formatDateTime, formatHours, formatMoney, shareLabel } from "@/lib/format";
 import type { StatRow } from "@/lib/types";
 import { buildHref, cn } from "@/lib/utils";
-import { EmptyRow, Panel, tdClass, thClass } from "./ui";
+import { EmptyRow, NoCell, NoHead, Panel, tdClass, thClass } from "./ui";
 
 type SortColumn = "earnings" | "hours";
 
@@ -36,13 +36,14 @@ export function ShareTable({
 }) {
   const earnings = rows.reduce((sum, row) => sum + row.earnings, 0);
   const hours = rows.reduce((sum, row) => sum + row.hours, 0);
-  const columns = 4 + (showEarnings ? 1 : 0);
+  const columns = 5 + (showEarnings ? 1 : 0);
   return (
     <Panel title={title} caption={caption}>
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-sm">
           <thead className="bg-header">
             <tr>
+              <NoHead />
               <th className={cn(thClass, "!text-center w-16")}>Rank</th>
               <th className={cn(thClass, "!text-center")}>{nameHeader}</th>
               {showEarnings ? (
@@ -54,8 +55,9 @@ export function ShareTable({
           </thead>
           <tbody className="divide-y divide-line">
             {rows.length === 0 ? <EmptyRow colSpan={columns}>No logged time for this selection.</EmptyRow> : null}
-            {rows.map((row) => (
+            {rows.map((row, index) => (
               <tr key={row.id} className="hover:bg-hover">
+                <NoCell value={index + 1} />
                 <td className={cn(tdClass, "!text-center")}>
                   <RankMark rank={row.rank} />
                 </td>
@@ -79,6 +81,7 @@ export function ShareTable({
           {rows.length > 0 ? (
             <tfoot>
               <tr className="bg-header font-medium">
+                <td className={cn(tdClass, "!text-center")} />
                 <td className={cn(tdClass, "!text-center")} />
                 <td className={cn(tdClass, "!text-center")}>Total</td>
                 {showEarnings ? (

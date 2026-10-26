@@ -14,6 +14,14 @@ export const secondaryBtn =
 export const dangerBtn =
   "inline-flex h-10 items-center justify-center rounded-md border border-red-200 bg-surface px-3 text-sm font-medium text-danger hover:bg-red-50 dark:border-red-900 dark:hover:bg-red-950";
 export const thClass = "px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide text-muted";
+
+export function NoHead() {
+  return <th className={cn(thClass, "!text-center w-14")}>No</th>;
+}
+
+export function NoCell({ value }: { value: number }) {
+  return <td className={cn(tdClass, "!text-center tabular-nums")}>{value}</td>;
+}
 export const tdClass = "px-4 py-3 align-middle";
 
 const tones: Record<Tone, string> = {

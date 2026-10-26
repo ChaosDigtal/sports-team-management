@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
 import { LaptopStatusSelect } from "@/components/laptop-status-select";
-import { Badge, EmptyRow, candidateTone, inputClass, personNameClass, secondaryBtn, tdClass, thClass } from "@/components/ui";
+import { Badge, EmptyRow, NoCell, NoHead, candidateTone, inputClass, personNameClass, secondaryBtn, tdClass, thClass } from "@/components/ui";
 import { chromeRemoteLabel } from "@/lib/constants";
 import { teamShare } from "@/lib/format";
 import { formatAccountTime, isWorkingAccountTime } from "@/lib/time";
@@ -203,6 +203,7 @@ export function CandidatesTable({
         <table className="w-full border-collapse text-sm">
           <thead className="bg-header">
             <tr>
+              <NoHead />
               {visible.map((column) => (
                 <th key={column.id} className={cn(thClass, "!text-center")}>
                   {column.label}
@@ -211,9 +212,10 @@ export function CandidatesTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-line">
-            {rows.length === 0 ? <EmptyRow colSpan={visible.length}>No candidates match.</EmptyRow> : null}
-            {rows.map((candidate) => (
+            {rows.length === 0 ? <EmptyRow colSpan={visible.length + 1}>No candidates match.</EmptyRow> : null}
+            {rows.map((candidate, index) => (
               <tr key={candidate.id} className={cn("hover:bg-hover", candidate.status === "In Review" && "candidate-in-review")}>
+                <NoCell value={index + 1} />
                 {visible.map((column) => (
                   <td key={column.id} className={cn(tdClass, "!text-center", column.id === "share" && "tabular-nums")}>
                     <Cell
