@@ -144,11 +144,12 @@ export function TasksTable({
 }
 
 function frozenElapsedMinutes(task: Task) {
-  if ((task.status === "Completed" || task.status === "Exited") && task.endTime) {
-    const end = new Date(task.endTime);
-    if (!Number.isNaN(end.getTime())) return wipElapsedMinutes(task.startTime, task.accountTimezone, end);
+  const start = new Date(task.startTime).getTime();
+  const end = new Date(task.endTime).getTime();
+  if (!task.startTime || !task.endTime || Number.isNaN(start) || Number.isNaN(end) || end < start) {
+    return (task.elapsedHours ?? 0) * 60;
   }
-  return (task.elapsedHours ?? 0) * 60;
+  return (end - start) / 60000;
 }
 
 function payoutTone(status: Task["payoutStatus"]) {
@@ -215,13 +216,13 @@ function ElapsedBar({
 }) {
   const [now, setNow] = useState<number | null>(null);
   useEffect(() => {
-    if (!startTime) return;
+    if (!startTime || minutes != null) return;
     const tick = () => setNow(Date.now());
     tick();
     const timer = window.setInterval(tick, 60_000);
     return () => window.clearInterval(timer);
-  }, [startTime]);
-  const elapsed = startTime ? (now == null ? null : wipElapsedMinutes(startTime, timeZone, new Date(now))) : minutes;
+  }, [startTime, minutes]);
+  const elapsed = minutes != null ? minutes : startTime && now != null ? wipElapsedMinutes(startTime, timeZone, new Date(now)) : null;
   const hasLimit = limit != null && limit > 0;
   const over = elapsed != null && hasLimit && elapsed > limit;
   const ratio = elapsed != null && hasLimit ? Math.min(1, Math.max(0, elapsed / limit)) : 0;
