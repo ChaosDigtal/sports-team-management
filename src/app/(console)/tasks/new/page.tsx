@@ -16,7 +16,7 @@ export default async function NewTaskPage() {
   }
   return (
     <div>
-      <PageHeader title="New task" description={manager ? "Assign an account, a person, and a project. Earning is hours logged times the rate." : "This task is assigned to you. You can update or delete it later."} />
+      <PageHeader title="New task" description={manager ? "Account, assignee, project, start time, and hourly rate are required." : "This task is assigned to you. Account, project, start time, and hourly rate are required."} />
       <TaskForm
         action={saveTask}
         accounts={listAccountOptions()}

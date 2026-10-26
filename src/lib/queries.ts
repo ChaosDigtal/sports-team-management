@@ -700,22 +700,21 @@ export function listTasks(filters: {
   }
   const limit = filters.limit ?? 300;
   const dir = filters.dir === "asc" ? "ASC" : "DESC";
-  const orderBy =
+  const detail =
     filters.sort === "id"
       ? `t.id ${dir}`
       : filters.sort === "account"
-        ? `a.name COLLATE NOCASE ${dir}, t.id DESC`
+        ? `a.name COLLATE NOCASE ${dir}`
         : filters.sort === "assignee"
-          ? `u.name COLLATE NOCASE ${dir}, t.id DESC`
+          ? `u.name COLLATE NOCASE ${dir}`
           : filters.sort === "ended"
-        ? `t.end_time ${dir}, t.id DESC`
-        : filters.sort === "earnings"
-          ? `CASE WHEN t.status = 'Exited' THEN NULL ELSE t.earning END ${dir}, t.id DESC`
-          : filters.sort === "rate"
-            ? `t.rate ${dir}, t.id DESC`
-            : filters.sort === "started"
-              ? `t.start_time ${dir}, t.id DESC`
-              : "t.start_time DESC, t.id DESC";
+            ? `t.end_time ${dir}`
+            : filters.sort === "earnings"
+              ? `CASE WHEN t.status = 'Exited' THEN NULL ELSE t.earning END ${dir}`
+              : filters.sort === "rate"
+                ? `t.rate ${dir}`
+                : `t.start_time ${dir}`;
+  const orderBy = `CASE t.status WHEN 'WIP' THEN 0 WHEN 'Completed' THEN 1 ELSE 2 END, CASE WHEN t.status = 'Completed' THEN t.completed_at END DESC, ${detail}, t.id DESC`;
   const rows = getDb()
     .prepare(`${TASK_SELECT} ${where.length ? `WHERE ${where.join(" AND ")}` : ""} ORDER BY ${orderBy} LIMIT ?`)
     .all(...params, limit) as Row[];
@@ -764,8 +763,8 @@ export function createTask(input: TaskInput) {
         `
         INSERT INTO "DA_tasks" (
           id, account_id, user_id, project_id, timezone, start_time, end_time,
-          elapsed_hours, logged_hours, rate, earning, status, created_by
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          elapsed_hours, logged_hours, rate, earning, status, created_by, completed_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       )
       .run(
@@ -782,18 +781,22 @@ export function createTask(input: TaskInput) {
         input.earning,
         input.status,
         input.createdBy,
+        input.status === "Completed" ? new Date().toISOString() : "",
       );
     return id;
   });
 }
 
 export function updateTask(id: string, input: TaskInput) {
+  const current = getDb().prepare(`SELECT status, completed_at FROM "DA_tasks" WHERE id = ?`).get(id) as Row | undefined;
+  const alreadyCompleted = text(current?.status) === "Completed" && text(current?.completed_at);
+  const completedAt = input.status === "Completed" ? (alreadyCompleted ? text(current?.completed_at) : new Date().toISOString()) : "";
   getDb()
     .prepare(
       `
       UPDATE "DA_tasks" SET
         account_id = ?, user_id = ?, project_id = ?, timezone = ?, start_time = ?, end_time = ?,
-        elapsed_hours = ?, logged_hours = ?, rate = ?, earning = ?, status = ?
+        elapsed_hours = ?, logged_hours = ?, rate = ?, earning = ?, status = ?, completed_at = ?
       WHERE id = ?
     `,
     )
@@ -809,6 +812,7 @@ export function updateTask(id: string, input: TaskInput) {
       input.rate,
       input.earning,
       input.status,
+      completedAt,
       id,
     );
 }

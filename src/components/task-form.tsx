@@ -39,8 +39,9 @@ export function TaskForm({
   onDelete?: () => Promise<void>;
 }) {
   const [state, formAction, pending] = useActionState(action, {});
-  const [accountId, setAccountId] = useState(task?.accountId ?? accounts[0]?.id ?? "");
-  const [timezone, setTimezone] = useState(task?.accountTimezone ?? accounts[0]?.timezone ?? "UTC");
+  const creating = !task;
+  const [accountId, setAccountId] = useState(task?.accountId ?? "");
+  const [timezone, setTimezone] = useState(task?.accountTimezone ?? "UTC");
   const [start, setStart] = useState(startLocal);
   const [end, setEnd] = useState(endLocal);
   const loggedParts = durationParts(task?.loggedHours == null ? null : Math.round(task.loggedHours * 60));
@@ -85,6 +86,7 @@ export function TaskForm({
               <select
                 className={inputClass}
                 name="accountId"
+                required={creating}
                 value={accountId}
                 onChange={(event) => {
                   const next = event.target.value;
@@ -93,6 +95,7 @@ export function TaskForm({
                   setTimezone(account?.timezone ?? "UTC");
                 }}
               >
+                {creating ? <option value="">Select an account</option> : null}
                 {accounts.map((account) => (
                   <option key={account.id} value={account.id}>
                     {account.name}
@@ -106,7 +109,8 @@ export function TaskForm({
           {canManage ? (
             <label>
               <span className={labelClass}>Assignee</span>
-              <select className={inputClass} name="userId" defaultValue={task?.userId ?? people[0]?.id}>
+              <select className={inputClass} name="userId" required={creating} defaultValue={task?.userId ?? ""}>
+                {creating ? <option value="">Select an assignee</option> : null}
                 {people.map((person) => (
                   <option key={person.id} value={person.id}>
                     {person.name}
@@ -120,7 +124,8 @@ export function TaskForm({
           {canChooseWork ? (
             <label>
               <span className={labelClass}>Project</span>
-              <select className={inputClass} name="projectId" defaultValue={task?.projectId ?? projects[0]?.id}>
+              <select className={inputClass} name="projectId" required={creating} defaultValue={task?.projectId ?? ""}>
+                {creating ? <option value="">Select a project</option> : null}
                 {projects.map((project) => (
                   <option key={project.id} value={project.id}>
                     {project.name}
@@ -134,7 +139,7 @@ export function TaskForm({
           <AccountClock timeZone={timezone} />
           <label>
             <span className={labelClass}>Started (Local)</span>
-            <input className={inputClass} name="startTime" type="datetime-local" value={start} onChange={(event) => setStart(event.target.value)} />
+            <input className={inputClass} name="startTime" type="datetime-local" required={creating} value={start} onChange={(event) => setStart(event.target.value)} />
           </label>
           <label>
             <span className={labelClass}>Ended (Local)</span>
@@ -177,6 +182,7 @@ export function TaskForm({
                 type="number"
                 min="0"
                 step="0.01"
+                required={creating}
                 value={rate}
                 onChange={(event) => setRate(event.target.value)}
               />

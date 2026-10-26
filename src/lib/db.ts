@@ -99,7 +99,8 @@ CREATE TABLE IF NOT EXISTS "DA_tasks" (
   earning REAL,
   status TEXT NOT NULL DEFAULT 'WIP',
   withdrawal_id TEXT NOT NULL DEFAULT '',
-  created_by TEXT NOT NULL DEFAULT ''
+  created_by TEXT NOT NULL DEFAULT '',
+  completed_at TEXT NOT NULL DEFAULT ''
 );
 
 CREATE INDEX IF NOT EXISTS idx_da_tasks_account ON "DA_tasks"(account_id);
@@ -280,6 +281,16 @@ function migrateCatalog(db: DatabaseSync) {
 function ensureTaskCreatorColumn(db: DatabaseSync) {
   const names = new Set((db.prepare(`PRAGMA table_info("DA_tasks")`).all() as Array<{ name: string }>).map((row) => row.name));
   if (!names.has("created_by")) db.exec(`ALTER TABLE "DA_tasks" ADD COLUMN created_by TEXT NOT NULL DEFAULT ''`);
+}
+
+function ensureTaskCompletedAt(db: DatabaseSync) {
+  const names = new Set((db.prepare(`PRAGMA table_info("DA_tasks")`).all() as Array<{ name: string }>).map((row) => row.name));
+  if (!names.has("completed_at")) db.exec(`ALTER TABLE "DA_tasks" ADD COLUMN completed_at TEXT NOT NULL DEFAULT ''`);
+  db.exec(`
+    UPDATE "DA_tasks"
+    SET completed_at = CASE WHEN end_time != '' THEN end_time ELSE start_time END
+    WHERE status = 'Completed' AND completed_at = ''
+  `);
 }
 
 function ensureTaskWithdrawalColumn(db: DatabaseSync) {
@@ -480,6 +491,7 @@ export function getDb() {
   globalForDb.__teamDbVersion = DB_VERSION;
   ensureTaskWithdrawalColumn(db);
   ensureTaskCreatorColumn(db);
+  ensureTaskCompletedAt(db);
   ensureWithdrawalSchedule(db);
   ensureOnboarding(db);
   ensureTelegram(db);

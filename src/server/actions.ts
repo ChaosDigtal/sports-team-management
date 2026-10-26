@@ -422,6 +422,8 @@ export async function saveTask(_prev: ActionState, formData: FormData): Promise<
     return { error: "Time logged needs whole hours and minutes from 0 to 59." };
   }
   if (rateResult.value != null && rateResult.value < 0) return { error: "Hourly rate can't be negative." };
+  if (!existing && !startLocal) return { error: "Add a start time." };
+  if (!existing && rateResult.value == null) return { error: "Add an hourly rate." };
   if (!existing && accountHasUnpausableWip(accountId)) {
     return { error: "This account already has a WIP task on a project that cannot be paused." };
   }
