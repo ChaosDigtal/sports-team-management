@@ -9,11 +9,13 @@ import { FormError, hintClass, inputClass, labelClass, primaryBtn, secondaryBtn 
 export function UserForm({
   action,
   user,
+  allowSuperAdmin = true,
   lockSuperAdmin,
   onDelete,
 }: {
   action: (prev: ActionState, formData: FormData) => Promise<ActionState>;
   user?: SessionUser;
+  allowSuperAdmin?: boolean;
   lockSuperAdmin?: boolean;
   onDelete?: () => Promise<void>;
 }) {
@@ -50,19 +52,21 @@ export function UserForm({
           </label>
           <fieldset>
             <legend className={labelClass}>Roles</legend>
-            <label className="mt-2 flex items-center gap-2 text-sm">
-              {lockSuperAdmin ? <input type="hidden" name="isSuperAdmin" value="on" /> : null}
-              <input
-                type="checkbox"
-                name="isSuperAdmin"
-                value="on"
-                defaultChecked={user?.isSuperAdmin || lockSuperAdmin}
-                disabled={lockSuperAdmin}
-                className="size-4 accent-accent"
-              />
-              Super admin
-            </label>
-            {lockSuperAdmin ? <span className={hintClass}>The console keeps this super admin.</span> : null}
+            {allowSuperAdmin ? (
+              <label className="mt-2 flex items-center gap-2 text-sm">
+                {lockSuperAdmin ? <input type="hidden" name="isSuperAdmin" value="on" /> : null}
+                <input
+                  type="checkbox"
+                  name="isSuperAdmin"
+                  value="on"
+                  defaultChecked={user?.isSuperAdmin || lockSuperAdmin}
+                  disabled={lockSuperAdmin}
+                  className="size-4 accent-accent"
+                />
+                Super admin
+              </label>
+            ) : null}
+            {allowSuperAdmin && lockSuperAdmin ? <span className={hintClass}>The console keeps this super admin.</span> : null}
             <div className="mt-4 text-sm font-medium">DA</div>
             <div className="mt-2 grid gap-2">
               <RoleOption value="" current={daRole} label="No DA access" />

@@ -9,12 +9,12 @@ export const metadata = { title: "New user" };
 export default async function NewUserPage() {
   const user = await requireUser();
   if (!canManageUsers(user)) {
-    return <AccessNote title="Super admins create logins" body="Platform admins can review people, and a super admin assigns roles." />;
+    return <AccessNote title="Platform admins create logins" body="A platform admin creates and edits user accounts." />;
   }
   return (
     <div>
-      <PageHeader title="New user" description="Choose a login ID and assign super admin, DA platform admin, or DA member." />
-      <UserForm action={saveUser} />
+      <PageHeader title="New user" description="Choose a login ID and assign a DA role." />
+      <UserForm action={saveUser} allowSuperAdmin={user.isSuperAdmin} />
     </div>
   );
 }

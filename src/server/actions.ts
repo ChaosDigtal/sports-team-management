@@ -508,7 +508,7 @@ const LOGIN_ID = /^[a-z][a-z0-9._-]{1,31}$/;
 
 export async function saveUser(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const actor = await requireUser();
-  if (!canManageUsers(actor)) return { error: "Only a super admin can edit logins." };
+  if (!canManageUsers(actor)) return { error: "Only a platform admin can edit logins." };
   const existingId = readString(formData, "id", 40).value;
   const existing = existingId ? getSessionUser(existingId) : null;
   if (existingId && !existing) return { error: "That person no longer exists." };
@@ -527,9 +527,12 @@ export async function saveUser(_prev: ActionState, formData: FormData): Promise<
   const daRoleRaw = readString(formData, "daRole", 20).value;
   const daRole: PlatformRole | null =
     daRoleRaw === "platform_admin" || daRoleRaw === "member" ? daRoleRaw : null;
-  let isSuperAdmin = readChecked(formData, "isSuperAdmin");
+  let isSuperAdmin = existing?.isSuperAdmin ?? false;
   const daOnboarding = readChecked(formData, "daOnboarding");
-  if (existing?.isSuperAdmin && countSuperAdmins() <= 1) isSuperAdmin = true;
+  if (actor.isSuperAdmin) {
+    isSuperAdmin = readChecked(formData, "isSuperAdmin");
+    if (existing?.isSuperAdmin && countSuperAdmins() <= 1) isSuperAdmin = true;
+  }
   if (!isSuperAdmin && !daRole && !daOnboarding) return { error: "Assign super admin, a DA role, or DA Onboarding." };
 
   if (!existing && password.value.length < 8) return { error: "Password needs at least 8 characters." };
@@ -727,7 +730,7 @@ export async function saveAssessment(formData: FormData) {
 
 export async function removeUser(id: string) {
   const actor = await requireUser();
-  if (!canManageUsers(actor)) redirect("/users");
+  if (!actor.isSuperAdmin) redirect("/users");
   if (actor.id === id) redirect(`/users/${id}?notice=locked`);
   const existing = getSessionUser(id);
   if (!existing) redirect("/users");

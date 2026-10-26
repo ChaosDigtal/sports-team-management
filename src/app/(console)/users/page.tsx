@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { FilterSelect } from "@/components/filter-select";
 import { RoleTags } from "@/components/role-tags";
 import { EmptyRow, Notice, PageHeader, primaryBtn, secondaryBtn, tdClass, thClass, inputClass, labelClass } from "@/components/ui";
-import { isManager } from "@/lib/access";
+import { canManageUsers, isManager } from "@/lib/access";
 import { requireUser } from "@/lib/auth";
 import { formatTimestamp } from "@/lib/format";
 import { listAccountOptions, listProjectOptions, listUsers } from "@/lib/queries";
@@ -27,9 +27,9 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
     <div>
       <PageHeader
         title="Users"
-        description="Find people by name, login ID, the account they worked, or the project they worked. Super admins create logins."
+        description="Find people by name, login ID, the account they worked, or the project they worked. Platform admins create and edit logins."
         actions={
-          user.isSuperAdmin ? (
+          canManageUsers(user) ? (
             <Link href="/users/new" className={primaryBtn}>
               New user
             </Link>

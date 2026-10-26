@@ -38,8 +38,9 @@ export default async function UserPage({
         <UserForm
           action={saveUser}
           user={person}
+          allowSuperAdmin={actor.isSuperAdmin}
           lockSuperAdmin={person.isSuperAdmin && countSuperAdmins() <= 1}
-          onDelete={actor.id === person.id ? undefined : removeUser.bind(null, person.id)}
+          onDelete={actor.isSuperAdmin && actor.id !== person.id ? removeUser.bind(null, person.id) : undefined}
         />
       ) : (
         <div className="max-w-2xl rounded-lg border border-line bg-surface p-5">

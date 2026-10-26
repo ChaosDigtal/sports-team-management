@@ -6,7 +6,7 @@ export function isManager(user: SessionUser) {
 }
 
 export function canManageUsers(user: SessionUser) {
-  return user.isSuperAdmin;
+  return isManager(user);
 }
 
 export function hasDaAccess(user: SessionUser) {
