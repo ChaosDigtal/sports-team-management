@@ -667,7 +667,7 @@ export function listTasks(filters: {
   status?: string;
   q?: string;
   limit?: number;
-  sort?: "id" | "started" | "ended" | "earnings" | "rate";
+  sort?: "id" | "account" | "assignee" | "started" | "ended" | "earnings" | "rate";
   dir?: "asc" | "desc";
 }) {
   const where: string[] = [];
@@ -703,7 +703,11 @@ export function listTasks(filters: {
   const orderBy =
     filters.sort === "id"
       ? `t.id ${dir}`
-      : filters.sort === "ended"
+      : filters.sort === "account"
+        ? `a.name COLLATE NOCASE ${dir}, t.id DESC`
+        : filters.sort === "assignee"
+          ? `u.name COLLATE NOCASE ${dir}, t.id DESC`
+          : filters.sort === "ended"
         ? `t.end_time ${dir}, t.id DESC`
         : filters.sort === "earnings"
           ? `CASE WHEN t.status = 'Exited' THEN NULL ELSE t.earning END ${dir}, t.id DESC`

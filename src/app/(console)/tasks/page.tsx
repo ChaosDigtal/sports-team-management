@@ -11,7 +11,7 @@ import type { SearchParams, TaskStatus } from "@/lib/types";
 
 export const metadata = { title: "Tasks" };
 
-const TASK_SORTS = ["id", "started", "ended", "earnings", "rate"] as const;
+const TASK_SORTS = ["id", "account", "assignee", "started", "ended", "earnings", "rate"] as const;
 
 export default async function TasksPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const user = await requireUser();

@@ -60,8 +60,8 @@ export function TasksTable({
           <tr>
             <NoHead />
             <SortTh label="Task" column="id" sort={sort} dir={dir} filters={filters} />
-            <th className={cn(thClass, "!text-center")}>Account</th>
-            <th className={cn(thClass, "!text-center")}>Assignee</th>
+            <SortTh label="Account" column="account" sort={sort} dir={dir} filters={filters} />
+            <SortTh label="Assignee" column="assignee" sort={sort} dir={dir} filters={filters} />
             <th className={cn(thClass, "!text-center")}>Project</th>
             <th className={cn(thClass, "!text-center")}>Account time</th>
             <SortTh label="Started (Local)" column="started" sort={sort} dir={dir} filters={filters} />
