@@ -402,7 +402,7 @@ export async function saveTask(_prev: ActionState, formData: FormData): Promise<
   const status = readString(formData, "status", 20).value;
   const loggedHoursPart = readNumber(formData, "loggedHours");
   const loggedMinutesPart = readNumber(formData, "loggedMinutes");
-  const rateResult = manager ? readNumber(formData, "rate") : { ok: true as const, value: existing?.rate ?? null };
+  const rateResult = manager || member ? readNumber(formData, "rate") : { ok: true as const, value: existing?.rate ?? null };
 
   if (!loggedHoursPart.ok || !loggedMinutesPart.ok || !rateResult.ok) return { error: "Time logged and rate need to be numbers." };
   if (!TASK_STATUSES.includes(status as TaskStatus)) return { error: "Choose a status." };

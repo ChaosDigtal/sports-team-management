@@ -225,8 +225,9 @@ export function zonedLocalToUtc(local: string, timeZone: string) {
 }
 
 export function openMinutes(startIso: string, now = new Date()) {
-  if (!startIso) return 0;
-  return Math.max(0, (now.getTime() - new Date(startIso).getTime()) / 60000);
+  const start = Date.parse(startIso);
+  if (!Number.isFinite(start)) return 0;
+  return Math.max(0, (now.getTime() - start) / 60000);
 }
 
 export function elapsedHours(startIso: string, endIso: string) {

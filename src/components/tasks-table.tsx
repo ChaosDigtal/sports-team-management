@@ -48,7 +48,7 @@ export function TasksTable({
   const [now, setNow] = useState<Date | null>(null);
   useEffect(() => {
     setNow(new Date());
-    const timer = window.setInterval(() => setNow(new Date()), 1000);
+    const timer = window.setInterval(() => setNow(new Date()), 60_000);
     return () => window.clearInterval(timer);
   }, []);
   const columns = 12 + (canSeeEarnings ? 1 : 0) + (canSeePayout ? 1 : 0);
@@ -113,7 +113,11 @@ export function TasksTable({
                 </td>
                 <td className={cn(tdClass, "!text-center")}>{formatWhen(task.startTime, task.accountTimezone)}</td>
                 <td className={cn(tdClass, "!text-center")}>
-                  <ElapsedBar minutes={elapsed} limit={task.maxAllowedMinutes} />
+                  <ElapsedBar
+                    startTime={task.status === "WIP" ? task.startTime : ""}
+                    minutes={task.status === "WIP" ? null : (task.elapsedHours ?? 0) * 60}
+                    limit={task.maxAllowedMinutes}
+                  />
                 </td>
                 <td className={cn(tdClass, "!text-center")}>{task.endTime ? formatWhen(task.endTime, task.accountTimezone) : "—"}</td>
                 <td className={cn(tdClass, "!text-center tabular-nums")}>{formatLogged(task.loggedHours)}</td>
@@ -189,17 +193,30 @@ function AssigneeTag({ id, name }: { id: string; name: string }) {
   );
 }
 
-function ElapsedBar({ minutes, limit }: { minutes: number | null; limit: number | null }) {
+function ElapsedBar({ startTime, minutes, limit }: { startTime: string; minutes: number | null; limit: number | null }) {
+  const [now, setNow] = useState<number | null>(null);
+  useEffect(() => {
+    if (!startTime) return;
+    const tick = () => setNow(Date.now());
+    tick();
+    const timer = window.setInterval(tick, 60_000);
+    return () => window.clearInterval(timer);
+  }, [startTime]);
+  const elapsed = startTime ? (now == null ? null : openMinutes(startTime, new Date(now))) : minutes;
   const hasLimit = limit != null && limit > 0;
-  const over = minutes != null && hasLimit && minutes > limit;
-  const width = minutes != null && hasLimit ? Math.min(100, (minutes / limit) * 100) : 0;
-  const elapsedLabel = minutes == null ? "—" : formatDuration(Math.round(minutes));
+  const over = elapsed != null && hasLimit && elapsed > limit;
+  const ratio = elapsed != null && hasLimit ? Math.min(1, Math.max(0, elapsed / limit)) : 0;
+  const width = ratio === 0 ? 0 : Math.max(ratio * 100, 2);
+  const elapsedLabel = elapsed == null ? "—" : formatDuration(Math.floor(elapsed));
   const limitLabel = hasLimit ? formatDuration(limit) : null;
   return (
     <div className="mx-auto w-40">
       {hasLimit ? (
-        <div className={cn("h-2.5 overflow-hidden rounded-full bg-slate-300 dark:bg-slate-600", over && "ring-2 ring-red-500 ring-offset-1 ring-offset-surface")}>
-          <div className="h-full bg-green-500" style={{ width: `${width}%` }} />
+        <div
+          className={cn("overflow-hidden rounded-full", over && "ring-2 ring-red-500 ring-offset-1 ring-offset-surface")}
+          style={{ height: 10, background: "#cbd5e1" }}
+        >
+          <div style={{ height: 10, width: `${Math.min(width, 100)}%`, background: over ? "#dc2626" : "#0d7a5f" }} />
         </div>
       ) : null}
       <div className={cn("mt-1 text-xs tabular-nums", over ? "font-semibold text-red-600" : "text-muted")}>

@@ -168,7 +168,7 @@ export function TaskForm({
               <span className="text-sm text-muted">m</span>
             </div>
           </div>
-          {canManage ? (
+          {canManage || canChooseWork ? (
             <label>
               <span className={labelClass}>Hourly rate</span>
               <input
