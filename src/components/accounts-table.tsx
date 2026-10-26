@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Badge, EmptyRow, NoCell, NoHead, accountTone, inputClass, personNameClass, secondaryBtn, tdClass, thClass } from "@/components/ui";
 import { chromeRemoteLabel } from "@/lib/constants";
 import { teamShare } from "@/lib/format";
-import { formatAccountTime, isWorkingAccountTime } from "@/lib/time";
+import { fixedOffsetHours, formatAccountTime, isWorkingAccountTime } from "@/lib/time";
 import type { AccountRow } from "@/lib/types";
 import { cn, softTag } from "@/lib/utils";
 
@@ -90,6 +90,7 @@ export function AccountsTable({
   const [selected, setSelected] = useState<ColumnId[]>(defaults);
   const [open, setOpen] = useState(false);
   const [now, setNow] = useState<Date | null>(null);
+  const [timeSort, setTimeSort] = useState<"asc" | "desc" | "">("");
 
   useEffect(() => {
     const raw = window.localStorage.getItem(storageKey);
@@ -123,6 +124,10 @@ export function AccountsTable({
   ];
 
   const filtered = Boolean(search.q || search.status || search.country);
+  const rows = useMemo(() => {
+    if (!timeSort || !now) return accounts;
+    return [...accounts].sort((left, right) => compareAccountTime(now, left, right, timeSort));
+  }, [accounts, now, timeSort]);
 
   return (
     <div>
@@ -187,14 +192,25 @@ export function AccountsTable({
               <NoHead />
               {visible.map((column) => (
                 <th key={column.id} className={cn(thClass, "!text-center")}>
-                  {column.label}
+                  {column.id === "accountTime" ? (
+                    <button
+                      type="button"
+                      className="hover:text-ink"
+                      onClick={() => setTimeSort((current) => (current === "asc" ? "desc" : "asc"))}
+                    >
+                      {column.label}
+                      {timeSort === "asc" ? " ↑" : timeSort === "desc" ? " ↓" : ""}
+                    </button>
+                  ) : (
+                    column.label
+                  )}
                 </th>
               ))}
             </tr>
           </thead>
           <tbody className="divide-y divide-line">
-            {accounts.length === 0 ? <EmptyRow colSpan={visible.length + 1}>No accounts match.</EmptyRow> : null}
-            {accounts.map((account, index) => (
+            {rows.length === 0 ? <EmptyRow colSpan={visible.length + 1}>No accounts match.</EmptyRow> : null}
+            {rows.map((account, index) => (
               <tr key={account.id} className="hover:bg-hover">
                 <NoCell value={index + 1} />
                 {visible.map((column) => (
@@ -209,6 +225,23 @@ export function AccountsTable({
       </div>
     </div>
   );
+}
+
+function compareAccountTime(now: Date, left: AccountRow, right: AccountRow, dir: "asc" | "desc") {
+  const leftMinutes = minutesOfDay(now, left.timezone);
+  const rightMinutes = minutesOfDay(now, right.timezone);
+  if (leftMinutes == null && rightMinutes == null) return left.name.localeCompare(right.name);
+  if (leftMinutes == null) return 1;
+  if (rightMinutes == null) return -1;
+  const diff = dir === "asc" ? leftMinutes - rightMinutes : rightMinutes - leftMinutes;
+  return diff || left.name.localeCompare(right.name);
+}
+
+function minutesOfDay(date: Date, timeZone: string) {
+  const offset = fixedOffsetHours(timeZone);
+  if (offset == null) return null;
+  const shifted = new Date(date.getTime() + offset * 3_600_000);
+  return shifted.getUTCHours() * 60 + shifted.getUTCMinutes();
 }
 
 function withWeekTarget(columns: ColumnId[]) {
