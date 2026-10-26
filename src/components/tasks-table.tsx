@@ -77,8 +77,8 @@ export function TasksTable({
         <tbody className="divide-y divide-line">
           {tasks.length === 0 ? <EmptyRow colSpan={columns}>No tasks match.</EmptyRow> : null}
           {tasks.map((task, index) => {
-            const elapsed = task.status === "WIP" ? (now ? wipElapsedMinutes(task.startTime, task.accountTimezone, now) : null) : (task.elapsedHours ?? 0) * 60;
-            const over = elapsed != null && task.status === "WIP" && task.maxAllowedMinutes != null && elapsed > task.maxAllowedMinutes;
+            const elapsed = task.status === "WIP" ? (now ? wipElapsedMinutes(task.startTime, task.accountTimezone, now) : null) : frozenElapsedMinutes(task);
+            const over = elapsed != null && task.maxAllowedMinutes != null && elapsed > task.maxAllowedMinutes;
             const outside = task.status === "WIP" && now != null && !isWorkingAccountTime(now, task.accountTimezone);
             return (
               <tr key={task.id} className={cn(over ? "bg-red-200 hover:bg-red-200 dark:bg-red-950 dark:text-red-100 dark:hover:bg-red-950" : "hover:bg-hover", outside && "task-wip-outside")}>
@@ -116,7 +116,7 @@ export function TasksTable({
                   <ElapsedBar
                     startTime={task.status === "WIP" ? task.startTime : ""}
                     timeZone={task.accountTimezone}
-                    minutes={task.status === "WIP" ? null : (task.elapsedHours ?? 0) * 60}
+                    minutes={task.status === "WIP" ? null : frozenElapsedMinutes(task)}
                     limit={task.maxAllowedMinutes}
                   />
                 </td>
@@ -141,6 +141,14 @@ export function TasksTable({
       </table>
     </div>
   );
+}
+
+function frozenElapsedMinutes(task: Task) {
+  if ((task.status === "Completed" || task.status === "Exited") && task.endTime) {
+    const end = new Date(task.endTime);
+    if (!Number.isNaN(end.getTime())) return wipElapsedMinutes(task.startTime, task.accountTimezone, end);
+  }
+  return (task.elapsedHours ?? 0) * 60;
 }
 
 function payoutTone(status: Task["payoutStatus"]) {

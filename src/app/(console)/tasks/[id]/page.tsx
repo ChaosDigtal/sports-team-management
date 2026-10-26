@@ -47,7 +47,7 @@ export default async function TaskPage({
         canManage={manager}
         canChooseWork={manager || owns}
         assigneeName={user.name}
-        onDelete={manager || owns ? removeTask.bind(null, task.id) : undefined}
+        onDelete={user.isSuperAdmin ? removeTask.bind(null, task.id) : undefined}
       />
     </div>
   );

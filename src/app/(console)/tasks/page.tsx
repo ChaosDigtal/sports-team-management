@@ -54,7 +54,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
     <div>
       <PageHeader
         title="Tasks"
-        description={manager ? "Work logged on DA accounts." : member ? "Tasks you created. You can add, update, and delete them." : "Your DA tasks. Update times, logged time, and status as you go."}
+        description={manager ? "Work logged on DA accounts." : member ? "Tasks you created. You can add and update them." : "Your DA tasks. Update times, logged time, and status as you go."}
         actions={
           manager || member ? (
             <Link href="/tasks/new" className={primaryBtn}>

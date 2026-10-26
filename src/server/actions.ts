@@ -424,6 +424,9 @@ export async function saveTask(_prev: ActionState, formData: FormData): Promise<
   if (rateResult.value != null && rateResult.value < 0) return { error: "Hourly rate can't be negative." };
   if (!existing && !startLocal) return { error: "Add a start time." };
   if (!existing && rateResult.value == null) return { error: "Add an hourly rate." };
+  if (existing?.status === "WIP" && (status === "Completed" || status === "Exited") && !endLocal) {
+    return { error: status === "Completed" ? "Add an end time to mark this task completed." : "Add an end time to mark this task exited." };
+  }
   if (!existing && accountHasUnpausableWip(accountId)) {
     return { error: "This account already has a WIP task on a project that cannot be paused." };
   }
@@ -505,10 +508,9 @@ export async function setWithdrawalStatus(formData: FormData) {
 
 export async function removeTask(id: string) {
   const user = await requireUser();
+  if (!user.isSuperAdmin) redirect("/tasks");
   const task = getTask(id);
   if (!task) redirect("/tasks");
-  const owns = isDaMember(user) && task.createdBy === user.id;
-  if (!isManager(user) && !owns) redirect("/tasks");
   deleteTask(id);
   refresh();
   redirect("/tasks?notice=deleted");

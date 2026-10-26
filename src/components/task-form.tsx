@@ -143,7 +143,14 @@ export function TaskForm({
           </label>
           <label>
             <span className={labelClass}>Ended (Local)</span>
-            <input className={inputClass} name="endTime" type="datetime-local" value={end} onChange={(event) => setEnd(event.target.value)} />
+            <input
+              className={inputClass}
+              name="endTime"
+              type="datetime-local"
+              required={task?.status === "WIP" && (status === "Completed" || status === "Exited")}
+              value={end}
+              onChange={(event) => setEnd(event.target.value)}
+            />
           </label>
           <div>
             <span className={labelClass}>Time logged</span>
