@@ -237,21 +237,6 @@ function migrateProjects(db: DatabaseSync) {
   for (const [name, definition] of columns) {
     if (!names.has(name)) db.exec(`ALTER TABLE "DA_projects" ADD COLUMN ${definition}`);
   }
-  db.exec(`
-    UPDATE "DA_projects" SET
-      max_allowed_minutes = CAST(ROUND(expected_hours * 60) AS INTEGER),
-      recommended_end_minutes = CAST(ROUND(expected_hours * 60) AS INTEGER),
-      recommended_start_minutes = CAST(ROUND(expected_hours * 45) AS INTEGER)
-    WHERE max_allowed_minutes IS NULL AND expected_hours IS NOT NULL;
-    UPDATE "DA_projects" SET auto_expire_enabled = 1, auto_expire_minutes = idle_expiry_days * 1440
-    WHERE auto_expire_minutes IS NULL AND idle_expiry_days IS NOT NULL;
-    UPDATE "DA_projects" SET max_allowed_minutes = 2880, recommended_start_minutes = 1920, recommended_end_minutes = 2400, auto_expire_enabled = 1, auto_expire_minutes = 30 WHERE id = 'DA-P-001';
-    UPDATE "DA_projects" SET max_allowed_minutes = 4320, recommended_start_minutes = 2880, recommended_end_minutes = 3600, auto_expire_enabled = 1, auto_expire_minutes = 45 WHERE id = 'DA-P-002';
-    UPDATE "DA_projects" SET max_allowed_minutes = 1800, recommended_start_minutes = 1080, recommended_end_minutes = 1440, auto_expire_enabled = 1, auto_expire_minutes = 20 WHERE id = 'DA-P-003';
-    UPDATE "DA_projects" SET max_allowed_minutes = 1440, recommended_start_minutes = 960, recommended_end_minutes = 1200, auto_expire_enabled = 1, auto_expire_minutes = 15 WHERE id = 'DA-P-004';
-    UPDATE "DA_projects" SET max_allowed_minutes = 2400, recommended_start_minutes = 1200, recommended_end_minutes = 1800, auto_expire_enabled = 0, auto_expire_minutes = NULL WHERE id = 'DA-P-005';
-    UPDATE "DA_projects" SET max_allowed_minutes = 1200, recommended_start_minutes = 720, recommended_end_minutes = 960, auto_expire_enabled = 1, auto_expire_minutes = 60 WHERE id = 'DA-P-006';
-  `);
 }
 
 function migrateCatalog(db: DatabaseSync) {
@@ -273,15 +258,7 @@ function migrateCatalog(db: DatabaseSync) {
     UPDATE "DA_accounts" SET gender = 'Prefer not to answer' WHERE gender = 'Prefer not to say';
     UPDATE "DA_accounts" SET race = 'Black or African American' WHERE race = 'Black';
     UPDATE "DA_accounts" SET race = 'East Asian' WHERE race = 'Asian';
-    UPDATE "DA_accounts" SET race = 'South Asian' WHERE id = 'DA-A-003' AND race IN ('Asian', 'East Asian');
     UPDATE "DA_accounts" SET weekly_target_hours = 40 WHERE weekly_target_hours IS NULL;
-    UPDATE "DA_accounts" SET weekly_target_hours = 40 WHERE id = 'DA-A-001' AND weekly_target_hours = 3;
-    UPDATE "DA_accounts" SET weekly_target_hours = 40 WHERE id = 'DA-A-002' AND weekly_target_hours = 8;
-    UPDATE "DA_accounts" SET weekly_target_hours = 40 WHERE id = 'DA-A-003' AND weekly_target_hours = 4;
-    UPDATE "DA_accounts" SET weekly_target_hours = 40 WHERE id = 'DA-A-004' AND weekly_target_hours = 30;
-    UPDATE "DA_projects" SET kind = 'Project' WHERE id IN ('DA-P-001', 'DA-P-002') AND (kind IS NULL OR kind = '');
-    UPDATE "DA_projects" SET kind = 'Qualification' WHERE id IN ('DA-P-003', 'DA-P-005') AND (kind IS NULL OR kind = '' OR kind = 'Project');
-    UPDATE "DA_projects" SET kind = 'Survey' WHERE id IN ('DA-P-004', 'DA-P-006') AND (kind IS NULL OR kind = '' OR kind = 'Project');
   `);
   db.exec(`
     CREATE TABLE IF NOT EXISTS "DA_withdrawals" (
@@ -494,12 +471,13 @@ export function getDb() {
   }
   const db = globalForDb.__teamDb;
   if (!db) throw new Error("Database failed to open");
-  if (globalForDb.__teamDbVersion !== DB_VERSION) {
+  if (readSchemaVersion(db) < DB_VERSION) {
     migrateAccounts(db);
     migrateProjects(db);
     migrateCatalog(db);
-    globalForDb.__teamDbVersion = DB_VERSION;
+    writeSchemaVersion(db, DB_VERSION);
   }
+  globalForDb.__teamDbVersion = DB_VERSION;
   ensureTaskWithdrawalColumn(db);
   ensureTaskCreatorColumn(db);
   ensureWithdrawalSchedule(db);
@@ -509,6 +487,17 @@ export function getDb() {
   ensureCandidateWorkflow(db);
   ensureProfileCredentials(db);
   return db;
+}
+
+function readSchemaVersion(db: DatabaseSync) {
+  db.exec(`CREATE TABLE IF NOT EXISTS schema_meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)`);
+  const row = db.prepare(`SELECT value FROM schema_meta WHERE key = 'version'`).get() as { value: string } | undefined;
+  const version = Number(row?.value ?? 0);
+  return Number.isFinite(version) ? version : 0;
+}
+
+function writeSchemaVersion(db: DatabaseSync, version: number) {
+  db.prepare(`INSERT INTO schema_meta (key, value) VALUES ('version', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value`).run(String(version));
 }
 
 function ensureTelegram(db: DatabaseSync) {
