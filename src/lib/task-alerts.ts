@@ -1,7 +1,7 @@
 import { isDaMember, isManager } from "./access";
 import { formatDuration } from "./format";
 import { listTasks } from "./queries";
-import { openMinutes } from "./time";
+import { wipElapsedMinutes } from "./time";
 import type { SessionUser } from "./types";
 
 export type TaskAlert = {
@@ -22,7 +22,7 @@ export function listTaskAlerts(user: SessionUser, now = new Date()): TaskAlert[]
   });
   const alerts: TaskAlert[] = [];
   for (const task of tasks) {
-    const elapsed = openMinutes(task.startTime, now);
+    const elapsed = wipElapsedMinutes(task.startTime, task.accountTimezone, now);
     const own = task.userId === user.id;
     if (task.maxAllowedMinutes != null && elapsed > task.maxAllowedMinutes && (manager || own)) {
       alerts.push({

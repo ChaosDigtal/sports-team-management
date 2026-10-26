@@ -224,10 +224,14 @@ export function zonedLocalToUtc(local: string, timeZone: string) {
   return new Date(utc);
 }
 
-export function openMinutes(startIso: string, now = new Date()) {
-  const start = Date.parse(startIso);
-  if (!Number.isFinite(start)) return 0;
-  return Math.max(0, (now.getTime() - start) / 60000);
+export function wipElapsedMinutes(startIso: string, accountTimeZone: string, now = new Date()) {
+  const start = new Date(startIso);
+  if (!startIso || Number.isNaN(start.getTime())) return 0;
+  const jst = zonedParts(now, "Asia/Tokyo");
+  const local = zonedParts(start, accountTimeZone || "Asia/Tokyo");
+  const jstMs = Date.UTC(jst.year, jst.month - 1, jst.day, jst.hour, jst.minute);
+  const localMs = Date.UTC(local.year, local.month - 1, local.day, local.hour, local.minute);
+  return Math.max(0, (jstMs - localMs) / 60000);
 }
 
 export function elapsedHours(startIso: string, endIso: string) {

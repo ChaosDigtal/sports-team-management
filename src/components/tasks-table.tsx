@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Badge, EmptyRow, NoCell, NoHead, taskTone, tdClass, thClass } from "@/components/ui";
 import { formatDuration, formatLogged, formatMoney, formatWhen } from "@/lib/format";
-import { formatAccountTime, isWorkingAccountTime, openMinutes } from "@/lib/time";
+import { formatAccountTime, isWorkingAccountTime, wipElapsedMinutes } from "@/lib/time";
 import type { Task } from "@/lib/types";
 import { buildHref, cn, softTag } from "@/lib/utils";
 
@@ -77,7 +77,7 @@ export function TasksTable({
         <tbody className="divide-y divide-line">
           {tasks.length === 0 ? <EmptyRow colSpan={columns}>No tasks match.</EmptyRow> : null}
           {tasks.map((task, index) => {
-            const elapsed = task.status === "WIP" ? (now ? openMinutes(task.startTime, now) : null) : (task.elapsedHours ?? 0) * 60;
+            const elapsed = task.status === "WIP" ? (now ? wipElapsedMinutes(task.startTime, task.accountTimezone, now) : null) : (task.elapsedHours ?? 0) * 60;
             const over = elapsed != null && task.status === "WIP" && task.maxAllowedMinutes != null && elapsed > task.maxAllowedMinutes;
             const outside = task.status === "WIP" && now != null && !isWorkingAccountTime(now, task.accountTimezone);
             return (
@@ -115,6 +115,7 @@ export function TasksTable({
                 <td className={cn(tdClass, "!text-center")}>
                   <ElapsedBar
                     startTime={task.status === "WIP" ? task.startTime : ""}
+                    timeZone={task.accountTimezone}
                     minutes={task.status === "WIP" ? null : (task.elapsedHours ?? 0) * 60}
                     limit={task.maxAllowedMinutes}
                   />
@@ -193,7 +194,17 @@ function AssigneeTag({ id, name }: { id: string; name: string }) {
   );
 }
 
-function ElapsedBar({ startTime, minutes, limit }: { startTime: string; minutes: number | null; limit: number | null }) {
+function ElapsedBar({
+  startTime,
+  timeZone,
+  minutes,
+  limit,
+}: {
+  startTime: string;
+  timeZone: string;
+  minutes: number | null;
+  limit: number | null;
+}) {
   const [now, setNow] = useState<number | null>(null);
   useEffect(() => {
     if (!startTime) return;
@@ -202,11 +213,10 @@ function ElapsedBar({ startTime, minutes, limit }: { startTime: string; minutes:
     const timer = window.setInterval(tick, 60_000);
     return () => window.clearInterval(timer);
   }, [startTime]);
-  const elapsed = startTime ? (now == null ? null : openMinutes(startTime, new Date(now))) : minutes;
+  const elapsed = startTime ? (now == null ? null : wipElapsedMinutes(startTime, timeZone, new Date(now))) : minutes;
   const hasLimit = limit != null && limit > 0;
   const over = elapsed != null && hasLimit && elapsed > limit;
   const ratio = elapsed != null && hasLimit ? Math.min(1, Math.max(0, elapsed / limit)) : 0;
-  const width = ratio === 0 ? 0 : Math.max(ratio * 100, 2);
   const elapsedLabel = elapsed == null ? "—" : formatDuration(Math.floor(elapsed));
   const limitLabel = hasLimit ? formatDuration(limit) : null;
   return (
@@ -216,7 +226,7 @@ function ElapsedBar({ startTime, minutes, limit }: { startTime: string; minutes:
           className={cn("overflow-hidden rounded-full", over && "ring-2 ring-red-500 ring-offset-1 ring-offset-surface")}
           style={{ height: 10, background: "#cbd5e1" }}
         >
-          <div style={{ height: 10, width: `${Math.min(width, 100)}%`, background: over ? "#dc2626" : "#0d7a5f" }} />
+          <div style={{ height: 10, width: `${ratio * 100}%`, background: over ? "#dc2626" : "#0d7a5f" }} />
         </div>
       ) : null}
       <div className={cn("mt-1 text-xs tabular-nums", over ? "font-semibold text-red-600" : "text-muted")}>
