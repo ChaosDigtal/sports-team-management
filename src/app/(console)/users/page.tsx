@@ -1,13 +1,12 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { FilterSelect } from "@/components/filter-select";
 import { RoleTags } from "@/components/role-tags";
 import { EmptyRow, NoCell, NoHead, Notice, PageHeader, primaryBtn, secondaryBtn, tdClass, thClass, inputClass, labelClass } from "@/components/ui";
 import { canManageUsers, isManager } from "@/lib/access";
 import { requireUser } from "@/lib/auth";
 import { formatTimestamp } from "@/lib/format";
-import { listAccountOptions, listProjectOptions, listUsers } from "@/lib/queries";
-import { cn, one } from "@/lib/utils";
+import { listUsers } from "@/lib/queries";
+import { buildHref, cn, one } from "@/lib/utils";
 import type { SearchParams } from "@/lib/types";
 
 export const metadata = { title: "Users" };
@@ -17,17 +16,15 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
   if (!isManager(user)) redirect(`/users/${user.id}`);
   const params = await searchParams;
   const q = one(params.q);
-  const accountId = one(params.account);
-  const projectId = one(params.project);
-  const users = listUsers({ q, accountId, projectId });
-  const accounts = listAccountOptions();
-  const projects = listProjectOptions();
+  const sort = one(params.sort) === "wip" ? "wip" : "name";
+  const dir = one(params.dir) === "asc" ? "asc" : "desc";
+  const users = listUsers({ q, sort, dir: sort === "wip" ? dir : "asc" });
 
   return (
     <div>
       <PageHeader
         title="Users"
-        description="Find people by name, login ID, the account they worked, or the project they worked. Platform admins create and edit logins."
+        description="Find people by name or login ID. Working accounts counts the accounts with a WIP task for that person."
         actions={
           canManageUsers(user) ? (
             <Link href="/users/new" className={primaryBtn}>
@@ -42,28 +39,6 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
           <span className={labelClass}>Name or ID</span>
           <input className={cn(inputClass, "min-w-52")} name="q" defaultValue={q} />
         </label>
-        <label>
-          <span className={labelClass}>Account</span>
-          <FilterSelect name="account" defaultValue={accountId} className={cn(inputClass, "min-w-48")}>
-            <option value="">Any account</option>
-            {accounts.map((account) => (
-              <option key={account.id} value={account.id}>
-                {account.name}
-              </option>
-            ))}
-          </FilterSelect>
-        </label>
-        <label>
-          <span className={labelClass}>Project</span>
-          <FilterSelect name="project" defaultValue={projectId} className={cn(inputClass, "min-w-48")}>
-            <option value="">Any project</option>
-            {projects.map((project) => (
-              <option key={project.id} value={project.id}>
-                {project.name}
-              </option>
-            ))}
-          </FilterSelect>
-        </label>
         <button className={secondaryBtn} type="submit">
           Search
         </button>
@@ -77,12 +52,16 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
               <th className={cn(thClass, "!text-center")}>Login ID</th>
               <th className={cn(thClass, "!text-center")}>Access</th>
               <th className={cn(thClass, "!text-center")}>Joined</th>
-              <th className={cn(thClass, "!text-center")}>Accounts</th>
-              <th className={cn(thClass, "!text-center")}>Projects</th>
+              <th className={cn(thClass, "!text-center")}>
+                <Link href={buildHref("/users", { q, sort: "wip", dir: sort === "wip" && dir === "desc" ? "asc" : "desc" })} className="hover:text-ink">
+                  Working accounts
+                  {sort === "wip" ? (dir === "asc" ? " ↑" : " ↓") : ""}
+                </Link>
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-line">
-            {users.length === 0 ? <EmptyRow colSpan={7}>No one matches that search.</EmptyRow> : null}
+            {users.length === 0 ? <EmptyRow colSpan={6}>No one matches that search.</EmptyRow> : null}
             {users.map((person, index) => (
               <tr key={person.id} className="hover:bg-hover">
                 <NoCell value={index + 1} />
@@ -99,8 +78,7 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
                   <RoleTags user={person} />
                 </td>
                 <td className={cn(tdClass, "!text-center")}>{formatTimestamp(person.signedUpAt)}</td>
-                <td className={cn(tdClass, "!text-center tabular-nums")}>{person.accountCount}</td>
-                <td className={cn(tdClass, "!text-center tabular-nums")}>{person.projectCount}</td>
+                <td className={cn(tdClass, "!text-center tabular-nums")}>{person.wipAccountCount}</td>
               </tr>
             ))}
           </tbody>

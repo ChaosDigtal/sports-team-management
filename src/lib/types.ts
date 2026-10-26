@@ -114,8 +114,7 @@ export type Task = {
 };
 
 export type DirectoryUser = SessionUser & {
-  accountCount: number;
-  projectCount: number;
+  wipAccountCount: number;
 };
 
 export type WorkLink = {

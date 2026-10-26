@@ -82,27 +82,25 @@ export function countSuperAdmins() {
   return num0(row.n);
 }
 
-export function listUsers(filters: { q?: string; accountId?: string; projectId?: string }): DirectoryUser[] {
+export function listUsers(filters: { q?: string; sort?: "name" | "wip"; dir?: "asc" | "desc" }): DirectoryUser[] {
   const q = (filters.q ?? "").replace(/[%_]/g, "");
+  const dir = filters.dir === "asc" ? "ASC" : "DESC";
+  const order = filters.sort === "wip" ? `wip_accounts ${dir}, u.name COLLATE NOCASE` : "u.name COLLATE NOCASE";
   const rows = getDb()
     .prepare(
       `
       SELECT u.*,
-        (SELECT COUNT(DISTINCT account_id) FROM "DA_tasks" t WHERE t.user_id = u.id) AS account_count,
-        (SELECT COUNT(DISTINCT project_id) FROM "DA_tasks" t WHERE t.user_id = u.id) AS project_count
+        (SELECT COUNT(DISTINCT account_id) FROM "DA_tasks" t WHERE t.user_id = u.id AND t.status = 'WIP') AS wip_accounts
       FROM users u
       WHERE (? = '' OR u.name LIKE ? OR u.id LIKE ?)
-        AND (? = '' OR EXISTS (SELECT 1 FROM "DA_tasks" t WHERE t.user_id = u.id AND t.account_id = ?))
-        AND (? = '' OR EXISTS (SELECT 1 FROM "DA_tasks" t WHERE t.user_id = u.id AND t.project_id = ?))
-      ORDER BY u.name COLLATE NOCASE
+      ORDER BY ${order}
     `,
     )
-    .all(q, `%${q}%`, `%${q}%`, filters.accountId ?? "", filters.accountId ?? "", filters.projectId ?? "", filters.projectId ?? "") as Row[];
+    .all(q, `%${q}%`, `%${q}%`) as Row[];
 
   return rows.map((row) => ({
     ...mapUser(row, loadRoles(text(row.id))),
-    accountCount: num0(row.account_count),
-    projectCount: num0(row.project_count),
+    wipAccountCount: num0(row.wip_accounts),
   }));
 }
 
