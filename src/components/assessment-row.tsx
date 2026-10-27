@@ -7,15 +7,18 @@ import { LaptopStatusSelect } from "@/components/laptop-status-select";
 import { assessmentLabel, countryName } from "@/lib/constants";
 import { formatDateTime } from "@/lib/format";
 import type { Assessment, LaptopStatus } from "@/lib/types";
+import { failAssessment } from "@/server/actions";
 import { Badge, assessmentTone, personNameClass } from "./ui";
 
 export function AssessmentCells({
   row,
   canEditLaptop,
+  canFailWaiting,
   onLaptop,
 }: {
   row: Assessment;
   canEditLaptop: boolean;
+  canFailWaiting: boolean;
   onLaptop: (candidateId: string, laptopStatus: LaptopStatus) => void;
 }) {
   return (
@@ -53,7 +56,20 @@ export function AssessmentCells({
       <td className="px-4 py-3 text-center tabular-nums">{formatDateTime(row.updatedAt)}</td>
       <td className="px-4 py-3 text-center font-mono text-xs">{row.taskId || "—"}</td>
       <td className="px-4 py-3 text-center">
-        <Badge tone={assessmentTone(row.status)}>{assessmentLabel(row.status, row.stage)}</Badge>
+        <span className="inline-flex flex-col items-center gap-1.5">
+          <Badge tone={assessmentTone(row.status)}>{assessmentLabel(row.status, row.stage)}</Badge>
+          {canFailWaiting && row.status === "Waiting" ? (
+            <form action={failAssessment}>
+              <input type="hidden" name="id" value={row.id} />
+              <button
+                type="submit"
+                className="rounded-md border border-red-200 px-2 py-0.5 text-xs font-medium text-danger hover:bg-red-50 dark:border-red-900 dark:hover:bg-red-950"
+              >
+                Fail
+              </button>
+            </form>
+          ) : null}
+        </span>
       </td>
     </>
   );

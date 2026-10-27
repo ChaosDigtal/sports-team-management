@@ -14,11 +14,13 @@ export function AssessmentsTable({
   filter,
   name,
   canEditLaptop,
+  canFailWaiting,
 }: {
   rows: Assessment[];
   filter: string;
   name: string;
   canEditLaptop: boolean;
+  canFailWaiting: boolean;
 }) {
   const [items, setItems] = useState(rows);
 
@@ -79,6 +81,7 @@ export function AssessmentsTable({
               <AssessmentCells
                 row={row}
                 canEditLaptop={canEditLaptop}
+                canFailWaiting={canFailWaiting}
                 onLaptop={(candidateId, laptopStatus) =>
                   setItems((current) => current.map((item) => (item.candidateId === candidateId ? { ...item, laptopStatus } : item)))
                 }

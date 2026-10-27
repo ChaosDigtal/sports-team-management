@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { AssessmentsTable } from "@/components/assessments-table";
 import { Notice, PageHeader } from "@/components/ui";
-import { canEditLaptopStatus } from "@/lib/access";
+import { canEditLaptopStatus, isManager } from "@/lib/access";
 import { requireUser } from "@/lib/auth";
 import { listAssessments } from "@/lib/candidates";
 import { buildHref, cn, one } from "@/lib/utils";
@@ -40,7 +40,7 @@ export default async function AssessmentsPage({ searchParams }: { searchParams: 
           </Link>
         ))}
       </div>
-      <AssessmentsTable rows={rows} filter={status} name={name} canEditLaptop={canEditLaptopStatus(user)} />
+      <AssessmentsTable rows={rows} filter={status} name={name} canEditLaptop={canEditLaptopStatus(user)} canFailWaiting={!isManager(user)} />
     </div>
   );
 }

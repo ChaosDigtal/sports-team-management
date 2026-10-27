@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AssessmentForm } from "@/components/assessment-form";
-import { Badge, Facts, Notice, PageHeader, assessmentTone, blank } from "@/components/ui";
-import { isManager } from "@/lib/access";
+import { Badge, Facts, Notice, PageHeader, assessmentTone, blank, dangerBtn } from "@/components/ui";
+import { canAccessOnboarding, isManager } from "@/lib/access";
 import { requireUser } from "@/lib/auth";
 import { getAssessment } from "@/lib/candidates";
 import { assessmentLabel } from "@/lib/constants";
 import { one } from "@/lib/utils";
+import { failAssessment } from "@/server/actions";
 import type { SearchParams } from "@/lib/types";
 
 function showTime(value: string) {
@@ -30,6 +31,7 @@ export default async function AssessmentPage({
   if (!assessment) notFound();
   const query = await searchParams;
   const manager = isManager(user);
+  const canFail = canAccessOnboarding(user) && !manager && assessment.status === "Waiting";
 
   return (
     <div>
@@ -66,7 +68,15 @@ export default async function AssessmentPage({
               { label: "Status", value: assessmentLabel(assessment.status, assessment.stage) },
             ]}
           />
-        </section>
+        {canFail ? (
+          <form action={failAssessment} className="mt-5 flex justify-end">
+            <input type="hidden" name="id" value={assessment.id} />
+            <button className={dangerBtn} type="submit">
+              Mark as Failed
+            </button>
+          </form>
+        ) : null}
+      </section>
       )}
     </div>
   );

@@ -21,7 +21,7 @@ import {
   WITHDRAWAL_STATUSES,
 } from "@/lib/constants";
 import { activeCandidateWarning } from "@/lib/candidate-active";
-import { createCandidate, deleteCandidate, getCandidate, setCandidateLaptopStatus, updateAssessment, updateCandidate } from "@/lib/candidates";
+import { createCandidate, deleteCandidate, getAssessment, getCandidate, setCandidateLaptopStatus, updateAssessment, updateCandidate } from "@/lib/candidates";
 import { computeEarning, round2 } from "@/lib/format";
 import { refreshProfitEstimate } from "@/lib/stats";
 import { defaultWithdrawalMinutes } from "@/lib/time";
@@ -736,6 +736,24 @@ export async function saveAssessment(formData: FormData) {
     redirect("/onboarding/assessments");
   }
   updateAssessment(id, { startTime, endTime, taskId, status, stage });
+  refresh();
+  redirect(`/onboarding/assessments/${id}?notice=saved`);
+}
+
+export async function failAssessment(formData: FormData) {
+  const user = await requireUser();
+  if (!canAccessOnboarding(user)) redirect("/onboarding/assessments");
+  const id = Number(readString(formData, "id", 20).value);
+  if (!Number.isInteger(id) || id <= 0) redirect("/onboarding/assessments");
+  const existing = getAssessment(id);
+  if (!existing || existing.status !== "Waiting") redirect("/onboarding/assessments");
+  updateAssessment(id, {
+    startTime: existing.startTime,
+    endTime: existing.endTime,
+    taskId: existing.taskId,
+    status: "Failed",
+    stage: "",
+  });
   refresh();
   redirect(`/onboarding/assessments/${id}?notice=saved`);
 }
