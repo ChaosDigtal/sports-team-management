@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { AssessmentCells } from "@/components/assessment-row";
 import { EmptyRow, NoCell, NoHead, thClass } from "@/components/ui";
 import type { Assessment, AssessmentNotification } from "@/lib/types";
+import { jstWallElapsedMinutes } from "@/lib/time";
 import { cn } from "@/lib/utils";
 
 const columns = ["ID", "Name", "Referral Link", "Email", "Password", "WhatsApp", "Laptop Status", "Email Forwarding", "AnyDesk ID", "AnyDesk password", "Start time", "End time", "Update time", "Task ID", "Status"];
@@ -23,10 +24,17 @@ export function AssessmentsTable({
   canFailWaiting: boolean;
 }) {
   const [items, setItems] = useState(rows);
+  const [now, setNow] = useState<Date | null>(null);
 
   useEffect(() => {
     setItems(rows);
   }, [rows]);
+
+  useEffect(() => {
+    setNow(new Date());
+    const timer = window.setInterval(() => setNow(new Date()), 30_000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     let stopped = false;
@@ -75,8 +83,11 @@ export function AssessmentsTable({
         </thead>
         <tbody className="divide-y divide-line">
           {visible.length === 0 ? <EmptyRow colSpan={columns.length + 1}>{filter || name ? "No assessments match." : "No assessments yet."}</EmptyRow> : null}
-          {visible.map((row, index) => (
-            <tr key={row.id} className={cn("hover:bg-hover", row.stuck && "assessment-stuck")} title={row.stuck ? row.stuckError : undefined}>
+          {visible.map((row, index) => {
+            const elapsed = now ? jstWallElapsedMinutes(row.startTime, now) : null;
+            const overtime = row.status === "On Assessment" && elapsed != null && elapsed > 180;
+            return (
+            <tr key={row.id} className={cn("hover:bg-hover", (row.stuck || overtime) && "assessment-stuck")} title={row.stuck ? row.stuckError : overtime ? "On assessment for more than 3 hours" : undefined}>
               <NoCell value={index + 1} />
               <AssessmentCells
                 row={row}
@@ -87,7 +98,8 @@ export function AssessmentsTable({
                 }
               />
             </tr>
-          ))}
+            );
+          })}
         </tbody>
       </table>
     </div>
