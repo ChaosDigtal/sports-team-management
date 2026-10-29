@@ -18,8 +18,6 @@ export default async function AssessmentsPage({ searchParams }: { searchParams: 
   const status = FILTERS.includes(one(params.status) as (typeof FILTERS)[number]) ? one(params.status) : "";
   const name = one(params.name);
   const laptop = LAPTOP_STATUSES.includes(one(params.laptop) as (typeof LAPTOP_STATUSES)[number]) ? one(params.laptop) : "";
-  const rawPage = Number(one(params.page));
-  const page = Number.isInteger(rawPage) && rawPage > 0 ? rawPage : 1;
   const rows = listAssessments();
 
   return (
@@ -44,7 +42,7 @@ export default async function AssessmentsPage({ searchParams }: { searchParams: 
           </Link>
         ))}
       </div>
-      <AssessmentsTable rows={rows} filter={status} name={name} laptop={laptop} page={page} canEditLaptop={canEditLaptopStatus(user)} canFailWaiting={!isManager(user)} />
+      <AssessmentsTable rows={rows} filter={status} name={name} laptop={laptop} canEditLaptop={canEditLaptopStatus(user)} canFailWaiting={!isManager(user)} />
     </div>
   );
 }

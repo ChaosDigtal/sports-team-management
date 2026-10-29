@@ -53,7 +53,8 @@ export function AssessmentCells({
       <td className="px-4 py-3 text-center tabular-nums">{showTime(row.startTime)}</td>
       <td className="px-4 py-3 text-center tabular-nums">{showTime(row.endTime)}</td>
       <td className="px-4 py-3 text-center tabular-nums">{showUpdateTime(row.updatedAt)}</td>
-      <td className="px-4 py-3 text-center font-mono text-xs">{row.taskId || "—"}</td>
+      <td className="px-4 py-3 text-center font-mono text-xs">{row.ultraviewerId || "—"}</td>
+      <td className="px-4 py-3 text-center break-all font-mono text-xs">{row.ultraviewerPassword || "—"}</td>
       <td className="px-4 py-3 text-center">
         <span className="inline-flex flex-col items-center gap-1.5">
           <Badge tone={assessmentTone(row.status)}>{assessmentLabel(row.status, row.stage)}</Badge>

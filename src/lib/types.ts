@@ -203,6 +203,8 @@ export type Assessment = {
   whatsapp: string;
   anydeskId: string;
   anydeskPassword: string;
+  ultraviewerId: string;
+  ultraviewerPassword: string;
   startTime: string;
   endTime: string;
   taskId: string;

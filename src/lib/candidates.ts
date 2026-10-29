@@ -220,6 +220,7 @@ export function deleteCandidate(id: string) {
 const ASSESSMENT_SELECT = `
   SELECT s.id AS id, s.candidate_id AS candidate_id, c.name AS name, c.whatsapp AS whatsapp,
     c.anydesk_id AS anydesk_id, c.anydesk_password AS anydesk_password,
+    c.ultraviewer_id AS ultraviewer_id, c.ultraviewer_password AS ultraviewer_password,
     s.start_time AS start_time, s.end_time AS end_time, s.task_id AS task_id, s.status AS status, s.stage AS stage,
     s.stuck AS stuck, s.stuck_error AS stuck_error, s.password AS password, s.updated_at AS updated_at, c.email AS email,
     c.dob AS dob, c.gender AS gender, c.race AS race, c.country AS country, c.linkedin_url AS linkedin_url, c.resume_url AS resume_url,
@@ -236,6 +237,8 @@ function mapAssessment(row: Row): Assessment {
     whatsapp: text(row.whatsapp),
     anydeskId: text(row.anydesk_id),
     anydeskPassword: text(row.anydesk_password),
+    ultraviewerId: text(row.ultraviewer_id),
+    ultraviewerPassword: text(row.ultraviewer_password),
     startTime: text(row.start_time),
     endTime: text(row.end_time),
     taskId: text(row.task_id),

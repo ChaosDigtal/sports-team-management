@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AssessmentCells } from "@/components/assessment-row";
@@ -8,10 +7,9 @@ import { EmptyRow, NoCell, NoHead, thClass } from "@/components/ui";
 import { LAPTOP_STATUSES } from "@/lib/constants";
 import type { Assessment, AssessmentNotification } from "@/lib/types";
 import { jstWallElapsedMinutes } from "@/lib/time";
-import { buildHref, cn } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
-const columns = ["ID", "Name", "Referral Link", "Email", "Password", "WhatsApp", "Laptop Status", "Email Forwarding", "AnyDesk ID", "AnyDesk password", "Start time", "End time", "Update time", "Task ID", "Status"];
-const PAGE_SIZE = 25;
+const columns = ["ID", "Name", "Referral Link", "Email", "Password", "WhatsApp", "Laptop Status", "Email Forwarding", "AnyDesk ID", "AnyDesk password", "Start time", "End time", "Update time", "UltraViewer ID", "UltraViewer password", "Status"];
 const WAITING_LATE_MINUTES = 3 * 24 * 60;
 
 export function AssessmentsTable({
@@ -19,7 +17,6 @@ export function AssessmentsTable({
   filter,
   name,
   laptop,
-  page,
   canEditLaptop,
   canFailWaiting,
 }: {
@@ -27,7 +24,6 @@ export function AssessmentsTable({
   filter: string;
   name: string;
   laptop: string;
-  page: number;
   canEditLaptop: boolean;
   canFailWaiting: boolean;
 }) {
@@ -74,10 +70,6 @@ export function AssessmentsTable({
     return row.status === filter;
   });
   const names = [...new Set(items.map((row) => row.name))].sort((left, right) => left.localeCompare(right));
-  const pages = Math.max(1, Math.ceil(visible.length / PAGE_SIZE));
-  const currentPage = Math.min(Math.max(1, page), pages);
-  const paged = visible.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
-  const query = { status: filter, name, laptop };
 
   return (
     <div>
@@ -98,8 +90,8 @@ export function AssessmentsTable({
           </tr>
         </thead>
         <tbody className="divide-y divide-line">
-          {paged.length === 0 ? <EmptyRow colSpan={columns.length + 1}>{filter || name || laptop ? "No assessments match." : "No assessments yet."}</EmptyRow> : null}
-          {paged.map((row, index) => {
+          {visible.length === 0 ? <EmptyRow colSpan={columns.length + 1}>{filter || name || laptop ? "No assessments match." : "No assessments yet."}</EmptyRow> : null}
+          {visible.map((row, index) => {
             const elapsed = now ? jstWallElapsedMinutes(row.startTime, now) : null;
             const sinceEnd = now ? jstWallElapsedMinutes(row.endTime, now) : null;
             const overtime = row.status === "On Assessment" && elapsed != null && elapsed > 180;
@@ -110,7 +102,7 @@ export function AssessmentsTable({
               className={cn("hover:bg-hover", (row.stuck || overtime) && "assessment-stuck", waitingLate && !row.stuck && !overtime && "assessment-waiting-late")}
               title={row.stuck ? row.stuckError : overtime ? "On assessment for more than 3 hours" : waitingLate ? "Waiting for more than 3 days after the end time" : undefined}
             >
-              <NoCell value={(currentPage - 1) * PAGE_SIZE + index + 1} />
+              <NoCell value={index + 1} />
               <AssessmentCells
                 row={row}
                 canEditLaptop={canEditLaptop}
@@ -125,7 +117,6 @@ export function AssessmentsTable({
         </tbody>
       </table>
     </div>
-    <Pager page={currentPage} pages={pages} total={visible.length} query={query} />
     </div>
   );
 }
@@ -142,7 +133,6 @@ function NameFilter({ name, names }: { name: string; names: string[] }) {
         onChange={(event) => {
           const params = new URLSearchParams(window.location.search);
           params.delete("notice");
-          params.delete("page");
           if (event.target.value) params.set("name", event.target.value);
           else params.delete("name");
           const query = params.toString();
@@ -172,7 +162,6 @@ function LaptopFilter({ laptop }: { laptop: string }) {
         onChange={(event) => {
           const params = new URLSearchParams(window.location.search);
           params.delete("notice");
-          params.delete("page");
           if (event.target.value) params.set("laptop", event.target.value);
           else params.delete("laptop");
           const query = params.toString();
@@ -187,43 +176,6 @@ function LaptopFilter({ laptop }: { laptop: string }) {
         ))}
       </select>
     </label>
-  );
-}
-
-function Pager({
-  page,
-  pages,
-  total,
-  query,
-}: {
-  page: number;
-  pages: number;
-  total: number;
-  query: { status: string; name: string; laptop: string };
-}) {
-  if (total === 0) return null;
-  const start = (page - 1) * PAGE_SIZE + 1;
-  const end = Math.min(total, page * PAGE_SIZE);
-  const href = (next: number) => buildHref("/onboarding/assessments", { ...query, page: next <= 1 ? "" : String(next) });
-  return (
-    <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm">
-      <p className="text-muted">
-        {start}–{end} of {total}
-      </p>
-      {pages > 1 ? (
-        <div className="flex items-center gap-2">
-          <Link href={href(page - 1)} className={cn("rounded-md border border-line bg-surface px-3 py-1", page <= 1 && "pointer-events-none opacity-40")} aria-disabled={page <= 1}>
-            Previous
-          </Link>
-          <span className="tabular-nums text-muted">
-            {page} / {pages}
-          </span>
-          <Link href={href(page + 1)} className={cn("rounded-md border border-line bg-surface px-3 py-1", page >= pages && "pointer-events-none opacity-40")} aria-disabled={page >= pages}>
-            Next
-          </Link>
-        </div>
-      ) : null}
-    </div>
   );
 }
 
