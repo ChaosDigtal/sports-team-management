@@ -119,6 +119,39 @@ body {
   box-shadow: inset -2px 0 0 var(--stuck-edge), inset 0 2px 0 var(--stuck-edge), inset 0 -2px 0 var(--stuck-edge);
 }
 
+@property --wait-edge {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: transparent;
+}
+
+@keyframes assessment-waiting-late {
+  0%,
+  49% {
+    --wait-edge: #2563eb;
+  }
+  50%,
+  100% {
+    --wait-edge: transparent;
+  }
+}
+
+.assessment-waiting-late {
+  animation: assessment-waiting-late 5s steps(1, end) infinite;
+}
+
+.assessment-waiting-late > td {
+  box-shadow: inset 0 2px 0 var(--wait-edge), inset 0 -2px 0 var(--wait-edge);
+}
+
+.assessment-waiting-late > td:first-child {
+  box-shadow: inset 2px 0 0 var(--wait-edge), inset 0 2px 0 var(--wait-edge), inset 0 -2px 0 var(--wait-edge);
+}
+
+.assessment-waiting-late > td:last-child {
+  box-shadow: inset -2px 0 0 var(--wait-edge), inset 0 2px 0 var(--wait-edge), inset 0 -2px 0 var(--wait-edge);
+}
+
 .metric-link {
   background-color: var(--color-surface);
   transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;

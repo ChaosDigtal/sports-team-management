@@ -51,7 +51,7 @@ import {
   createWithdrawals,
   updateWithdrawalStatus,
 } from "@/lib/queries";
-import { elapsedHours, zonedLocalToUtc } from "@/lib/time";
+import { elapsedHours, jstNowWall, zonedLocalToUtc } from "@/lib/time";
 import type { AccountStatus, ActionState, CandidateStatus, LaptopStatus, PlatformRole, ProjectKind, TaskStatus, WithdrawalStatus } from "@/lib/types";
 
 function refresh() {
@@ -735,9 +735,23 @@ export async function saveAssessment(formData: FormData) {
   if ((startTime && !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(startTime)) || (endTime && !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(endTime))) {
     redirect("/onboarding/assessments");
   }
-  updateAssessment(id, { startTime, endTime, taskId, status, stage });
+  const existing = getAssessment(id);
+  if (!existing) redirect("/onboarding/assessments");
+  const updatedAt = assessmentUpdatedAt(existing.status, existing.updatedAt, status, readString(formData, "updatedAt", 40).value);
+  if (updatedAt == null) redirect(`/onboarding/assessments/${id}?notice=update-time`);
+  updateAssessment(id, { startTime, endTime, taskId, status, stage, updatedAt });
   refresh();
   redirect(`/onboarding/assessments/${id}?notice=saved`);
+}
+
+const WALL_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
+
+function assessmentUpdatedAt(previousStatus: string, previousUpdatedAt: string, nextStatus: string, manual: string) {
+  if (previousStatus === "Waiting" && nextStatus === "Failed") return jstNowWall();
+  if (previousStatus === "Waiting" && nextStatus === "Passed") return WALL_TIME.test(manual) ? manual : null;
+  if (previousStatus === "Passed" && nextStatus === "Passed") return WALL_TIME.test(manual) ? manual : null;
+  if (previousStatus === "Failed" && nextStatus === "Failed" && WALL_TIME.test(previousUpdatedAt)) return previousUpdatedAt;
+  return "";
 }
 
 export async function failAssessment(formData: FormData) {
@@ -753,6 +767,7 @@ export async function failAssessment(formData: FormData) {
     taskId: existing.taskId,
     status: "Failed",
     stage: "",
+    updatedAt: jstNowWall(),
   });
   refresh();
   redirect(`/onboarding/assessments/${id}?notice=saved`);

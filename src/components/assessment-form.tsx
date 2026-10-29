@@ -10,6 +10,8 @@ import { hintClass, inputClass, labelClass, primaryBtn, secondaryBtn } from "./u
 export function AssessmentForm({ assessment }: { assessment: Assessment }) {
   const [status, setStatus] = useState(assessment.status);
   const [stage, setStage] = useState(assessment.stage);
+  const manualUpdate = (assessment.status === "Waiting" && status === "Passed") || (assessment.status === "Passed" && status === "Passed");
+  const storedUpdate = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(assessment.updatedAt) ? assessment.updatedAt : "";
   return (
     <form action={saveAssessment} className="max-w-3xl rounded-lg border border-line bg-surface p-5">
       <input type="hidden" name="id" value={assessment.id} />
@@ -43,7 +45,17 @@ export function AssessmentForm({ assessment }: { assessment: Assessment }) {
             )}
           </span>
           {status === "On Assessment" ? <span className={hintClass}>{assessmentLabel(status, stage)}</span> : null}
+          {assessment.status === "Waiting" && status === "Failed" ? (
+            <span className={hintClass}>Update time is set to the current Japan time when you save.</span>
+          ) : null}
         </label>
+        {manualUpdate ? (
+          <label>
+            <span className={labelClass}>Update time</span>
+            <input className={inputClass} name="updatedAt" type="datetime-local" required defaultValue={assessment.status === "Passed" ? storedUpdate : ""} />
+            <span className={hintClass}>Required when Waiting changes to Passed. Enter it in Japan time.</span>
+          </label>
+        ) : null}
       </div>
       <div className="mt-5 flex justify-end gap-2">
         <Link href="/onboarding/assessments" className={secondaryBtn}>

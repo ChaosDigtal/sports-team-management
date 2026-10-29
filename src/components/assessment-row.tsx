@@ -5,7 +5,6 @@ import { useState } from "react";
 import { writeClipboard } from "@/components/copyable";
 import { LaptopStatusSelect } from "@/components/laptop-status-select";
 import { assessmentLabel, countryName } from "@/lib/constants";
-import { formatDateTime } from "@/lib/format";
 import type { Assessment, LaptopStatus } from "@/lib/types";
 import { failAssessment } from "@/server/actions";
 import { Badge, assessmentTone, personNameClass } from "./ui";
@@ -53,7 +52,7 @@ export function AssessmentCells({
       <td className="px-4 py-3 text-center break-all font-mono text-xs">{row.anydeskPassword || "—"}</td>
       <td className="px-4 py-3 text-center tabular-nums">{showTime(row.startTime)}</td>
       <td className="px-4 py-3 text-center tabular-nums">{showTime(row.endTime)}</td>
-      <td className="px-4 py-3 text-center tabular-nums">{formatDateTime(row.updatedAt)}</td>
+      <td className="px-4 py-3 text-center tabular-nums">{showUpdateTime(row.updatedAt)}</td>
       <td className="px-4 py-3 text-center font-mono text-xs">{row.taskId || "—"}</td>
       <td className="px-4 py-3 text-center">
         <span className="inline-flex flex-col items-center gap-1.5">
@@ -164,4 +163,9 @@ function CopyIcon() {
 
 function showTime(value: string) {
   return value ? value.replace("T", " ") : "—";
+}
+
+function showUpdateTime(value: string) {
+  if (!value || /z$/i.test(value)) return "—";
+  return value.replace("T", " ");
 }

@@ -84,9 +84,9 @@ export function getCandidate(id: string) {
 function insertReady(candidateId: string) {
   getDb()
     .prepare(
-      `INSERT INTO "DA_assessments" (candidate_id, start_time, end_time, task_id, status, stage, password, updated_at) VALUES (?, '', '', '', 'Ready', '', ?, ?)`,
+      `INSERT INTO "DA_assessments" (candidate_id, start_time, end_time, task_id, status, stage, password, updated_at) VALUES (?, '', '', '', 'Ready', '', ?, '')`,
     )
-    .run(candidateId, assessmentPassword(), new Date().toISOString());
+    .run(candidateId, assessmentPassword());
 }
 
 function assessmentPassword() {
@@ -273,7 +273,10 @@ export function getAssessment(id: number) {
   return row ? mapAssessment(row) : null;
 }
 
-export function updateAssessment(id: number, input: { startTime: string; endTime: string; taskId: string; status: string; stage: string }) {
+export function updateAssessment(
+  id: number,
+  input: { startTime: string; endTime: string; taskId: string; status: string; stage: string; updatedAt: string },
+) {
   transaction(() => {
     const db = getDb();
     const existing = db.prepare(`SELECT status FROM "DA_assessments" WHERE id = ?`).get(id) as Row | undefined;
@@ -285,7 +288,7 @@ export function updateAssessment(id: number, input: { startTime: string; endTime
       input.taskId,
       input.status,
       stage,
-      new Date().toISOString(),
+      input.updatedAt,
       id,
     );
     if (input.status === "Failed" && text(existing.status) !== "Failed") {

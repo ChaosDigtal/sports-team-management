@@ -234,6 +234,11 @@ export function wipElapsedMinutes(startIso: string, accountTimeZone: string, now
   return Math.max(0, (jstMs - localMs) / 60000);
 }
 
+export function jstNowWall(now = new Date()) {
+  const jst = zonedParts(now, "Asia/Tokyo");
+  return `${jst.year}-${pad(jst.month)}-${pad(jst.day)}T${pad(jst.hour)}:${pad(jst.minute)}`;
+}
+
 export function jstWallElapsedMinutes(startWall: string, now = new Date()) {
   const wall = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(startWall.trim());
   if (!wall) return null;

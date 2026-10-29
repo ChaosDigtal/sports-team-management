@@ -60,30 +60,26 @@ function applyNotification(notification: AssessmentNotification) {
   const id = resolveAssessmentId(notification);
   if (id == null) return false;
   notification.id = id;
-  const updatedAt = new Date().toISOString();
   if (notification.event === "started") {
-    db.prepare(`UPDATE "DA_assessments" SET status = 'Started', start_time = ?, stage = '', updated_at = ? WHERE id = ?`).run(
+    db.prepare(`UPDATE "DA_assessments" SET status = 'Started', start_time = ?, stage = '', updated_at = '' WHERE id = ?`).run(
       toJstLocal(notification["started at"]),
-      updatedAt,
       notification.id,
     );
     return true;
   }
   if (notification.event === "updated") {
-    db.prepare(`UPDATE "DA_assessments" SET status = 'On Assessment', stage = ?, stuck = 0, stuck_error = '', updated_at = ? WHERE id = ?`).run(
+    db.prepare(`UPDATE "DA_assessments" SET status = 'On Assessment', stage = ?, stuck = 0, stuck_error = '', updated_at = '' WHERE id = ?`).run(
       notification.stage ?? "",
-      updatedAt,
       notification.id,
     );
     return true;
   }
   if (notification.event === "stuck") {
-    db.prepare(`UPDATE "DA_assessments" SET stuck = 1, stuck_error = ?, updated_at = ? WHERE id = ?`).run(notification.error ?? "", updatedAt, notification.id);
+    db.prepare(`UPDATE "DA_assessments" SET stuck = 1, stuck_error = ? WHERE id = ?`).run(notification.error ?? "", notification.id);
     return true;
   }
-  db.prepare(`UPDATE "DA_assessments" SET status = 'Waiting', end_time = ?, stage = '', stuck = 0, stuck_error = '', updated_at = ? WHERE id = ?`).run(
+  db.prepare(`UPDATE "DA_assessments" SET status = 'Waiting', end_time = ?, stage = '', stuck = 0, stuck_error = '', updated_at = '' WHERE id = ?`).run(
     toJstLocal(notification["ended at"]),
-    updatedAt,
     notification.id,
   );
   return true;

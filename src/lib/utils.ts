@@ -51,5 +51,6 @@ export function noticeText(notice: string) {
   if (notice === "locked") return "That login stays. Keep at least one super admin, and keep your own login.";
   if (notice === "withdrawn") return "Withdrawal recorded. Status is Processing.";
   if (notice === "withdraw-empty") return "Nothing is available to withdraw yet.";
+  if (notice === "update-time") return "Add an update time to mark this assessment Passed.";
   return "";
 }

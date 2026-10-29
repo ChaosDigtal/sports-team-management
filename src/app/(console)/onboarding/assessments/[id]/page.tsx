@@ -65,6 +65,7 @@ export default async function AssessmentPage({
               { label: "Start time", value: showTime(assessment.startTime) },
               { label: "End time", value: showTime(assessment.endTime) },
               { label: "Task ID", value: blank(assessment.taskId) },
+              { label: "Update time", value: showTime(assessment.updatedAt.endsWith("Z") ? "" : assessment.updatedAt) },
               { label: "Status", value: assessmentLabel(assessment.status, assessment.stage) },
             ]}
           />

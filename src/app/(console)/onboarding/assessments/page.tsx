@@ -3,6 +3,7 @@ import { AssessmentsTable } from "@/components/assessments-table";
 import { Notice, PageHeader } from "@/components/ui";
 import { canEditLaptopStatus, isManager } from "@/lib/access";
 import { requireUser } from "@/lib/auth";
+import { LAPTOP_STATUSES } from "@/lib/constants";
 import { listAssessments } from "@/lib/candidates";
 import { buildHref, cn, one } from "@/lib/utils";
 import type { SearchParams } from "@/lib/types";
@@ -16,6 +17,9 @@ export default async function AssessmentsPage({ searchParams }: { searchParams: 
   const params = await searchParams;
   const status = FILTERS.includes(one(params.status) as (typeof FILTERS)[number]) ? one(params.status) : "";
   const name = one(params.name);
+  const laptop = LAPTOP_STATUSES.includes(one(params.laptop) as (typeof LAPTOP_STATUSES)[number]) ? one(params.laptop) : "";
+  const rawPage = Number(one(params.page));
+  const page = Number.isInteger(rawPage) && rawPage > 0 ? rawPage : 1;
   const rows = listAssessments();
 
   return (
@@ -30,7 +34,7 @@ export default async function AssessmentsPage({ searchParams }: { searchParams: 
         {[{ id: "", label: "All" }, ...FILTERS.map((item) => ({ id: item, label: item }))].map((option) => (
           <Link
             key={option.label}
-            href={buildHref("/onboarding/assessments", { status: option.id, name })}
+            href={buildHref("/onboarding/assessments", { status: option.id, name, laptop })}
             className={cn(
               "rounded-full px-3 py-1 text-sm",
               status === option.id ? "bg-inverse text-inverse-ink" : "border border-line bg-surface text-muted hover:text-ink",
@@ -40,7 +44,7 @@ export default async function AssessmentsPage({ searchParams }: { searchParams: 
           </Link>
         ))}
       </div>
-      <AssessmentsTable rows={rows} filter={status} name={name} canEditLaptop={canEditLaptopStatus(user)} canFailWaiting={!isManager(user)} />
+      <AssessmentsTable rows={rows} filter={status} name={name} laptop={laptop} page={page} canEditLaptop={canEditLaptopStatus(user)} canFailWaiting={!isManager(user)} />
     </div>
   );
 }
