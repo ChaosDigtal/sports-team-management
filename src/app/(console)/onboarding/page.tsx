@@ -4,7 +4,7 @@ import { Notice, PageHeader, primaryBtn } from "@/components/ui";
 import { canEditLaptopStatus, isManager } from "@/lib/access";
 import { requireUser } from "@/lib/auth";
 import { listCandidates } from "@/lib/candidates";
-import { CANDIDATE_STATUSES, COUNTRIES } from "@/lib/constants";
+import { CANDIDATE_STATUSES, COUNTRIES, LAPTOP_STATUSES } from "@/lib/constants";
 import { buildHref, cn, one } from "@/lib/utils";
 import type { Candidate, SearchParams } from "@/lib/types";
 
@@ -20,7 +20,8 @@ export default async function CandidatesPage({ searchParams }: { searchParams: P
   const country = COUNTRIES.some((item) => item.id === one(params.country)) ? one(params.country) : "";
   const noResume = one(params.noResume) === "1";
   const noLinkedin = one(params.noLinkedin) === "1";
-  const candidates = listCandidates({ status, country, noResume, noLinkedin }).map((candidate) => (systemAdmin ? candidate : hideShare(candidate)));
+  const laptop = LAPTOP_STATUSES.includes(one(params.laptop) as (typeof LAPTOP_STATUSES)[number]) ? one(params.laptop) : "";
+  const candidates = listCandidates({ status, country, noResume, noLinkedin, laptop }).map((candidate) => (systemAdmin ? candidate : hideShare(candidate)));
 
   return (
     <div>
@@ -40,24 +41,31 @@ export default async function CandidatesPage({ searchParams }: { searchParams: P
         candidates={candidates}
         canSeeShare={systemAdmin}
         canEditLaptop={canEditLaptopStatus(user)}
-        search={{ q, status, country, noResume, noLinkedin }}
+        search={{ q, status, country, noResume, noLinkedin, laptop }}
         filters={
           <>
             <FilterRow
               label="Status"
               current={status}
               param="status"
-              query={{ q, status, country, noResume, noLinkedin }}
+              query={{ q, status, country, noResume, noLinkedin, laptop }}
               options={[{ id: "", label: "All" }, ...CANDIDATE_STATUSES.map((item) => ({ id: item, label: item }))]}
             />
             <FilterRow
               label="Country"
               current={country}
               param="country"
-              query={{ q, status, country, noResume, noLinkedin }}
+              query={{ q, status, country, noResume, noLinkedin, laptop }}
               options={[{ id: "", label: "All" }, ...COUNTRIES.map((item) => ({ id: item.id, label: item.id }))]}
             />
-            <ProfileFilters q={q} status={status} country={country} noResume={noResume} noLinkedin={noLinkedin} />
+            <FilterRow
+              label="Laptop status"
+              current={laptop}
+              param="laptop"
+              query={{ q, status, country, noResume, noLinkedin, laptop }}
+              options={[{ id: "", label: "All" }, ...LAPTOP_STATUSES.map((item) => ({ id: item, label: item }))]}
+            />
+            <ProfileFilters q={q} status={status} country={country} noResume={noResume} noLinkedin={noLinkedin} laptop={laptop} />
           </>
         }
       />
@@ -78,7 +86,7 @@ function FilterRow({
 }: {
   label: string;
   current: string;
-  param: "status" | "country";
+  param: "status" | "country" | "laptop";
   query: CandidateQuery;
   options: Array<{ id: string; label: string }>;
 }) {
@@ -105,7 +113,7 @@ function FilterRow({
   );
 }
 
-function ProfileFilters({ q, status, country, noResume, noLinkedin }: CandidateQuery) {
+function ProfileFilters({ q, status, country, noResume, noLinkedin, laptop }: CandidateQuery) {
   const chips = [
     { key: "noResume" as const, label: "No Resume", active: noResume },
     { key: "noLinkedin" as const, label: "No LinkedIn", active: noLinkedin },
@@ -116,7 +124,7 @@ function ProfileFilters({ q, status, country, noResume, noLinkedin }: CandidateQ
       {chips.map((chip) => (
         <Link
           key={chip.key}
-          href={candidateHref({ q, status, country, noResume, noLinkedin, [chip.key]: !chip.active })}
+          href={candidateHref({ q, status, country, noResume, noLinkedin, laptop, [chip.key]: !chip.active })}
           className={cn(
             "rounded-full px-3 py-1 text-sm",
             chip.active ? "bg-inverse text-inverse-ink" : "border border-line bg-surface text-muted hover:text-ink",
@@ -129,13 +137,14 @@ function ProfileFilters({ q, status, country, noResume, noLinkedin }: CandidateQ
   );
 }
 
-type CandidateQuery = { q: string; status: string; country: string; noResume: boolean; noLinkedin: boolean };
+type CandidateQuery = { q: string; status: string; country: string; noResume: boolean; noLinkedin: boolean; laptop: string };
 
 function candidateHref(query: CandidateQuery) {
   return buildHref("/onboarding", {
     q: query.q,
     status: query.status,
     country: query.country,
+    laptop: query.laptop,
     noResume: query.noResume ? "1" : "",
     noLinkedin: query.noLinkedin ? "1" : "",
   });

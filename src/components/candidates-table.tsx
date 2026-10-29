@@ -84,7 +84,7 @@ export function CandidatesTable({
   canSeeShare: boolean;
   canEditLaptop: boolean;
   filters: ReactNode;
-  search: { q: string; status: string; country: string; noResume: boolean; noLinkedin: boolean };
+  search: { q: string; status: string; country: string; noResume: boolean; noLinkedin: boolean; laptop: string };
 }) {
   const storageKey = canSeeShare ? "da-candidate-columns-admin" : "da-candidate-columns-member";
   const defaults = canSeeShare ? ADMIN_DEFAULT : MEMBER_DEFAULT;
@@ -133,7 +133,7 @@ export function CandidatesTable({
     ...COLUMNS.filter((column) => !["name", "whatsapp", "telegram", "laptopStatus", "emailForwarding", "status"].includes(column.id) && selected.includes(column.id) && (!column.managersOnly || canSeeShare)),
     ...COLUMNS.filter((column) => column.id === "status" && selected.includes("status")),
   ];
-  const chipsOn = Boolean(search.status || search.country || search.noResume || search.noLinkedin);
+  const chipsOn = Boolean(search.status || search.country || search.noResume || search.noLinkedin || search.laptop);
   const needle = query.replace(/[%_]/g, "").trim().toLowerCase();
   const rows = needle ? items.filter((candidate) => candidateSearchText(candidate).includes(needle)) : items;
 

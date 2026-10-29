@@ -51,7 +51,7 @@ function mapCandidate(row: Row): Candidate {
   };
 }
 
-export function listCandidates(filters?: { status?: string; country?: string; q?: string; noResume?: boolean; noLinkedin?: boolean }) {
+export function listCandidates(filters?: { status?: string; country?: string; q?: string; noResume?: boolean; noLinkedin?: boolean; laptop?: string }) {
   const where: string[] = [];
   const params: string[] = [];
   if (filters?.status) {
@@ -64,6 +64,10 @@ export function listCandidates(filters?: { status?: string; country?: string; q?
   }
   if (filters?.noResume) where.push("TRIM(resume_url) = ''");
   if (filters?.noLinkedin) where.push("TRIM(linkedin_url) = ''");
+  if (filters?.laptop) {
+    where.push("laptop_status = ?");
+    params.push(filters.laptop);
+  }
   const q = (filters?.q ?? "").replace(/[%_]/g, "").trim();
   if (q) {
     const columns = ["id", "name", "whatsapp", "telegram", "email", "anydesk_id", "phone", "country", "status", "linkedin_email", "laptop_pin", "referral_link"];
