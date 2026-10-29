@@ -28,6 +28,7 @@ export function canEditLaptopStatus(user: SessionUser) {
 export function candidateStatusChoices(user: SessionUser, current?: CandidateStatus): CandidateStatus[] {
   if (isManager(user)) return [...CANDIDATE_STATUSES];
   if (current === "Incomplete") return ["Incomplete", "In Review"];
+  if (current === "Active" && user.daOnboarding) return ["Active", "Incomplete"];
   return current ? [current] : ["Incomplete"];
 }
 

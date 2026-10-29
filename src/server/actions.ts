@@ -629,7 +629,7 @@ export async function saveCandidate(_prev: ActionState, formData: FormData): Pro
   if (!CANDIDATE_STATUSES.includes(status.value as CandidateStatus)) return { error: "Choose a status." };
   if (!LAPTOP_STATUSES.includes(laptopStatus.value as LaptopStatus)) return { error: "Choose a laptop status." };
   if (!candidateStatusChoices(user, existing?.status).includes(status.value as CandidateStatus)) {
-    return { error: "You can change Incomplete to In Review. Active and Client No Longer Interested need a platform admin." };
+    return { error: "You can change Incomplete to In Review, or Active to Incomplete. Other status changes need a platform admin." };
   }
   if (!CHROME_REMOTE_OPTIONS.some((option) => option.value === chromeRemote.value)) return { error: "Choose a Chrome Remote Desktop login." };
   if (gender.value && !GENDERS.includes(gender.value)) return { error: "Choose a gender." };
