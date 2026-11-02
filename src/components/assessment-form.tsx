@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { ASSESSMENT_STATUSES, assessmentLabel } from "@/lib/constants";
 import type { Assessment } from "@/lib/types";
+import { jstNowWall } from "@/lib/time";
 import { saveAssessment, setAssessmentStatus } from "@/server/actions";
 import { hintClass, inputClass, labelClass, primaryBtn, secondaryBtn } from "./ui";
 
@@ -18,20 +19,30 @@ export function AssessmentForm({
 }) {
   const [status, setStatus] = useState(assessment.status);
   const [stage, setStage] = useState(assessment.stage);
+  const [startTime, setStartTime] = useState(assessment.startTime);
+  const [endTime, setEndTime] = useState(assessment.endTime);
   const manualUpdate = (assessment.status === "Waiting" && status === "Passed") || (assessment.status === "Passed" && status === "Passed");
   const storedUpdate = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(assessment.updatedAt) ? assessment.updatedAt : "";
   return (
     <form action={saveAssessment} className="max-w-3xl rounded-lg border border-line bg-surface p-5">
       <input type="hidden" name="id" value={assessment.id} />
       <div className="grid gap-4 sm:grid-cols-2">
-        <label>
-          <span className={labelClass}>Start time</span>
-          <input className={inputClass} name="startTime" type="datetime-local" defaultValue={assessment.startTime} />
-        </label>
-        <label>
-          <span className={labelClass}>End time</span>
-          <input className={inputClass} name="endTime" type="datetime-local" defaultValue={assessment.endTime} />
-        </label>
+        <TimeField
+          label="Start time"
+          name="startTime"
+          value={startTime}
+          onChange={setStartTime}
+          required={status === "On Assessment"}
+          hint={status === "On Assessment" ? "Required for On Assessment. Japan time." : undefined}
+        />
+        <TimeField
+          label="End time"
+          name="endTime"
+          value={endTime}
+          onChange={setEndTime}
+          required={status === "Waiting"}
+          hint={status === "Waiting" ? "Required for Waiting. Japan time." : undefined}
+        />
         <label>
           <span className={labelClass}>Task ID</span>
           <input className={inputClass} name="taskId" defaultValue={assessment.taskId} />
@@ -97,6 +108,8 @@ export function AssessmentForm({
 export function AssessmentStatusForm({ assessment }: { assessment: Assessment }) {
   const [status, setStatus] = useState(assessment.status);
   const [stage, setStage] = useState(assessment.stage);
+  const [startTime, setStartTime] = useState(assessment.startTime);
+  const [endTime, setEndTime] = useState(assessment.endTime);
   const manualUpdate = (assessment.status === "Waiting" && status === "Passed") || (assessment.status === "Passed" && status === "Passed");
   const storedUpdate = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(assessment.updatedAt) ? assessment.updatedAt : "";
   return (
@@ -124,6 +137,26 @@ export function AssessmentStatusForm({ assessment }: { assessment: Assessment })
           <span className={hintClass}>Update time is set to the current Japan time when you save.</span>
         ) : null}
       </label>
+      {status === "On Assessment" ? (
+        <TimeField
+          label="Start time"
+          name="startTime"
+          value={startTime}
+          onChange={setStartTime}
+          required
+          hint="Required for On Assessment. Japan time."
+        />
+      ) : null}
+      {status === "Waiting" ? (
+        <TimeField
+          label="End time"
+          name="endTime"
+          value={endTime}
+          onChange={setEndTime}
+          required
+          hint="Required for Waiting. Japan time."
+        />
+      ) : null}
       {manualUpdate ? (
         <label>
           <span className={labelClass}>Update time</span>
@@ -137,5 +170,40 @@ export function AssessmentStatusForm({ assessment }: { assessment: Assessment })
         </button>
       </div>
     </form>
+  );
+}
+
+function TimeField({
+  label,
+  name,
+  value,
+  onChange,
+  required,
+  hint,
+}: {
+  label: string;
+  name: string;
+  value: string;
+  onChange: (value: string) => void;
+  required?: boolean;
+  hint?: string;
+}) {
+  return (
+    <label>
+      <span className={labelClass}>{label}</span>
+      <div className="flex items-center gap-2">
+        <div className="min-w-0 flex-1">
+          <input className={inputClass} name={name} type="datetime-local" value={value} required={required} onChange={(event) => onChange(event.target.value)} />
+        </div>
+        <button
+          type="button"
+          className="inline-flex h-8 shrink-0 items-center rounded-md border border-line bg-surface px-2 text-xs font-medium hover:bg-canvas"
+          onClick={() => onChange(jstNowWall())}
+        >
+          Use current date time
+        </button>
+      </div>
+      {hint ? <span className={hintClass}>{hint}</span> : null}
+    </label>
   );
 }

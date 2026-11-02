@@ -10,7 +10,7 @@ import type { SearchParams } from "@/lib/types";
 
 export const metadata = { title: "Assessments" };
 
-const FILTERS = ["Failed", "Ready", "Passed", "Stuck", "On Assessment", "Waiting"] as const;
+const FILTERS = ["Failed", "Ready", "Started", "Passed", "Stuck", "On Assessment", "Waiting"] as const;
 
 export default async function AssessmentsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const user = await requireUser();

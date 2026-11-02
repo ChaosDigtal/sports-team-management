@@ -730,7 +730,9 @@ export async function saveAssessment(formData: FormData) {
   const taskId = readString(formData, "taskId", 80).value;
   if (!Number.isInteger(id) || id <= 0) redirect("/onboarding/assessments");
   if (!ASSESSMENT_STATUSES.includes(status as (typeof ASSESSMENT_STATUSES)[number])) redirect("/onboarding/assessments");
-  if ((startTime && !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(startTime)) || (endTime && !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(endTime))) {
+  if (status === "On Assessment" && !WALL_TIME.test(startTime)) redirect(`/onboarding/assessments/${id}?notice=start-time`);
+  if (status === "Waiting" && !WALL_TIME.test(endTime)) redirect(`/onboarding/assessments/${id}?notice=end-time`);
+  if ((startTime && !WALL_TIME.test(startTime)) || (endTime && !WALL_TIME.test(endTime))) {
     redirect("/onboarding/assessments");
   }
   const existing = getAssessment(id);
@@ -796,9 +798,27 @@ export async function setAssessmentStatus(formData: FormData) {
     destination.searchParams.set("notice", "update-time");
     redirect(assessmentHref(destination));
   }
+  const submittedStart = readString(formData, "startTime", 40).value;
+  const submittedEnd = readString(formData, "endTime", 40).value;
+  let startTime = existing.startTime;
+  let endTime = existing.endTime;
+  if (status === "On Assessment") {
+    if (!WALL_TIME.test(submittedStart)) {
+      destination.searchParams.set("notice", "start-time");
+      redirect(assessmentHref(destination));
+    }
+    startTime = submittedStart;
+  }
+  if (status === "Waiting") {
+    if (!WALL_TIME.test(submittedEnd)) {
+      destination.searchParams.set("notice", "end-time");
+      redirect(assessmentHref(destination));
+    }
+    endTime = submittedEnd;
+  }
   updateAssessment(id, {
-    startTime: existing.startTime,
-    endTime: existing.endTime,
+    startTime,
+    endTime,
     taskId: existing.taskId,
     status,
     stage,
