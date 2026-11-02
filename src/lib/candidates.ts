@@ -88,7 +88,7 @@ export function getCandidate(id: string) {
 function insertReady(candidateId: string) {
   getDb()
     .prepare(
-      `INSERT INTO "DA_assessments" (candidate_id, start_time, end_time, task_id, status, stage, password, updated_at) VALUES (?, '', '', '', 'Ready', '', ?, '')`,
+      `INSERT INTO "DA_assessments" (candidate_id, start_time, end_time, task_id, status, stage, password, updated_at, written_by) VALUES (?, '', '', '', 'Ready', '', ?, '', '')`,
     )
     .run(candidateId, assessmentPassword());
 }
@@ -206,9 +206,12 @@ export function updateCandidate(id: string, input: CandidateInput) {
         id,
       );
     const previous = existing?.status;
-    const leavesActive = previous === "Active" && (input.status === "Incomplete" || input.status === "In Review" || input.status === "Client No Longer Interested");
     const becomesActive = input.status === "Active" && (previous === "Incomplete" || previous === "In Review" || previous === "Client No Longer Interested");
-    if (leavesActive) removeReady(id);
+    const dropsReady =
+      input.status === "Incomplete" ||
+      input.status === "Client No Longer Interested" ||
+      (previous === "Active" && input.status === "In Review");
+    if (dropsReady) removeReady(id);
     if (becomesActive) insertReady(id);
   });
 }
@@ -226,7 +229,7 @@ const ASSESSMENT_SELECT = `
     c.anydesk_id AS anydesk_id, c.anydesk_password AS anydesk_password,
     c.ultraviewer_id AS ultraviewer_id, c.ultraviewer_password AS ultraviewer_password,
     s.start_time AS start_time, s.end_time AS end_time, s.task_id AS task_id, s.status AS status, s.stage AS stage,
-    s.stuck AS stuck, s.stuck_error AS stuck_error, s.password AS password, s.updated_at AS updated_at, c.email AS email,
+    s.stuck AS stuck, s.stuck_error AS stuck_error, s.password AS password, s.updated_at AS updated_at, s.written_by AS written_by, c.email AS email,
     c.dob AS dob, c.gender AS gender, c.race AS race, c.country AS country, c.linkedin_url AS linkedin_url, c.resume_url AS resume_url,
     c.email_forwarding AS email_forwarding, c.laptop_status AS laptop_status, c.status AS candidate_status, c.referral_link AS referral_link
   FROM "DA_assessments" s
@@ -251,6 +254,7 @@ function mapAssessment(row: Row): Assessment {
     stuck: Number(row.stuck) === 1,
     stuckError: text(row.stuck_error),
     updatedAt: text(row.updated_at),
+    writtenBy: text(row.written_by),
     email: text(row.email),
     password: text(row.password),
     dob: text(row.dob),
@@ -270,6 +274,12 @@ export function setCandidateLaptopStatus(id: string, laptopStatus: LaptopStatus)
   getDb().prepare(`UPDATE "DA_candidates" SET laptop_status = ? WHERE id = ?`).run(laptopStatus, id);
 }
 
+export function writtenByForStatus(previousStatus: string, nextStatus: string, previousWrittenBy: string, actorName: string) {
+  if (previousStatus === "Ready" && (nextStatus === "Started" || nextStatus === "On Assessment")) return actorName;
+  if (nextStatus === "Ready" && (previousStatus === "Started" || previousStatus === "On Assessment")) return "";
+  return previousWrittenBy;
+}
+
 export function listAssessments() {
   const rows = getDb().prepare(`${ASSESSMENT_SELECT} ORDER BY s.id`).all() as Row[];
   return rows.map(mapAssessment);
@@ -282,20 +292,21 @@ export function getAssessment(id: number) {
 
 export function updateAssessment(
   id: number,
-  input: { startTime: string; endTime: string; taskId: string; status: string; stage: string; updatedAt: string },
+  input: { startTime: string; endTime: string; taskId: string; status: string; stage: string; updatedAt: string; writtenBy: string },
 ) {
   transaction(() => {
     const db = getDb();
     const existing = db.prepare(`SELECT status FROM "DA_assessments" WHERE id = ?`).get(id) as Row | undefined;
     if (!existing) return;
     const stage = input.status === "On Assessment" ? input.stage : "";
-    db.prepare(`UPDATE "DA_assessments" SET start_time = ?, end_time = ?, task_id = ?, status = ?, stage = ?, updated_at = ? WHERE id = ?`).run(
+    db.prepare(`UPDATE "DA_assessments" SET start_time = ?, end_time = ?, task_id = ?, status = ?, stage = ?, updated_at = ?, written_by = ? WHERE id = ?`).run(
       input.startTime,
       input.endTime,
       input.taskId,
       input.status,
       stage,
       input.updatedAt,
+      input.writtenBy,
       id,
     );
     if (input.status === "Failed" && text(existing.status) !== "Failed") {

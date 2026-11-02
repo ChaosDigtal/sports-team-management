@@ -3,13 +3,13 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AssessmentCells } from "@/components/assessment-row";
-import { EmptyRow, NoCell, NoHead, thClass } from "@/components/ui";
+import { EmptyRow, NoCell, NoHead, inputClass, thClass } from "@/components/ui";
 import { LAPTOP_STATUSES } from "@/lib/constants";
 import type { Assessment, AssessmentNotification } from "@/lib/types";
 import { jstWallElapsedMinutes } from "@/lib/time";
 import { cn } from "@/lib/utils";
 
-const columns = ["ID", "Name", "Referral Link", "Email", "Password", "WhatsApp", "Laptop Status", "Email Forwarding", "AnyDesk ID", "AnyDesk password", "Start time", "End time", "Update time", "UltraViewer ID", "UltraViewer password", "Status"];
+const columns = ["ID", "Name", "Referral Link", "Email", "Password", "WhatsApp", "Laptop Status", "Email Forwarding", "AnyDesk ID", "AnyDesk password", "Start time", "End time", "Update time", "UltraViewer ID", "UltraViewer password", "Written By", "Status"];
 const WAITING_LATE_MINUTES = 3 * 24 * 60;
 
 export function AssessmentsTable({
@@ -18,6 +18,7 @@ export function AssessmentsTable({
   name,
   laptop,
   canEditLaptop,
+  canEditStatus,
   canFailWaiting,
 }: {
   rows: Assessment[];
@@ -25,9 +26,11 @@ export function AssessmentsTable({
   name: string;
   laptop: string;
   canEditLaptop: boolean;
+  canEditStatus: boolean;
   canFailWaiting: boolean;
 }) {
   const [items, setItems] = useState(rows);
+  const [query, setQuery] = useState("");
   const [now, setNow] = useState<Date | null>(null);
 
   useEffect(() => {
@@ -62,12 +65,17 @@ export function AssessmentsTable({
     };
   }, []);
 
+  const needle = query.replace(/[%_]/g, "").trim().toLowerCase();
   const visible = items.filter((row) => {
     if (name && row.name !== name) return false;
     if (laptop && row.laptopStatus !== laptop) return false;
-    if (!filter) return true;
-    if (filter === "Stuck") return row.stuck;
-    return row.status === filter;
+    if (filter === "Stuck" && !row.stuck) return false;
+    if (filter && filter !== "Stuck" && row.status !== filter) return false;
+    if (!needle) return true;
+    const haystack = [row.id, row.name, row.email, row.password, row.whatsapp, row.anydeskId, row.anydeskPassword, row.ultraviewerId, row.ultraviewerPassword, row.referralLink, row.status, row.stage, row.writtenBy, row.laptopStatus]
+      .join(" ")
+      .toLowerCase();
+    return haystack.includes(needle);
   });
   const names = [...new Set(items.map((row) => row.name))].sort((left, right) => left.localeCompare(right));
 
@@ -76,6 +84,14 @@ export function AssessmentsTable({
     <div className="mb-3 flex flex-wrap items-center gap-4">
       <NameFilter name={name} names={names} />
       <LaptopFilter laptop={laptop} />
+      <div className="w-56">
+        <input className={inputClass} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search" aria-label="Search assessments" />
+      </div>
+      {query ? (
+        <button type="button" className="text-sm font-medium text-accent" onClick={() => setQuery("")}>
+          Clear
+        </button>
+      ) : null}
     </div>
     <div className="overflow-x-auto rounded-lg border border-line bg-surface">
       <table className="w-full border-collapse text-sm">
@@ -90,7 +106,7 @@ export function AssessmentsTable({
           </tr>
         </thead>
         <tbody className="divide-y divide-line">
-          {visible.length === 0 ? <EmptyRow colSpan={columns.length + 1}>{filter || name || laptop ? "No assessments match." : "No assessments yet."}</EmptyRow> : null}
+          {visible.length === 0 ? <EmptyRow colSpan={columns.length + 1}>{filter || name || laptop || needle ? "No assessments match." : "No assessments yet."}</EmptyRow> : null}
           {visible.map((row, index) => {
             const elapsed = now ? jstWallElapsedMinutes(row.startTime, now) : null;
             const sinceEnd = now ? jstWallElapsedMinutes(row.endTime, now) : null;
@@ -106,6 +122,7 @@ export function AssessmentsTable({
               <AssessmentCells
                 row={row}
                 canEditLaptop={canEditLaptop}
+                canEditStatus={canEditStatus}
                 canFailWaiting={canFailWaiting}
                 onLaptop={(candidateId, laptopStatus) =>
                   setItems((current) => current.map((item) => (item.candidateId === candidateId ? { ...item, laptopStatus } : item)))
@@ -183,14 +200,44 @@ function applyNotification(rows: Assessment[], notification: AssessmentNotificat
   return rows.map((row) => {
     if (row.id !== notification.id) return row;
     if (notification.event === "started") {
-      return { ...row, status: "Started", stage: "", startTime: notification["started at"] || row.startTime, updatedAt: "" };
+      return {
+        ...row,
+        status: "Started",
+        stage: "",
+        startTime: notification["started at"] || row.startTime,
+        updatedAt: "",
+        writtenBy: writtenByFromSignal(row.status, "Started", row.writtenBy),
+      };
     }
     if (notification.event === "updated") {
-      return { ...row, status: "On Assessment", stage: notification.stage ?? "", stuck: false, stuckError: "", updatedAt: "" };
+      return {
+        ...row,
+        status: "On Assessment",
+        stage: notification.stage ?? "",
+        stuck: false,
+        stuckError: "",
+        updatedAt: "",
+        writtenBy: writtenByFromSignal(row.status, "On Assessment", row.writtenBy),
+      };
     }
     if (notification.event === "stuck") {
       return { ...row, stuck: true, stuckError: notification.error ?? "" };
     }
-    return { ...row, status: "Waiting", stage: "", endTime: notification["ended at"] || row.endTime, stuck: false, stuckError: "", updatedAt: "" };
+    return {
+      ...row,
+      status: "Waiting",
+      stage: "",
+      endTime: notification["ended at"] || row.endTime,
+      stuck: false,
+      stuckError: "",
+      updatedAt: "",
+      writtenBy: writtenByFromSignal(row.status, "Waiting", row.writtenBy),
+    };
   });
+}
+
+function writtenByFromSignal(previousStatus: string, nextStatus: string, previousWrittenBy: string) {
+  if (previousStatus === "Ready" && (nextStatus === "Started" || nextStatus === "On Assessment")) return "Bot";
+  if (nextStatus === "Ready" && (previousStatus === "Started" || previousStatus === "On Assessment")) return "";
+  return previousWrittenBy;
 }

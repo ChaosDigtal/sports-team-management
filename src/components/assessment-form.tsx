@@ -45,6 +45,7 @@ export function AssessmentForm({ assessment }: { assessment: Assessment }) {
             )}
           </span>
           {status === "On Assessment" ? <span className={hintClass}>{assessmentLabel(status, stage)}</span> : null}
+          <span className={hintClass}>Written by {assessment.writtenBy || "—"}</span>
           {assessment.status === "Waiting" && status === "Failed" ? (
             <span className={hintClass}>Update time is set to the current Japan time when you save.</span>
           ) : null}

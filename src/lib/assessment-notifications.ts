@@ -1,4 +1,5 @@
 import { getDb } from "./db";
+import { writtenByForStatus } from "./candidates";
 import type { AssessmentNotification } from "./types";
 
 const NOTIFY_URL = "https://www.hehehe1012.com/da-starter-assessment-get-notifications";
@@ -60,16 +61,22 @@ function applyNotification(notification: AssessmentNotification) {
   const id = resolveAssessmentId(notification);
   if (id == null) return false;
   notification.id = id;
+  const current = db.prepare(`SELECT status, written_by FROM "DA_assessments" WHERE id = ?`).get(notification.id) as
+    | { status: string; written_by: string }
+    | undefined;
+  if (!current) return false;
   if (notification.event === "started") {
-    db.prepare(`UPDATE "DA_assessments" SET status = 'Started', start_time = ?, stage = '', updated_at = '' WHERE id = ?`).run(
+    db.prepare(`UPDATE "DA_assessments" SET status = 'Started', start_time = ?, stage = '', updated_at = '', written_by = ? WHERE id = ?`).run(
       toJstLocal(notification["started at"]),
+      writtenByForStatus(current.status, "Started", current.written_by, "Bot"),
       notification.id,
     );
     return true;
   }
   if (notification.event === "updated") {
-    db.prepare(`UPDATE "DA_assessments" SET status = 'On Assessment', stage = ?, stuck = 0, stuck_error = '', updated_at = '' WHERE id = ?`).run(
+    db.prepare(`UPDATE "DA_assessments" SET status = 'On Assessment', stage = ?, stuck = 0, stuck_error = '', updated_at = '', written_by = ? WHERE id = ?`).run(
       notification.stage ?? "",
+      writtenByForStatus(current.status, "On Assessment", current.written_by, "Bot"),
       notification.id,
     );
     return true;
@@ -78,8 +85,9 @@ function applyNotification(notification: AssessmentNotification) {
     db.prepare(`UPDATE "DA_assessments" SET stuck = 1, stuck_error = ? WHERE id = ?`).run(notification.error ?? "", notification.id);
     return true;
   }
-  db.prepare(`UPDATE "DA_assessments" SET status = 'Waiting', end_time = ?, stage = '', stuck = 0, stuck_error = '', updated_at = '' WHERE id = ?`).run(
+  db.prepare(`UPDATE "DA_assessments" SET status = 'Waiting', end_time = ?, stage = '', stuck = 0, stuck_error = '', updated_at = '', written_by = ? WHERE id = ?`).run(
     toJstLocal(notification["ended at"]),
+    writtenByForStatus(current.status, "Waiting", current.written_by, "Bot"),
     notification.id,
   );
   return true;

@@ -22,7 +22,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
   const projectId = one(params.project);
   const status = TASK_STATUSES.includes(one(params.status) as TaskStatus) ? one(params.status) : "";
   const q = one(params.q);
-  const personId = manager ? one(params.user) : member ? "" : user.id;
+  const personId = manager ? one(params.user) : user.id;
   const requestedSort = one(params.sort);
   const sort = TASK_SORTS.includes(requestedSort as (typeof TASK_SORTS)[number]) ? requestedSort : "started";
   const visibleSort = !manager && sort === "earnings" ? "started" : sort;
@@ -31,7 +31,6 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
     accountId: accountId || undefined,
     projectId: projectId || undefined,
     userId: personId || undefined,
-    createdBy: member ? user.id : undefined,
     status: status || undefined,
     q,
     sort: visibleSort as (typeof TASK_SORTS)[number],
@@ -54,7 +53,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
     <div>
       <PageHeader
         title="Tasks"
-        description={manager ? "Work logged on DA accounts." : member ? "Tasks you created. You can add and update them." : "Your DA tasks. Update times, logged time, and status as you go."}
+        description={manager ? "Work logged on DA accounts." : member ? "Tasks assigned to you. You can add and update them." : "Your DA tasks. Update times, logged time, and status as you go."}
         actions={
           manager || member ? (
             <Link href="/tasks/new" className={primaryBtn}>

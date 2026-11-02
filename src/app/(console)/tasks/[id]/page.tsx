@@ -24,12 +24,8 @@ export default async function TaskPage({
   if (!task) notFound();
   const manager = isManager(user);
   const member = !manager && isDaMember(user);
-  const owns = task.createdBy === user.id;
-  if (member && !owns) {
-    return <AccessNote title="Created by someone else" body="You can open the tasks you created." />;
-  }
-  if (!manager && !member && task.userId !== user.id) {
-    return <AccessNote title="Assigned to someone else" body="You can update the tasks on your own login." />;
+  if (!manager && task.userId !== user.id) {
+    return <AccessNote title="Assigned to someone else" body="You can update the tasks assigned to you." />;
   }
   const query = await searchParams;
   return (
@@ -45,7 +41,7 @@ export default async function TaskPage({
         startLocal={toDatetimeLocalValue(task.startTime, task.accountTimezone)}
         endLocal={toDatetimeLocalValue(task.endTime, task.accountTimezone)}
         canManage={manager}
-        canChooseWork={manager || owns}
+        canChooseWork={manager || (member && task.userId === user.id)}
         assigneeName={user.name}
         onDelete={user.isSuperAdmin ? removeTask.bind(null, task.id) : undefined}
       />

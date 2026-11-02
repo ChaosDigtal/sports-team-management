@@ -21,7 +21,7 @@ import {
   WITHDRAWAL_STATUSES,
 } from "@/lib/constants";
 import { activeCandidateWarning } from "@/lib/candidate-active";
-import { createCandidate, deleteCandidate, getAssessment, getCandidate, setCandidateLaptopStatus, updateAssessment, updateCandidate } from "@/lib/candidates";
+import { createCandidate, deleteCandidate, getAssessment, getCandidate, setCandidateLaptopStatus, updateAssessment, updateCandidate, writtenByForStatus } from "@/lib/candidates";
 import { computeEarning, round2 } from "@/lib/format";
 import { refreshProfitEstimate } from "@/lib/stats";
 import { defaultWithdrawalMinutes } from "@/lib/time";
@@ -384,11 +384,8 @@ export async function saveTask(_prev: ActionState, formData: FormData): Promise<
   if (id && !existing) return { error: "That task no longer exists." };
   const manager = isManager(user);
   const member = isDaMember(user);
-  if (!manager && member && existing && existing.createdBy !== user.id) {
-    return { error: "You can update tasks you created." };
-  }
-  if (!manager && !member && (!existing || existing.userId !== user.id)) {
-    return { error: "You can update your own tasks." };
+  if (!manager && existing && existing.userId !== user.id) {
+    return { error: "You can update tasks assigned to you." };
   }
   if (!existing && !manager && !member) return { error: "A platform admin creates tasks." };
 
@@ -739,7 +736,8 @@ export async function saveAssessment(formData: FormData) {
   if (!existing) redirect("/onboarding/assessments");
   const updatedAt = assessmentUpdatedAt(existing.status, existing.updatedAt, status, readString(formData, "updatedAt", 40).value);
   if (updatedAt == null) redirect(`/onboarding/assessments/${id}?notice=update-time`);
-  updateAssessment(id, { startTime, endTime, taskId, status, stage, updatedAt });
+  const writtenBy = writtenByForStatus(existing.status, status, existing.writtenBy, user.name);
+  updateAssessment(id, { startTime, endTime, taskId, status, stage, updatedAt, writtenBy });
   refresh();
   redirect(`/onboarding/assessments/${id}?notice=saved`);
 }
@@ -768,9 +766,53 @@ export async function failAssessment(formData: FormData) {
     status: "Failed",
     stage: "",
     updatedAt: jstNowWall(),
+    writtenBy: writtenByForStatus(existing.status, "Failed", existing.writtenBy, user.name),
   });
   refresh();
   redirect(`/onboarding/assessments/${id}?notice=saved`);
+}
+
+export async function setAssessmentStatus(formData: FormData) {
+  const user = await requireUser();
+  if (!user.daOnboarding && !user.isSuperAdmin) redirect("/onboarding/assessments");
+  const id = Number(readString(formData, "id", 20).value);
+  const status = readString(formData, "status", 40).value;
+  const stage = readString(formData, "stage", 80).value;
+  const returnTo = readString(formData, "returnTo", 300).value;
+  const destination = assessmentListReturn(returnTo);
+  if (!Number.isInteger(id) || id <= 0) redirect("/onboarding/assessments");
+  if (!ASSESSMENT_STATUSES.includes(status as (typeof ASSESSMENT_STATUSES)[number])) redirect(assessmentHref(destination));
+  const existing = getAssessment(id);
+  if (!existing) redirect("/onboarding/assessments");
+  const updatedAt = assessmentUpdatedAt(existing.status, existing.updatedAt, status, readString(formData, "updatedAt", 40).value);
+  if (updatedAt == null) {
+    destination.searchParams.set("notice", "update-time");
+    redirect(assessmentHref(destination));
+  }
+  updateAssessment(id, {
+    startTime: existing.startTime,
+    endTime: existing.endTime,
+    taskId: existing.taskId,
+    status,
+    stage,
+    updatedAt,
+    writtenBy: writtenByForStatus(existing.status, status, existing.writtenBy, user.name),
+  });
+  refresh();
+  destination.searchParams.set("notice", "saved");
+  redirect(assessmentHref(destination));
+}
+
+function assessmentListReturn(returnTo: string) {
+  const destination = new URL("/onboarding/assessments", "http://localhost");
+  if (!returnTo.startsWith("/onboarding/assessments")) return destination;
+  const requested = new URL(returnTo.split("#")[0], "http://localhost");
+  if (requested.pathname !== "/onboarding/assessments") return destination;
+  return requested;
+}
+
+function assessmentHref(destination: URL) {
+  return `${destination.pathname}${destination.search}`;
 }
 
 export async function removeUser(id: string) {

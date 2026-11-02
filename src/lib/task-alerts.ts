@@ -1,4 +1,4 @@
-import { isDaMember, isManager } from "./access";
+import { isManager } from "./access";
 import { formatDuration } from "./format";
 import { listTasks } from "./queries";
 import { wipElapsedMinutes } from "./time";
@@ -13,10 +13,8 @@ export type TaskAlert = {
 
 export function listTaskAlerts(user: SessionUser, now = new Date()): TaskAlert[] {
   const manager = isManager(user);
-  const member = !manager && isDaMember(user);
   const tasks = listTasks({
-    userId: manager || member ? undefined : user.id,
-    createdBy: member ? user.id : undefined,
+    userId: manager ? undefined : user.id,
     status: "WIP",
     limit: 500,
   });

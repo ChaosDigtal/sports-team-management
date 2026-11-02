@@ -373,7 +373,8 @@ function ensureOnboarding(db: DatabaseSync) {
       stuck INTEGER NOT NULL DEFAULT 0,
       stuck_error TEXT NOT NULL DEFAULT '',
       password TEXT NOT NULL DEFAULT '',
-      updated_at TEXT NOT NULL DEFAULT ''
+      updated_at TEXT NOT NULL DEFAULT '',
+      written_by TEXT NOT NULL DEFAULT ''
     );
     CREATE TABLE IF NOT EXISTS "DA_assessment_notifications" (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -395,6 +396,11 @@ function ensureOnboarding(db: DatabaseSync) {
   const setPassword = db.prepare(`UPDATE "DA_assessments" SET password = ? WHERE id = ?`);
   for (const row of missingPasswords) setPassword.run(assessmentPassword(), row.id);
   ensureAssessmentIdsStartAtOne(db);
+}
+
+function ensureAssessmentWrittenBy(db: DatabaseSync) {
+  const names = new Set((db.prepare(`PRAGMA table_info("DA_assessments")`).all() as Array<{ name: string }>).map((row) => row.name));
+  if (!names.has("written_by")) db.exec(`ALTER TABLE "DA_assessments" ADD COLUMN written_by TEXT NOT NULL DEFAULT ''`);
 }
 
 function assessmentPassword() {
@@ -494,6 +500,7 @@ export function getDb() {
   ensureTaskCompletedAt(db);
   ensureWithdrawalSchedule(db);
   ensureOnboarding(db);
+  ensureAssessmentWrittenBy(db);
   ensureTelegram(db);
   ensureEmailForwarding(db);
   ensureCandidateWorkflow(db);

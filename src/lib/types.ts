@@ -213,6 +213,7 @@ export type Assessment = {
   stuck: boolean;
   stuckError: string;
   updatedAt: string;
+  writtenBy: string;
   email: string;
   password: string;
   dob: string;

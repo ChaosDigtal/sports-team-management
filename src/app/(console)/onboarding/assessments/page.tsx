@@ -24,7 +24,7 @@ export default async function AssessmentsPage({ searchParams }: { searchParams: 
     <div>
       <PageHeader
         title="Assessments"
-        description="A Ready row is added when a candidate becomes Active from Incomplete, In Review, or Client No Longer Interested, and removed if they leave Active for one of those. Extension events update a row to Started, On Assessment (stage), or Waiting. Open an ID to edit times and status."
+        description="A Ready row is added when a candidate becomes Active from Incomplete, In Review, or Client No Longer Interested, and removed if they leave Active for one of those. Extension events update a row to Started, On Assessment (stage), or Waiting. Change status in the table, or open an ID to edit times."
       />
       <Notice notice={one(params.notice)} />
       <div className="mb-3 flex flex-wrap items-center gap-2">
@@ -42,7 +42,15 @@ export default async function AssessmentsPage({ searchParams }: { searchParams: 
           </Link>
         ))}
       </div>
-      <AssessmentsTable rows={rows} filter={status} name={name} laptop={laptop} canEditLaptop={canEditLaptopStatus(user)} canFailWaiting={!isManager(user)} />
+      <AssessmentsTable
+        rows={rows}
+        filter={status}
+        name={name}
+        laptop={laptop}
+        canEditLaptop={canEditLaptopStatus(user)}
+        canEditStatus={user.daOnboarding || user.isSuperAdmin}
+        canFailWaiting={!user.daOnboarding && !user.isSuperAdmin && !isManager(user)}
+      />
     </div>
   );
 }
