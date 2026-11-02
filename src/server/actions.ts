@@ -21,7 +21,7 @@ import {
   WITHDRAWAL_STATUSES,
 } from "@/lib/constants";
 import { activeCandidateWarning } from "@/lib/candidate-active";
-import { createCandidate, deleteAssessment, deleteCandidate, getAssessment, getCandidate, setAssessmentWrittenBy, setCandidateLaptopStatus, updateAssessment, updateCandidate, writtenByForStatus } from "@/lib/candidates";
+import { createCandidate, deleteAssessment, deleteCandidate, getAssessment, getCandidate, setCandidateLaptopStatus, updateAssessment, updateCandidate, writtenByForStatus } from "@/lib/candidates";
 import { computeEarning, round2 } from "@/lib/format";
 import { refreshProfitEstimate } from "@/lib/stats";
 import { defaultWithdrawalMinutes } from "@/lib/time";
@@ -814,24 +814,12 @@ function assessmentListReturn(returnTo: string) {
   const destination = new URL("/onboarding/assessments", "http://localhost");
   if (!returnTo.startsWith("/onboarding/assessments")) return destination;
   const requested = new URL(returnTo.split("#")[0], "http://localhost");
-  if (requested.pathname !== "/onboarding/assessments") return destination;
+  if (requested.pathname !== "/onboarding/assessments" && !/^\/onboarding\/assessments\/\d+$/.test(requested.pathname)) return destination;
   return requested;
 }
 
 function assessmentHref(destination: URL) {
   return `${destination.pathname}${destination.search}`;
-}
-
-export async function saveAssessmentWrittenBy(formData: FormData) {
-  const user = await requireUser();
-  if (!user.isSuperAdmin) return;
-  const id = Number(readString(formData, "id", 20).value);
-  const writtenBy = readString(formData, "writtenBy", 80);
-  if (!writtenBy.ok || !Number.isInteger(id) || id <= 0) return;
-  if (!getAssessment(id)) return;
-  if (!new Set(["", ...listWrittenByChoices()]).has(writtenBy.value)) return;
-  setAssessmentWrittenBy(id, writtenBy.value);
-  refresh();
 }
 
 export async function removeAssessment(id: number, formData?: FormData) {

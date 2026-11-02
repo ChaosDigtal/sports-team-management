@@ -1,11 +1,10 @@
 import Link from "next/link";
 import { AssessmentsTable } from "@/components/assessments-table";
 import { Notice, PageHeader } from "@/components/ui";
-import { canEditLaptopStatus, isManager } from "@/lib/access";
+import { canEditLaptopStatus } from "@/lib/access";
 import { requireUser } from "@/lib/auth";
 import { LAPTOP_STATUSES } from "@/lib/constants";
 import { listAssessments } from "@/lib/candidates";
-import { listWrittenByChoices } from "@/lib/queries";
 import { buildHref, cn, one } from "@/lib/utils";
 import type { SearchParams } from "@/lib/types";
 
@@ -26,7 +25,7 @@ export default async function AssessmentsPage({ searchParams }: { searchParams: 
     <div>
       <PageHeader
         title="Assessments"
-        description="A Ready row is added when a candidate becomes Active from Incomplete, In Review, or Client No Longer Interested, and removed if they leave Active for one of those. Extension events update a row to Started, On Assessment (stage), or Waiting. Change status in the table, or open an ID to edit times."
+        description="A Ready row is added when a candidate becomes Active from Incomplete, In Review, or Client No Longer Interested, and removed if they leave Active for one of those. Extension events update a row to Started, On Assessment (stage), or Waiting. Open an ID to edit times and status."
       />
       <Notice notice={one(params.notice)} />
       <div className="mb-3 flex flex-wrap items-center gap-2">
@@ -51,10 +50,6 @@ export default async function AssessmentsPage({ searchParams }: { searchParams: 
         laptop={laptop}
         written={written}
         canEditLaptop={canEditLaptopStatus(user)}
-        canEditStatus={user.daOnboarding || user.isSuperAdmin}
-        canEditWrittenBy={user.isSuperAdmin}
-        writtenByChoices={listWrittenByChoices()}
-        canFailWaiting={!user.daOnboarding && !user.isSuperAdmin && !isManager(user)}
       />
     </div>
   );

@@ -1,32 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { writeClipboard } from "@/components/copyable";
 import { LaptopStatusSelect } from "@/components/laptop-status-select";
-import { ASSESSMENT_STATUSES, assessmentLabel, countryName } from "@/lib/constants";
+import { assessmentLabel, countryName } from "@/lib/constants";
 import type { Assessment, LaptopStatus } from "@/lib/types";
-import { failAssessment, saveAssessmentWrittenBy, setAssessmentStatus } from "@/server/actions";
 import { Badge, assessmentTone, personNameClass } from "./ui";
 
 export function AssessmentCells({
   row,
   canEditLaptop,
-  canEditStatus,
-  canEditWrittenBy,
-  writtenByChoices,
-  canFailWaiting,
   onLaptop,
-  onWrittenBy,
 }: {
   row: Assessment;
   canEditLaptop: boolean;
-  canEditStatus: boolean;
-  canEditWrittenBy: boolean;
-  writtenByChoices: string[];
-  canFailWaiting: boolean;
   onLaptop: (candidateId: string, laptopStatus: LaptopStatus) => void;
-  onWrittenBy: (id: number, writtenBy: string) => void;
 }) {
   return (
     <>
@@ -63,160 +52,11 @@ export function AssessmentCells({
       <td className="px-4 py-3 text-center tabular-nums">{showUpdateTime(row.updatedAt)}</td>
       <td className="px-4 py-3 text-center font-mono text-xs">{row.ultraviewerId || "—"}</td>
       <td className="px-4 py-3 text-center break-all font-mono text-xs">{row.ultraviewerPassword || "—"}</td>
+      <td className="px-4 py-3 text-center">{row.writtenBy || "—"}</td>
       <td className="px-4 py-3 text-center">
-        {canEditWrittenBy ? (
-          <WrittenByEditor row={row} choices={writtenByChoices} onChange={(writtenBy) => onWrittenBy(row.id, writtenBy)} />
-        ) : (
-          row.writtenBy || "—"
-        )}
-      </td>
-      <td className="px-4 py-3 text-center">
-        {canEditStatus ? (
-          <StatusEditor row={row} />
-        ) : (
-          <span className="inline-flex flex-col items-center gap-1.5">
-            <Badge tone={assessmentTone(row.status)}>{assessmentLabel(row.status, row.stage)}</Badge>
-            {canFailWaiting && row.status === "Waiting" ? (
-              <form action={failAssessment}>
-                <input type="hidden" name="id" value={row.id} />
-                <button
-                  type="submit"
-                  className="rounded-md border border-red-200 px-2 py-0.5 text-xs font-medium text-danger hover:bg-red-50 dark:border-red-900 dark:hover:bg-red-950"
-                >
-                  Fail
-                </button>
-              </form>
-            ) : null}
-          </span>
-        )}
+        <Badge tone={assessmentTone(row.status)}>{assessmentLabel(row.status, row.stage)}</Badge>
       </td>
     </>
-  );
-}
-
-function WrittenByEditor({ row, choices, onChange }: { row: Assessment; choices: string[]; onChange: (writtenBy: string) => void }) {
-  const [value, setValue] = useState(row.writtenBy);
-  const [pending, startTransition] = useTransition();
-  const [seen, setSeen] = useState(row.writtenBy);
-  if (!pending && seen !== row.writtenBy) {
-    setSeen(row.writtenBy);
-    setValue(row.writtenBy);
-  }
-  const options = choices.includes(row.writtenBy) || !row.writtenBy ? choices : [row.writtenBy, ...choices];
-
-  function commit(next: string) {
-    setValue(next);
-    if (next === row.writtenBy) return;
-    const data = new FormData();
-    data.set("id", String(row.id));
-    data.set("writtenBy", next);
-    startTransition(async () => {
-      await saveAssessmentWrittenBy(data);
-      setSeen(next);
-      onChange(next);
-    });
-  }
-
-  return (
-    <select
-      className="h-8 max-w-44 rounded-md border border-line bg-surface px-2 text-xs"
-      value={options.includes(value) || value === "" ? value : row.writtenBy}
-      aria-label={`Written by for assessment ${row.id}`}
-      disabled={pending}
-      onChange={(event) => commit(event.target.value)}
-    >
-      <option value="">—</option>
-      {options.map((name) => (
-        <option key={name} value={name}>
-          {name}
-        </option>
-      ))}
-    </select>
-  );
-}
-
-function StatusEditor({ row }: { row: Assessment }) {
-  const [status, setStatus] = useState(row.status);
-  const [stage, setStage] = useState(row.stage);
-  const [pending, startTransition] = useTransition();
-  const source = `${row.status}|${row.stage}|${row.updatedAt}|${row.writtenBy}`;
-  const [seen, setSeen] = useState(source);
-  if (seen !== source) {
-    setSeen(source);
-    setStatus(row.status);
-    setStage(row.stage);
-  }
-  const needsTime = row.status === "Waiting" && status === "Passed";
-  const needsStage = status === "On Assessment";
-
-  function submit(next: string, nextStage: string) {
-    const data = new FormData();
-    data.set("id", String(row.id));
-    data.set("status", next);
-    data.set("stage", next === "On Assessment" ? nextStage : "");
-    const url = new URL(window.location.href);
-    url.searchParams.delete("notice");
-    data.set("returnTo", `${url.pathname}${url.search}`);
-    startTransition(() => {
-      void setAssessmentStatus(data);
-    });
-  }
-
-  return (
-    <form
-      action={setAssessmentStatus}
-      className="inline-flex min-w-40 flex-col items-center gap-1.5"
-      onSubmit={(event) => {
-        const input = event.currentTarget.elements.namedItem("returnTo");
-        if (input instanceof HTMLInputElement) {
-          const url = new URL(window.location.href);
-          url.searchParams.delete("notice");
-          input.value = `${url.pathname}${url.search}`;
-        }
-      }}
-    >
-      <input type="hidden" name="id" value={row.id} />
-      <input type="hidden" name="returnTo" value="/onboarding/assessments" />
-      <select
-        className="h-8 max-w-44 rounded-md border border-line bg-surface px-2 text-xs"
-        name="status"
-        value={status}
-        aria-label={`Status for assessment ${row.id}`}
-        disabled={pending}
-        onChange={(event) => {
-          const next = event.target.value;
-          setStatus(next);
-          const extra = next === "On Assessment" || (row.status === "Waiting" && next === "Passed");
-          if (!extra) submit(next, "");
-        }}
-      >
-        {ASSESSMENT_STATUSES.map((item) => (
-          <option key={item} value={item}>
-            {item}
-          </option>
-        ))}
-      </select>
-      {needsStage ? (
-        <input
-          className="h-8 w-full rounded-md border border-line bg-surface px-2 text-xs"
-          name="stage"
-          value={stage}
-          placeholder="Stage"
-          aria-label="Stage"
-          onChange={(event) => setStage(event.target.value)}
-        />
-      ) : (
-        <input type="hidden" name="stage" value="" />
-      )}
-      {needsTime ? (
-        <input className="h-8 w-full rounded-md border border-line bg-surface px-2 text-xs" name="updatedAt" type="datetime-local" required aria-label="Update time" />
-      ) : null}
-      {needsStage || needsTime ? (
-        <button type="submit" disabled={pending} className="rounded-md bg-accent px-2 py-0.5 text-xs font-semibold text-white hover:bg-accent-ink disabled:opacity-60">
-          Save
-        </button>
-      ) : null}
-    </form>
   );
 }
 

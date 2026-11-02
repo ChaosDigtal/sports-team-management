@@ -20,10 +20,6 @@ export function AssessmentsTable({
   laptop,
   written,
   canEditLaptop,
-  canEditStatus,
-  canEditWrittenBy,
-  writtenByChoices,
-  canFailWaiting,
 }: {
   rows: Assessment[];
   filter: string;
@@ -31,10 +27,6 @@ export function AssessmentsTable({
   laptop: string;
   written: string;
   canEditLaptop: boolean;
-  canEditStatus: boolean;
-  canEditWrittenBy: boolean;
-  writtenByChoices: string[];
-  canFailWaiting: boolean;
 }) {
   const [items, setItems] = useState(rows);
   const [query, setQuery] = useState("");
@@ -134,14 +126,9 @@ export function AssessmentsTable({
               <AssessmentCells
                 row={row}
                 canEditLaptop={canEditLaptop}
-                canEditStatus={canEditStatus}
-                canEditWrittenBy={canEditWrittenBy}
-                writtenByChoices={writtenByChoices}
-                canFailWaiting={canFailWaiting}
                 onLaptop={(candidateId, laptopStatus) =>
                   setItems((current) => current.map((item) => (item.candidateId === candidateId ? { ...item, laptopStatus } : item)))
                 }
-                onWrittenBy={(id, writtenBy) => setItems((current) => current.map((item) => (item.id === id ? { ...item, writtenBy } : item)))}
               />
             </tr>
             );
