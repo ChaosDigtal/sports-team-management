@@ -6,21 +6,25 @@ import { writeClipboard } from "@/components/copyable";
 import { LaptopStatusSelect } from "@/components/laptop-status-select";
 import { ASSESSMENT_STATUSES, assessmentLabel, countryName } from "@/lib/constants";
 import type { Assessment, LaptopStatus } from "@/lib/types";
-import { failAssessment, setAssessmentStatus } from "@/server/actions";
+import { failAssessment, saveAssessmentWrittenBy, setAssessmentStatus } from "@/server/actions";
 import { Badge, assessmentTone, personNameClass } from "./ui";
 
 export function AssessmentCells({
   row,
   canEditLaptop,
   canEditStatus,
+  canEditWrittenBy,
   canFailWaiting,
   onLaptop,
+  onWrittenBy,
 }: {
   row: Assessment;
   canEditLaptop: boolean;
   canEditStatus: boolean;
+  canEditWrittenBy: boolean;
   canFailWaiting: boolean;
   onLaptop: (candidateId: string, laptopStatus: LaptopStatus) => void;
+  onWrittenBy: (id: number, writtenBy: string) => void;
 }) {
   return (
     <>
@@ -57,7 +61,9 @@ export function AssessmentCells({
       <td className="px-4 py-3 text-center tabular-nums">{showUpdateTime(row.updatedAt)}</td>
       <td className="px-4 py-3 text-center font-mono text-xs">{row.ultraviewerId || "—"}</td>
       <td className="px-4 py-3 text-center break-all font-mono text-xs">{row.ultraviewerPassword || "—"}</td>
-      <td className="px-4 py-3 text-center">{row.writtenBy || "—"}</td>
+      <td className="px-4 py-3 text-center">
+        {canEditWrittenBy ? <WrittenByEditor row={row} onChange={(writtenBy) => onWrittenBy(row.id, writtenBy)} /> : row.writtenBy || "—"}
+      </td>
       <td className="px-4 py-3 text-center">
         {canEditStatus ? (
           <StatusEditor row={row} />
@@ -79,6 +85,47 @@ export function AssessmentCells({
         )}
       </td>
     </>
+  );
+}
+
+function WrittenByEditor({ row, onChange }: { row: Assessment; onChange: (writtenBy: string) => void }) {
+  const [value, setValue] = useState(row.writtenBy);
+  const [pending, startTransition] = useTransition();
+  const [seen, setSeen] = useState(row.writtenBy);
+  if (!pending && seen !== row.writtenBy) {
+    setSeen(row.writtenBy);
+    setValue(row.writtenBy);
+  }
+
+  function commit() {
+    const next = value.trim();
+    if (next === row.writtenBy) return;
+    const data = new FormData();
+    data.set("id", String(row.id));
+    data.set("writtenBy", next);
+    startTransition(async () => {
+      await saveAssessmentWrittenBy(data);
+      setSeen(next);
+      onChange(next);
+    });
+  }
+
+  return (
+    <input
+      className="h-8 w-36 rounded-md border border-line bg-surface px-2 text-center text-xs"
+      value={value}
+      maxLength={80}
+      aria-label={`Written by for assessment ${row.id}`}
+      disabled={pending}
+      onChange={(event) => setValue(event.target.value)}
+      onBlur={commit}
+      onKeyDown={(event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          event.currentTarget.blur();
+        }
+      }}
+    />
   );
 }
 

@@ -315,3 +315,11 @@ export function updateAssessment(
     }
   });
 }
+
+export function setAssessmentWrittenBy(id: number, writtenBy: string) {
+  getDb().prepare(`UPDATE "DA_assessments" SET written_by = ? WHERE id = ?`).run(writtenBy, id);
+}
+
+export function deleteAssessment(id: number) {
+  getDb().prepare(`DELETE FROM "DA_assessments" WHERE id = ?`).run(id);
+}

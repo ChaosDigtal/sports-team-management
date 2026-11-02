@@ -18,6 +18,7 @@ export default async function AssessmentsPage({ searchParams }: { searchParams: 
   const status = FILTERS.includes(one(params.status) as (typeof FILTERS)[number]) ? one(params.status) : "";
   const name = one(params.name);
   const laptop = LAPTOP_STATUSES.includes(one(params.laptop) as (typeof LAPTOP_STATUSES)[number]) ? one(params.laptop) : "";
+  const written = one(params.written).slice(0, 80);
   const rows = listAssessments();
 
   return (
@@ -32,7 +33,7 @@ export default async function AssessmentsPage({ searchParams }: { searchParams: 
         {[{ id: "", label: "All" }, ...FILTERS.map((item) => ({ id: item, label: item }))].map((option) => (
           <Link
             key={option.label}
-            href={buildHref("/onboarding/assessments", { status: option.id, name, laptop })}
+            href={buildHref("/onboarding/assessments", { status: option.id, name, laptop, written })}
             className={cn(
               "rounded-full px-3 py-1 text-sm",
               status === option.id ? "bg-inverse text-inverse-ink" : "border border-line bg-surface text-muted hover:text-ink",
@@ -47,8 +48,11 @@ export default async function AssessmentsPage({ searchParams }: { searchParams: 
         filter={status}
         name={name}
         laptop={laptop}
+        written={written}
         canEditLaptop={canEditLaptopStatus(user)}
         canEditStatus={user.daOnboarding || user.isSuperAdmin}
+        canEditWrittenBy={user.isSuperAdmin}
+        canDelete={user.isSuperAdmin}
         canFailWaiting={!user.daOnboarding && !user.isSuperAdmin && !isManager(user)}
       />
     </div>

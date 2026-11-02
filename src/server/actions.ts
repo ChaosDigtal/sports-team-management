@@ -21,7 +21,7 @@ import {
   WITHDRAWAL_STATUSES,
 } from "@/lib/constants";
 import { activeCandidateWarning } from "@/lib/candidate-active";
-import { createCandidate, deleteCandidate, getAssessment, getCandidate, setCandidateLaptopStatus, updateAssessment, updateCandidate, writtenByForStatus } from "@/lib/candidates";
+import { createCandidate, deleteAssessment, deleteCandidate, getAssessment, getCandidate, setAssessmentWrittenBy, setCandidateLaptopStatus, updateAssessment, updateCandidate, writtenByForStatus } from "@/lib/candidates";
 import { computeEarning, round2 } from "@/lib/format";
 import { refreshProfitEstimate } from "@/lib/stats";
 import { defaultWithdrawalMinutes } from "@/lib/time";
@@ -736,7 +736,12 @@ export async function saveAssessment(formData: FormData) {
   if (!existing) redirect("/onboarding/assessments");
   const updatedAt = assessmentUpdatedAt(existing.status, existing.updatedAt, status, readString(formData, "updatedAt", 40).value);
   if (updatedAt == null) redirect(`/onboarding/assessments/${id}?notice=update-time`);
-  const writtenBy = writtenByForStatus(existing.status, status, existing.writtenBy, user.name);
+  const submittedWrittenBy = readString(formData, "writtenBy", 80);
+  const automaticWrittenBy = writtenByForStatus(existing.status, status, existing.writtenBy, user.name);
+  const writtenBy =
+    user.isSuperAdmin && formData.has("writtenBy") && submittedWrittenBy.ok && submittedWrittenBy.value !== existing.writtenBy
+      ? submittedWrittenBy.value
+      : automaticWrittenBy;
   updateAssessment(id, { startTime, endTime, taskId, status, stage, updatedAt, writtenBy });
   refresh();
   redirect(`/onboarding/assessments/${id}?notice=saved`);
@@ -813,6 +818,28 @@ function assessmentListReturn(returnTo: string) {
 
 function assessmentHref(destination: URL) {
   return `${destination.pathname}${destination.search}`;
+}
+
+export async function saveAssessmentWrittenBy(formData: FormData) {
+  const user = await requireUser();
+  if (!user.isSuperAdmin) return;
+  const id = Number(readString(formData, "id", 20).value);
+  const writtenBy = readString(formData, "writtenBy", 80);
+  if (!writtenBy.ok || !Number.isInteger(id) || id <= 0) return;
+  if (!getAssessment(id)) return;
+  setAssessmentWrittenBy(id, writtenBy.value);
+  refresh();
+}
+
+export async function removeAssessment(id: number, formData?: FormData) {
+  const user = await requireUser();
+  if (!user.isSuperAdmin) redirect("/onboarding/assessments");
+  if (!Number.isInteger(id) || id <= 0) redirect("/onboarding/assessments");
+  deleteAssessment(id);
+  refresh();
+  const destination = assessmentListReturn(formData ? readString(formData, "returnTo", 300).value : "");
+  destination.searchParams.set("notice", "deleted");
+  redirect(assessmentHref(destination));
 }
 
 export async function removeUser(id: string) {

@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AssessmentForm } from "@/components/assessment-form";
+import { DeleteButton } from "@/components/delete-button";
 import { Badge, Facts, Notice, PageHeader, assessmentTone, blank, dangerBtn } from "@/components/ui";
 import { canAccessOnboarding, isManager } from "@/lib/access";
 import { requireUser } from "@/lib/auth";
 import { getAssessment } from "@/lib/candidates";
 import { assessmentLabel } from "@/lib/constants";
 import { one } from "@/lib/utils";
-import { failAssessment } from "@/server/actions";
+import { failAssessment, removeAssessment } from "@/server/actions";
 import type { SearchParams } from "@/lib/types";
 
 function showTime(value: string) {
@@ -57,7 +58,7 @@ export default async function AssessmentPage({
         />
       </section>
       {manager ? (
-        <AssessmentForm assessment={assessment} />
+        <AssessmentForm assessment={assessment} canEditWrittenBy={user.isSuperAdmin} />
       ) : (
         <section className="max-w-3xl rounded-lg border border-line bg-surface p-5">
           <Facts
@@ -80,6 +81,11 @@ export default async function AssessmentPage({
         ) : null}
       </section>
       )}
+      {user.isSuperAdmin ? (
+        <div className="mt-4">
+          <DeleteButton action={removeAssessment.bind(null, assessment.id)} label="assessment" />
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -7,7 +7,7 @@ import type { Assessment } from "@/lib/types";
 import { saveAssessment } from "@/server/actions";
 import { hintClass, inputClass, labelClass, primaryBtn, secondaryBtn } from "./ui";
 
-export function AssessmentForm({ assessment }: { assessment: Assessment }) {
+export function AssessmentForm({ assessment, canEditWrittenBy = false }: { assessment: Assessment; canEditWrittenBy?: boolean }) {
   const [status, setStatus] = useState(assessment.status);
   const [stage, setStage] = useState(assessment.stage);
   const manualUpdate = (assessment.status === "Waiting" && status === "Passed") || (assessment.status === "Passed" && status === "Passed");
@@ -45,11 +45,17 @@ export function AssessmentForm({ assessment }: { assessment: Assessment }) {
             )}
           </span>
           {status === "On Assessment" ? <span className={hintClass}>{assessmentLabel(status, stage)}</span> : null}
-          <span className={hintClass}>Written by {assessment.writtenBy || "—"}</span>
+          {canEditWrittenBy ? null : <span className={hintClass}>Written by {assessment.writtenBy || "—"}</span>}
           {assessment.status === "Waiting" && status === "Failed" ? (
             <span className={hintClass}>Update time is set to the current Japan time when you save.</span>
           ) : null}
         </label>
+        {canEditWrittenBy ? (
+          <label>
+            <span className={labelClass}>Written by</span>
+            <input className={inputClass} name="writtenBy" defaultValue={assessment.writtenBy} maxLength={80} />
+          </label>
+        ) : null}
         {manualUpdate ? (
           <label>
             <span className={labelClass}>Update time</span>

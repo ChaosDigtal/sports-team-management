@@ -4,12 +4,14 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AssessmentCells } from "@/components/assessment-row";
 import { EmptyRow, NoCell, NoHead, inputClass, thClass } from "@/components/ui";
+import { removeAssessment } from "@/server/actions";
 import { LAPTOP_STATUSES } from "@/lib/constants";
 import type { Assessment, AssessmentNotification } from "@/lib/types";
 import { jstWallElapsedMinutes } from "@/lib/time";
 import { cn } from "@/lib/utils";
 
-const columns = ["ID", "Name", "Referral Link", "Email", "Password", "WhatsApp", "Laptop Status", "Email Forwarding", "AnyDesk ID", "AnyDesk password", "Start time", "End time", "Update time", "UltraViewer ID", "UltraViewer password", "Written By", "Status"];
+const baseColumns = ["ID", "Name", "Referral Link", "Email", "Password", "WhatsApp", "Laptop Status", "Email Forwarding", "AnyDesk ID", "AnyDesk password", "Start time", "End time", "Update time", "UltraViewer ID", "UltraViewer password", "Written By", "Status"];
+const BLANK_WRITTEN = "__blank__";
 const WAITING_LATE_MINUTES = 3 * 24 * 60;
 
 export function AssessmentsTable({
@@ -17,16 +19,22 @@ export function AssessmentsTable({
   filter,
   name,
   laptop,
+  written,
   canEditLaptop,
   canEditStatus,
+  canEditWrittenBy,
+  canDelete,
   canFailWaiting,
 }: {
   rows: Assessment[];
   filter: string;
   name: string;
   laptop: string;
+  written: string;
   canEditLaptop: boolean;
   canEditStatus: boolean;
+  canEditWrittenBy: boolean;
+  canDelete: boolean;
   canFailWaiting: boolean;
 }) {
   const [items, setItems] = useState(rows);
@@ -66,9 +74,12 @@ export function AssessmentsTable({
   }, []);
 
   const needle = query.replace(/[%_]/g, "").trim().toLowerCase();
+  const columns = canDelete ? [...baseColumns, "Delete"] : baseColumns;
   const visible = items.filter((row) => {
     if (name && row.name !== name) return false;
     if (laptop && row.laptopStatus !== laptop) return false;
+    if (written === BLANK_WRITTEN && row.writtenBy !== "") return false;
+    if (written && written !== BLANK_WRITTEN && row.writtenBy !== written) return false;
     if (filter === "Stuck" && !row.stuck) return false;
     if (filter && filter !== "Stuck" && row.status !== filter) return false;
     if (!needle) return true;
@@ -78,12 +89,15 @@ export function AssessmentsTable({
     return haystack.includes(needle);
   });
   const names = [...new Set(items.map((row) => row.name))].sort((left, right) => left.localeCompare(right));
+  const writers = [...new Set(items.map((row) => row.writtenBy).filter(Boolean))].sort((left, right) => left.localeCompare(right));
+  if (written && written !== BLANK_WRITTEN && !writers.includes(written)) writers.unshift(written);
 
   return (
     <div>
     <div className="mb-3 flex flex-wrap items-center gap-4">
       <NameFilter name={name} names={names} />
       <LaptopFilter laptop={laptop} />
+      <WrittenByFilter written={written} writers={writers} />
       <div className="w-56">
         <input className={inputClass} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search" aria-label="Search assessments" />
       </div>
@@ -106,7 +120,7 @@ export function AssessmentsTable({
           </tr>
         </thead>
         <tbody className="divide-y divide-line">
-          {visible.length === 0 ? <EmptyRow colSpan={columns.length + 1}>{filter || name || laptop || needle ? "No assessments match." : "No assessments yet."}</EmptyRow> : null}
+          {visible.length === 0 ? <EmptyRow colSpan={columns.length + 1}>{filter || name || laptop || written || needle ? "No assessments match." : "No assessments yet."}</EmptyRow> : null}
           {visible.map((row, index) => {
             const elapsed = now ? jstWallElapsedMinutes(row.startTime, now) : null;
             const sinceEnd = now ? jstWallElapsedMinutes(row.endTime, now) : null;
@@ -123,11 +137,37 @@ export function AssessmentsTable({
                 row={row}
                 canEditLaptop={canEditLaptop}
                 canEditStatus={canEditStatus}
+                canEditWrittenBy={canEditWrittenBy}
                 canFailWaiting={canFailWaiting}
                 onLaptop={(candidateId, laptopStatus) =>
                   setItems((current) => current.map((item) => (item.candidateId === candidateId ? { ...item, laptopStatus } : item)))
                 }
+                onWrittenBy={(id, writtenBy) => setItems((current) => current.map((item) => (item.id === id ? { ...item, writtenBy } : item)))}
               />
+              {canDelete ? (
+                <td className="px-4 py-3 text-center">
+                  <form
+                    action={removeAssessment.bind(null, row.id)}
+                    onSubmit={(event) => {
+                      const input = event.currentTarget.elements.namedItem("returnTo");
+                      if (input instanceof HTMLInputElement) {
+                        const url = new URL(window.location.href);
+                        url.searchParams.delete("notice");
+                        input.value = `${url.pathname}${url.search}`;
+                      }
+                      if (!window.confirm("Delete this assessment? This cannot be undone.")) event.preventDefault();
+                    }}
+                  >
+                    <input type="hidden" name="returnTo" value="/onboarding/assessments" />
+                    <button
+                      type="submit"
+                      className="rounded-md border border-red-200 px-2 py-0.5 text-xs font-medium text-danger hover:bg-red-50 dark:border-red-900 dark:hover:bg-red-950"
+                    >
+                      Delete
+                    </button>
+                  </form>
+                </td>
+              ) : null}
             </tr>
             );
           })}
@@ -158,6 +198,36 @@ function NameFilter({ name, names }: { name: string; names: string[] }) {
       >
         <option value="">All</option>
         {names.map((item) => (
+          <option key={item} value={item}>
+            {item}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+function WrittenByFilter({ written, writers }: { written: string; writers: string[] }) {
+  const router = useRouter();
+  return (
+    <label className="flex items-center gap-2 text-sm">
+      <span className="text-xs font-semibold uppercase tracking-wide text-muted">Written By</span>
+      <select
+        className="h-9 min-w-40 rounded-md border border-line bg-surface px-2"
+        value={written}
+        aria-label="Filter by written by"
+        onChange={(event) => {
+          const params = new URLSearchParams(window.location.search);
+          params.delete("notice");
+          if (event.target.value) params.set("written", event.target.value);
+          else params.delete("written");
+          const query = params.toString();
+          router.push(query ? `/onboarding/assessments?${query}` : "/onboarding/assessments");
+        }}
+      >
+        <option value="">All</option>
+        <option value={BLANK_WRITTEN}>Blank</option>
+        {writers.map((item) => (
           <option key={item} value={item}>
             {item}
           </option>
