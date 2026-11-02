@@ -14,6 +14,7 @@ export function AssessmentCells({
   canEditLaptop,
   canEditStatus,
   canEditWrittenBy,
+  writtenByChoices,
   canFailWaiting,
   onLaptop,
   onWrittenBy,
@@ -22,6 +23,7 @@ export function AssessmentCells({
   canEditLaptop: boolean;
   canEditStatus: boolean;
   canEditWrittenBy: boolean;
+  writtenByChoices: string[];
   canFailWaiting: boolean;
   onLaptop: (candidateId: string, laptopStatus: LaptopStatus) => void;
   onWrittenBy: (id: number, writtenBy: string) => void;
@@ -62,7 +64,11 @@ export function AssessmentCells({
       <td className="px-4 py-3 text-center font-mono text-xs">{row.ultraviewerId || "—"}</td>
       <td className="px-4 py-3 text-center break-all font-mono text-xs">{row.ultraviewerPassword || "—"}</td>
       <td className="px-4 py-3 text-center">
-        {canEditWrittenBy ? <WrittenByEditor row={row} onChange={(writtenBy) => onWrittenBy(row.id, writtenBy)} /> : row.writtenBy || "—"}
+        {canEditWrittenBy ? (
+          <WrittenByEditor row={row} choices={writtenByChoices} onChange={(writtenBy) => onWrittenBy(row.id, writtenBy)} />
+        ) : (
+          row.writtenBy || "—"
+        )}
       </td>
       <td className="px-4 py-3 text-center">
         {canEditStatus ? (
@@ -88,7 +94,7 @@ export function AssessmentCells({
   );
 }
 
-function WrittenByEditor({ row, onChange }: { row: Assessment; onChange: (writtenBy: string) => void }) {
+function WrittenByEditor({ row, choices, onChange }: { row: Assessment; choices: string[]; onChange: (writtenBy: string) => void }) {
   const [value, setValue] = useState(row.writtenBy);
   const [pending, startTransition] = useTransition();
   const [seen, setSeen] = useState(row.writtenBy);
@@ -96,9 +102,10 @@ function WrittenByEditor({ row, onChange }: { row: Assessment; onChange: (writte
     setSeen(row.writtenBy);
     setValue(row.writtenBy);
   }
+  const options = choices.includes(row.writtenBy) || !row.writtenBy ? choices : [row.writtenBy, ...choices];
 
-  function commit() {
-    const next = value.trim();
+  function commit(next: string) {
+    setValue(next);
     if (next === row.writtenBy) return;
     const data = new FormData();
     data.set("id", String(row.id));
@@ -111,21 +118,20 @@ function WrittenByEditor({ row, onChange }: { row: Assessment; onChange: (writte
   }
 
   return (
-    <input
-      className="h-8 w-36 rounded-md border border-line bg-surface px-2 text-center text-xs"
-      value={value}
-      maxLength={80}
+    <select
+      className="h-8 max-w-44 rounded-md border border-line bg-surface px-2 text-xs"
+      value={options.includes(value) || value === "" ? value : row.writtenBy}
       aria-label={`Written by for assessment ${row.id}`}
       disabled={pending}
-      onChange={(event) => setValue(event.target.value)}
-      onBlur={commit}
-      onKeyDown={(event) => {
-        if (event.key === "Enter") {
-          event.preventDefault();
-          event.currentTarget.blur();
-        }
-      }}
-    />
+      onChange={(event) => commit(event.target.value)}
+    >
+      <option value="">—</option>
+      {options.map((name) => (
+        <option key={name} value={name}>
+          {name}
+        </option>
+      ))}
+    </select>
   );
 }
 

@@ -4,13 +4,12 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AssessmentCells } from "@/components/assessment-row";
 import { EmptyRow, NoCell, NoHead, inputClass, thClass } from "@/components/ui";
-import { removeAssessment } from "@/server/actions";
 import { LAPTOP_STATUSES } from "@/lib/constants";
 import type { Assessment, AssessmentNotification } from "@/lib/types";
 import { jstWallElapsedMinutes } from "@/lib/time";
 import { cn } from "@/lib/utils";
 
-const baseColumns = ["ID", "Name", "Referral Link", "Email", "Password", "WhatsApp", "Laptop Status", "Email Forwarding", "AnyDesk ID", "AnyDesk password", "Start time", "End time", "Update time", "UltraViewer ID", "UltraViewer password", "Written By", "Status"];
+const columns = ["ID", "Name", "Referral Link", "Email", "Password", "WhatsApp", "Laptop Status", "Email Forwarding", "AnyDesk ID", "AnyDesk password", "Start time", "End time", "Update time", "UltraViewer ID", "UltraViewer password", "Written By", "Status"];
 const BLANK_WRITTEN = "__blank__";
 const WAITING_LATE_MINUTES = 3 * 24 * 60;
 
@@ -23,7 +22,7 @@ export function AssessmentsTable({
   canEditLaptop,
   canEditStatus,
   canEditWrittenBy,
-  canDelete,
+  writtenByChoices,
   canFailWaiting,
 }: {
   rows: Assessment[];
@@ -34,7 +33,7 @@ export function AssessmentsTable({
   canEditLaptop: boolean;
   canEditStatus: boolean;
   canEditWrittenBy: boolean;
-  canDelete: boolean;
+  writtenByChoices: string[];
   canFailWaiting: boolean;
 }) {
   const [items, setItems] = useState(rows);
@@ -74,7 +73,6 @@ export function AssessmentsTable({
   }, []);
 
   const needle = query.replace(/[%_]/g, "").trim().toLowerCase();
-  const columns = canDelete ? [...baseColumns, "Delete"] : baseColumns;
   const visible = items.filter((row) => {
     if (name && row.name !== name) return false;
     if (laptop && row.laptopStatus !== laptop) return false;
@@ -138,36 +136,13 @@ export function AssessmentsTable({
                 canEditLaptop={canEditLaptop}
                 canEditStatus={canEditStatus}
                 canEditWrittenBy={canEditWrittenBy}
+                writtenByChoices={writtenByChoices}
                 canFailWaiting={canFailWaiting}
                 onLaptop={(candidateId, laptopStatus) =>
                   setItems((current) => current.map((item) => (item.candidateId === candidateId ? { ...item, laptopStatus } : item)))
                 }
                 onWrittenBy={(id, writtenBy) => setItems((current) => current.map((item) => (item.id === id ? { ...item, writtenBy } : item)))}
               />
-              {canDelete ? (
-                <td className="px-4 py-3 text-center">
-                  <form
-                    action={removeAssessment.bind(null, row.id)}
-                    onSubmit={(event) => {
-                      const input = event.currentTarget.elements.namedItem("returnTo");
-                      if (input instanceof HTMLInputElement) {
-                        const url = new URL(window.location.href);
-                        url.searchParams.delete("notice");
-                        input.value = `${url.pathname}${url.search}`;
-                      }
-                      if (!window.confirm("Delete this assessment? This cannot be undone.")) event.preventDefault();
-                    }}
-                  >
-                    <input type="hidden" name="returnTo" value="/onboarding/assessments" />
-                    <button
-                      type="submit"
-                      className="rounded-md border border-red-200 px-2 py-0.5 text-xs font-medium text-danger hover:bg-red-50 dark:border-red-900 dark:hover:bg-red-950"
-                    >
-                      Delete
-                    </button>
-                  </form>
-                </td>
-              ) : null}
             </tr>
             );
           })}

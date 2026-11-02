@@ -7,7 +7,15 @@ import type { Assessment } from "@/lib/types";
 import { saveAssessment } from "@/server/actions";
 import { hintClass, inputClass, labelClass, primaryBtn, secondaryBtn } from "./ui";
 
-export function AssessmentForm({ assessment, canEditWrittenBy = false }: { assessment: Assessment; canEditWrittenBy?: boolean }) {
+export function AssessmentForm({
+  assessment,
+  canEditWrittenBy = false,
+  writtenByChoices = [],
+}: {
+  assessment: Assessment;
+  canEditWrittenBy?: boolean;
+  writtenByChoices?: string[];
+}) {
   const [status, setStatus] = useState(assessment.status);
   const [stage, setStage] = useState(assessment.stage);
   const manualUpdate = (assessment.status === "Waiting" && status === "Passed") || (assessment.status === "Passed" && status === "Passed");
@@ -53,7 +61,17 @@ export function AssessmentForm({ assessment, canEditWrittenBy = false }: { asses
         {canEditWrittenBy ? (
           <label>
             <span className={labelClass}>Written by</span>
-            <input className={inputClass} name="writtenBy" defaultValue={assessment.writtenBy} maxLength={80} />
+            <select className={inputClass} name="writtenBy" defaultValue={assessment.writtenBy}>
+              <option value="">—</option>
+              {writtenByChoices.map((name) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
+              ))}
+              {assessment.writtenBy && !writtenByChoices.includes(assessment.writtenBy) ? (
+                <option value={assessment.writtenBy}>{assessment.writtenBy}</option>
+              ) : null}
+            </select>
           </label>
         ) : null}
         {manualUpdate ? (

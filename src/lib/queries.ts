@@ -821,6 +821,13 @@ export function deleteTask(id: string) {
   getDb().prepare(`DELETE FROM "DA_tasks" WHERE id = ?`).run(id);
 }
 
+export function listWrittenByChoices() {
+  const rows = getDb().prepare(`SELECT DISTINCT name FROM users WHERE TRIM(name) != '' ORDER BY name COLLATE NOCASE`).all() as Row[];
+  const names = rows.map((row) => text(row.name)).filter((name) => name !== "Bot");
+  names.push("Bot");
+  return names;
+}
+
 export function listPeopleOptions() {
   const rows = getDb()
     .prepare(

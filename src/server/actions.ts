@@ -43,6 +43,7 @@ import {
   getTask,
   listAccountOptions,
   listProjectOptions,
+  listWrittenByChoices,
   updateAccount,
   updateProject,
   updateTask,
@@ -738,8 +739,9 @@ export async function saveAssessment(formData: FormData) {
   if (updatedAt == null) redirect(`/onboarding/assessments/${id}?notice=update-time`);
   const submittedWrittenBy = readString(formData, "writtenBy", 80);
   const automaticWrittenBy = writtenByForStatus(existing.status, status, existing.writtenBy, user.name);
+  const allowedWrittenBy = new Set(["", ...listWrittenByChoices()]);
   const writtenBy =
-    user.isSuperAdmin && formData.has("writtenBy") && submittedWrittenBy.ok && submittedWrittenBy.value !== existing.writtenBy
+    user.isSuperAdmin && formData.has("writtenBy") && submittedWrittenBy.ok && allowedWrittenBy.has(submittedWrittenBy.value) && submittedWrittenBy.value !== existing.writtenBy
       ? submittedWrittenBy.value
       : automaticWrittenBy;
   updateAssessment(id, { startTime, endTime, taskId, status, stage, updatedAt, writtenBy });
@@ -827,6 +829,7 @@ export async function saveAssessmentWrittenBy(formData: FormData) {
   const writtenBy = readString(formData, "writtenBy", 80);
   if (!writtenBy.ok || !Number.isInteger(id) || id <= 0) return;
   if (!getAssessment(id)) return;
+  if (!new Set(["", ...listWrittenByChoices()]).has(writtenBy.value)) return;
   setAssessmentWrittenBy(id, writtenBy.value);
   refresh();
 }

@@ -5,6 +5,7 @@ import { canEditLaptopStatus, isManager } from "@/lib/access";
 import { requireUser } from "@/lib/auth";
 import { LAPTOP_STATUSES } from "@/lib/constants";
 import { listAssessments } from "@/lib/candidates";
+import { listWrittenByChoices } from "@/lib/queries";
 import { buildHref, cn, one } from "@/lib/utils";
 import type { SearchParams } from "@/lib/types";
 
@@ -52,7 +53,7 @@ export default async function AssessmentsPage({ searchParams }: { searchParams: 
         canEditLaptop={canEditLaptopStatus(user)}
         canEditStatus={user.daOnboarding || user.isSuperAdmin}
         canEditWrittenBy={user.isSuperAdmin}
-        canDelete={user.isSuperAdmin}
+        writtenByChoices={listWrittenByChoices()}
         canFailWaiting={!user.daOnboarding && !user.isSuperAdmin && !isManager(user)}
       />
     </div>

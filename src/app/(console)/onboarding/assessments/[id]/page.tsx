@@ -6,6 +6,7 @@ import { Badge, Facts, Notice, PageHeader, assessmentTone, blank, dangerBtn } fr
 import { canAccessOnboarding, isManager } from "@/lib/access";
 import { requireUser } from "@/lib/auth";
 import { getAssessment } from "@/lib/candidates";
+import { listWrittenByChoices } from "@/lib/queries";
 import { assessmentLabel } from "@/lib/constants";
 import { one } from "@/lib/utils";
 import { failAssessment, removeAssessment } from "@/server/actions";
@@ -58,7 +59,7 @@ export default async function AssessmentPage({
         />
       </section>
       {manager ? (
-        <AssessmentForm assessment={assessment} canEditWrittenBy={user.isSuperAdmin} />
+        <AssessmentForm assessment={assessment} canEditWrittenBy={user.isSuperAdmin} writtenByChoices={listWrittenByChoices()} />
       ) : (
         <section className="max-w-3xl rounded-lg border border-line bg-surface p-5">
           <Facts
