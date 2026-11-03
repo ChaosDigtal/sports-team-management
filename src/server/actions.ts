@@ -737,6 +737,8 @@ export async function saveAssessment(formData: FormData) {
   }
   const existing = getAssessment(id);
   if (!existing) redirect("/onboarding/assessments");
+  const password = readString(formData, "password", 200);
+  if (existing.status === "Ready" && status === "Started" && (!password.ok || !password.value)) redirect(`/onboarding/assessments/${id}?notice=password`);
   const updatedAt = assessmentUpdatedAt(existing.status, existing.updatedAt, status, readString(formData, "updatedAt", 40).value);
   if (updatedAt == null) redirect(`/onboarding/assessments/${id}?notice=update-time`);
   const submittedWrittenBy = readString(formData, "writtenBy", 80);
@@ -746,7 +748,7 @@ export async function saveAssessment(formData: FormData) {
     user.isSuperAdmin && formData.has("writtenBy") && submittedWrittenBy.ok && allowedWrittenBy.has(submittedWrittenBy.value) && submittedWrittenBy.value !== existing.writtenBy
       ? submittedWrittenBy.value
       : automaticWrittenBy;
-  updateAssessment(id, { startTime, endTime, taskId, status, stage, updatedAt, writtenBy });
+  updateAssessment(id, { startTime, endTime, taskId, status, stage, updatedAt, writtenBy, password: password.value });
   refresh();
   redirect(`/onboarding/assessments/${id}?notice=saved`);
 }
@@ -793,6 +795,11 @@ export async function setAssessmentStatus(formData: FormData) {
   if (!ASSESSMENT_STATUSES.includes(status as (typeof ASSESSMENT_STATUSES)[number])) redirect(assessmentHref(destination));
   const existing = getAssessment(id);
   if (!existing) redirect("/onboarding/assessments");
+  const password = readString(formData, "password", 200);
+  if (existing.status === "Ready" && status === "Started" && (!password.ok || !password.value)) {
+    destination.searchParams.set("notice", "password");
+    redirect(assessmentHref(destination));
+  }
   const updatedAt = assessmentUpdatedAt(existing.status, existing.updatedAt, status, readString(formData, "updatedAt", 40).value);
   if (updatedAt == null) {
     destination.searchParams.set("notice", "update-time");
@@ -824,6 +831,7 @@ export async function setAssessmentStatus(formData: FormData) {
     stage,
     updatedAt,
     writtenBy: writtenByForStatus(existing.status, status, existing.writtenBy, user.name),
+    password: password.value,
   });
   refresh();
   destination.searchParams.set("notice", "saved");

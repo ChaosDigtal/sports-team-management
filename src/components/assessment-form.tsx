@@ -69,6 +69,7 @@ export function AssessmentForm({
             <span className={hintClass}>Update time is set to the current Japan time when you save.</span>
           ) : null}
         </label>
+        {assessment.status === "Ready" && status === "Started" ? <StartedPassword /> : null}
         {canEditWrittenBy ? (
           <label>
             <span className={labelClass}>Written by</span>
@@ -137,6 +138,7 @@ export function AssessmentStatusForm({ assessment }: { assessment: Assessment })
           <span className={hintClass}>Update time is set to the current Japan time when you save.</span>
         ) : null}
       </label>
+      {assessment.status === "Ready" && status === "Started" ? <StartedPassword /> : null}
       {status === "On Assessment" ? (
         <TimeField
           label="Start time"
@@ -170,6 +172,16 @@ export function AssessmentStatusForm({ assessment }: { assessment: Assessment })
         </button>
       </div>
     </form>
+  );
+}
+
+function StartedPassword() {
+  return (
+    <label>
+      <span className={labelClass}>Password</span>
+      <input className={inputClass} name="password" required maxLength={200} autoComplete="off" />
+      <span className={hintClass}>Required when Ready changes to Started.</span>
+    </label>
   );
 }
 

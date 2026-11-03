@@ -1,4 +1,3 @@
-import { randomInt } from "node:crypto";
 import { signUpLinkForAttempt } from "./constants";
 import { getDb, nextId, transaction } from "./db";
 import type { Assessment, Candidate, CandidateStatus, LaptopStatus } from "./types";
@@ -89,23 +88,9 @@ export function getCandidate(id: string) {
 function insertReady(candidateId: string) {
   getDb()
     .prepare(
-      `INSERT INTO "DA_assessments" (candidate_id, start_time, end_time, task_id, status, stage, password, updated_at, written_by, signup_link) VALUES (?, '', '', '', 'Ready', '', ?, '', '', '')`,
+      `INSERT INTO "DA_assessments" (candidate_id, start_time, end_time, task_id, status, stage, password, updated_at, written_by, signup_link) VALUES (?, '', '', '', 'Ready', '', '', '', '', '')`,
     )
-    .run(candidateId, assessmentPassword());
-}
-
-function assessmentPassword() {
-  const sets = ["ABCDEFGHJKLMNPQRSTUVWXYZ", "abcdefghijkmnopqrstuvwxyz", "23456789", "!@#$%&*"];
-  const alphabet = sets.join("");
-  const chars = sets.map((set) => set[randomInt(set.length)]);
-  while (chars.length < 20) chars.push(alphabet[randomInt(alphabet.length)]);
-  for (let index = chars.length - 1; index > 0; index -= 1) {
-    const swap = randomInt(index + 1);
-    const current = chars[index];
-    chars[index] = chars[swap];
-    chars[swap] = current;
-  }
-  return chars.join("");
+    .run(candidateId);
 }
 
 function removeReady(candidateId: string) {
@@ -305,15 +290,16 @@ function nextSignUpLink(db: ReturnType<typeof getDb>, existing: Row, nextStatus:
 
 export function updateAssessment(
   id: number,
-  input: { startTime: string; endTime: string; taskId: string; status: string; stage: string; updatedAt: string; writtenBy: string },
+  input: { startTime: string; endTime: string; taskId: string; status: string; stage: string; updatedAt: string; writtenBy: string; password?: string },
 ) {
   transaction(() => {
     const db = getDb();
-    const existing = db.prepare(`SELECT status, candidate_id, signup_link FROM "DA_assessments" WHERE id = ?`).get(id) as Row | undefined;
+    const existing = db.prepare(`SELECT status, candidate_id, signup_link, password FROM "DA_assessments" WHERE id = ?`).get(id) as Row | undefined;
     if (!existing) return;
     const stage = input.status === "On Assessment" ? input.stage : "";
     const signupLink = nextSignUpLink(db, existing, input.status);
-    db.prepare(`UPDATE "DA_assessments" SET start_time = ?, end_time = ?, task_id = ?, status = ?, stage = ?, updated_at = ?, written_by = ?, signup_link = ? WHERE id = ?`).run(
+    const password = text(existing.status) === "Ready" && input.status === "Started" ? input.password ?? "" : text(existing.password);
+    db.prepare(`UPDATE "DA_assessments" SET start_time = ?, end_time = ?, task_id = ?, status = ?, stage = ?, updated_at = ?, written_by = ?, signup_link = ?, password = ? WHERE id = ?`).run(
       input.startTime,
       input.endTime,
       input.taskId,
@@ -322,6 +308,7 @@ export function updateAssessment(
       input.updatedAt,
       input.writtenBy,
       signupLink,
+      password,
       id,
     );
     if (input.status === "Failed" && text(existing.status) !== "Failed") {

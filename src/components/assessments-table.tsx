@@ -30,6 +30,8 @@ export function AssessmentsTable({
 }) {
   const [items, setItems] = useState(rows);
   const [query, setQuery] = useState("");
+  const [sort, setSort] = useState<"" | "start" | "end">("");
+  const [dir, setDir] = useState<"asc" | "desc">("asc");
   const [now, setNow] = useState<Date | null>(null);
 
   useEffect(() => {
@@ -78,6 +80,13 @@ export function AssessmentsTable({
       .toLowerCase();
     return haystack.includes(needle);
   });
+  const sorted = [...visible].sort((left, right) => {
+    if (sort === "start" || sort === "end") {
+      const compared = compareTime(sort === "start" ? left.startTime : left.endTime, sort === "start" ? right.startTime : right.endTime, dir);
+      if (compared !== 0) return compared;
+    }
+    return left.id - right.id;
+  });
   const names = [...new Set(items.map((row) => row.name))].sort((left, right) => left.localeCompare(right));
   const writers = [...new Set(items.map((row) => row.writtenBy).filter(Boolean))].sort((left, right) => left.localeCompare(right));
   if (written && written !== BLANK_WRITTEN && !writers.includes(written)) writers.unshift(written);
@@ -102,16 +111,41 @@ export function AssessmentsTable({
         <thead className="bg-header">
           <tr>
             <NoHead />
-            {columns.map((column) => (
-              <th key={column} className={cn(thClass, "!text-center")}>
-                {column}
-              </th>
-            ))}
+            {columns.map((column) => {
+              const sortable = column === "Start time" ? "start" : column === "End time" ? "end" : "";
+              if (!sortable) {
+                return (
+                  <th key={column} className={cn(thClass, "!text-center")}>
+                    {column}
+                  </th>
+                );
+              }
+              const active = sort === sortable;
+              return (
+                <th key={column} className={cn(thClass, "!text-center")}>
+                  <button
+                    type="button"
+                    className="hover:text-ink"
+                    onClick={() => {
+                      if (sort !== sortable) {
+                        setSort(sortable);
+                        setDir("asc");
+                        return;
+                      }
+                      setDir((current) => (current === "asc" ? "desc" : "asc"));
+                    }}
+                  >
+                    {column}
+                    {active ? (dir === "asc" ? " ↑" : " ↓") : ""}
+                  </button>
+                </th>
+              );
+            })}
           </tr>
         </thead>
         <tbody className="divide-y divide-line">
           {visible.length === 0 ? <EmptyRow colSpan={columns.length + 1}>{filter || name || laptop || written || needle ? "No assessments match." : "No assessments yet."}</EmptyRow> : null}
-          {visible.map((row, index) => {
+          {sorted.map((row, index) => {
             const elapsed = now ? jstWallElapsedMinutes(row.startTime, now) : null;
             const sinceEnd = now ? jstWallElapsedMinutes(row.endTime, now) : null;
             const overtime = row.status === "On Assessment" && elapsed != null && elapsed > 180;
@@ -267,6 +301,14 @@ function applyNotification(rows: Assessment[], notification: AssessmentNotificat
       writtenBy: writtenByFromSignal(row.status, "Waiting", row.writtenBy),
     };
   });
+}
+
+function compareTime(left: string, right: string, direction: "asc" | "desc") {
+  if (!left && !right) return 0;
+  if (!left) return 1;
+  if (!right) return -1;
+  const order = left < right ? -1 : left > right ? 1 : 0;
+  return direction === "asc" ? order : -order;
 }
 
 function writtenByFromSignal(previousStatus: string, nextStatus: string, previousWrittenBy: string) {

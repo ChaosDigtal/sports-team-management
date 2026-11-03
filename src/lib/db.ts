@@ -1,4 +1,3 @@
-import { randomInt } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
@@ -394,9 +393,6 @@ function ensureOnboarding(db: DatabaseSync) {
   if (!names.has("password")) db.exec(`ALTER TABLE "DA_assessments" ADD COLUMN password TEXT NOT NULL DEFAULT ''`);
   if (!names.has("updated_at")) db.exec(`ALTER TABLE "DA_assessments" ADD COLUMN updated_at TEXT NOT NULL DEFAULT ''`);
   ensureOnboardingRole(db);
-  const missingPasswords = db.prepare(`SELECT id FROM "DA_assessments" WHERE password = ''`).all() as Array<{ id: number }>;
-  const setPassword = db.prepare(`UPDATE "DA_assessments" SET password = ? WHERE id = ?`);
-  for (const row of missingPasswords) setPassword.run(assessmentPassword(), row.id);
   ensureAssessmentIdsStartAtOne(db);
 }
 
@@ -417,20 +413,6 @@ function ensureAssessmentSignupLink(db: DatabaseSync) {
     const candidate = referral.get(row.candidate_id) as { referral_link: string } | undefined;
     set.run(signUpLinkForAttempt(Number(attempts.n) || 0, candidate?.referral_link ?? ""), row.id);
   }
-}
-
-function assessmentPassword() {
-  const sets = ["ABCDEFGHJKLMNPQRSTUVWXYZ", "abcdefghijkmnopqrstuvwxyz", "23456789", "!@#$%&*"];
-  const alphabet = sets.join("");
-  const chars = sets.map((set) => set[randomInt(set.length)]);
-  while (chars.length < 20) chars.push(alphabet[randomInt(alphabet.length)]);
-  for (let index = chars.length - 1; index > 0; index -= 1) {
-    const swap = randomInt(index + 1);
-    const current = chars[index];
-    chars[index] = chars[swap];
-    chars[swap] = current;
-  }
-  return chars.join("");
 }
 
 function ensureOnboardingRole(db: DatabaseSync) {

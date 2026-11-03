@@ -53,6 +53,7 @@ export function noticeText(notice: string) {
   if (notice === "withdraw-empty") return "Nothing is available to withdraw yet.";
   if (notice === "update-time") return "Add an update time to mark this assessment Passed.";
   if (notice === "start-time") return "Add a start time to mark this assessment On Assessment.";
+  if (notice === "password") return "Add a password to mark this assessment Started.";
   if (notice === "end-time") return "Add an end time to mark this assessment Waiting.";
   return "";
 }
