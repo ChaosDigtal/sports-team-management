@@ -1,4 +1,5 @@
 import { randomInt } from "node:crypto";
+import { signUpLinkForAttempt } from "./constants";
 import { getDb, nextId, transaction } from "./db";
 import type { Assessment, Candidate, CandidateStatus, LaptopStatus } from "./types";
 
@@ -88,7 +89,7 @@ export function getCandidate(id: string) {
 function insertReady(candidateId: string) {
   getDb()
     .prepare(
-      `INSERT INTO "DA_assessments" (candidate_id, start_time, end_time, task_id, status, stage, password, updated_at, written_by) VALUES (?, '', '', '', 'Ready', '', ?, '', '')`,
+      `INSERT INTO "DA_assessments" (candidate_id, start_time, end_time, task_id, status, stage, password, updated_at, written_by, signup_link) VALUES (?, '', '', '', 'Ready', '', ?, '', '', '')`,
     )
     .run(candidateId, assessmentPassword());
 }
@@ -229,7 +230,7 @@ const ASSESSMENT_SELECT = `
     c.anydesk_id AS anydesk_id, c.anydesk_password AS anydesk_password,
     c.ultraviewer_id AS ultraviewer_id, c.ultraviewer_password AS ultraviewer_password,
     s.start_time AS start_time, s.end_time AS end_time, s.task_id AS task_id, s.status AS status, s.stage AS stage,
-    s.stuck AS stuck, s.stuck_error AS stuck_error, s.password AS password, s.updated_at AS updated_at, s.written_by AS written_by, c.email AS email,
+    s.stuck AS stuck, s.stuck_error AS stuck_error, s.password AS password, s.updated_at AS updated_at, s.written_by AS written_by, s.signup_link AS signup_link, c.email AS email,
     c.dob AS dob, c.gender AS gender, c.race AS race, c.country AS country, c.linkedin_url AS linkedin_url, c.resume_url AS resume_url,
     c.email_forwarding AS email_forwarding, c.laptop_status AS laptop_status, c.status AS candidate_status, c.referral_link AS referral_link
   FROM "DA_assessments" s
@@ -255,6 +256,7 @@ function mapAssessment(row: Row): Assessment {
     stuckError: text(row.stuck_error),
     updatedAt: text(row.updated_at),
     writtenBy: text(row.written_by),
+    signupLink: text(row.signup_link),
     email: text(row.email),
     password: text(row.password),
     dob: text(row.dob),
@@ -290,16 +292,28 @@ export function getAssessment(id: number) {
   return row ? mapAssessment(row) : null;
 }
 
+function nextSignUpLink(db: ReturnType<typeof getDb>, existing: Row, nextStatus: string) {
+  if (nextStatus === "Ready") return "";
+  if (nextStatus === "Started" && text(existing.status) !== "Started") {
+    const candidateId = text(existing.candidate_id);
+    const countRow = db.prepare(`SELECT COUNT(*) AS n FROM "DA_assessments" WHERE candidate_id = ?`).get(candidateId) as Row;
+    const referral = db.prepare(`SELECT referral_link FROM "DA_candidates" WHERE id = ?`).get(candidateId) as Row | undefined;
+    return signUpLinkForAttempt(Number(countRow.n) || 0, text(referral?.referral_link));
+  }
+  return text(existing.signup_link);
+}
+
 export function updateAssessment(
   id: number,
   input: { startTime: string; endTime: string; taskId: string; status: string; stage: string; updatedAt: string; writtenBy: string },
 ) {
   transaction(() => {
     const db = getDb();
-    const existing = db.prepare(`SELECT status FROM "DA_assessments" WHERE id = ?`).get(id) as Row | undefined;
+    const existing = db.prepare(`SELECT status, candidate_id, signup_link FROM "DA_assessments" WHERE id = ?`).get(id) as Row | undefined;
     if (!existing) return;
     const stage = input.status === "On Assessment" ? input.stage : "";
-    db.prepare(`UPDATE "DA_assessments" SET start_time = ?, end_time = ?, task_id = ?, status = ?, stage = ?, updated_at = ?, written_by = ? WHERE id = ?`).run(
+    const signupLink = nextSignUpLink(db, existing, input.status);
+    db.prepare(`UPDATE "DA_assessments" SET start_time = ?, end_time = ?, task_id = ?, status = ?, stage = ?, updated_at = ?, written_by = ?, signup_link = ? WHERE id = ?`).run(
       input.startTime,
       input.endTime,
       input.taskId,
@@ -307,6 +321,7 @@ export function updateAssessment(
       stage,
       input.updatedAt,
       input.writtenBy,
+      signupLink,
       id,
     );
     if (input.status === "Failed" && text(existing.status) !== "Failed") {

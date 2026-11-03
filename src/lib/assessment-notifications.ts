@@ -1,3 +1,4 @@
+import { signUpLinkForAttempt } from "./constants";
 import { getDb } from "./db";
 import { writtenByForStatus } from "./candidates";
 import type { AssessmentNotification } from "./types";
@@ -61,14 +62,20 @@ function applyNotification(notification: AssessmentNotification) {
   const id = resolveAssessmentId(notification);
   if (id == null) return false;
   notification.id = id;
-  const current = db.prepare(`SELECT status, written_by FROM "DA_assessments" WHERE id = ?`).get(notification.id) as
-    | { status: string; written_by: string }
+  const current = db.prepare(
+    `SELECT s.status AS status, s.written_by AS written_by, s.signup_link AS signup_link, s.candidate_id AS candidate_id, c.referral_link AS referral_link
+     FROM "DA_assessments" s JOIN "DA_candidates" c ON c.id = s.candidate_id WHERE s.id = ?`,
+  ).get(notification.id) as
+    | { status: string; written_by: string; signup_link: string; candidate_id: string; referral_link: string }
     | undefined;
   if (!current) return false;
   if (notification.event === "started") {
-    db.prepare(`UPDATE "DA_assessments" SET status = 'Started', start_time = ?, stage = '', updated_at = '', written_by = ? WHERE id = ?`).run(
+    const count = db.prepare(`SELECT COUNT(*) AS n FROM "DA_assessments" WHERE candidate_id = ?`).get(current.candidate_id) as { n: number };
+    const signupLink = current.status === "Started" ? current.signup_link : signUpLinkForAttempt(Number(count.n) || 0, current.referral_link);
+    db.prepare(`UPDATE "DA_assessments" SET status = 'Started', start_time = ?, stage = '', updated_at = '', written_by = ?, signup_link = ? WHERE id = ?`).run(
       toJstLocal(notification["started at"]),
       writtenByForStatus(current.status, "Started", current.written_by, "Bot"),
+      signupLink,
       notification.id,
     );
     return true;

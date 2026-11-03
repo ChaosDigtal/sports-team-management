@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AssessmentForm, AssessmentStatusForm } from "@/components/assessment-form";
 import { DeleteButton } from "@/components/delete-button";
-import { Badge, Facts, Notice, PageHeader, assessmentTone, blank } from "@/components/ui";
+import { Badge, ExternalLink, Facts, Notice, PageHeader, assessmentTone, blank } from "@/components/ui";
 import { isManager } from "@/lib/access";
 import { requireUser } from "@/lib/auth";
 import { getAssessment } from "@/lib/candidates";
@@ -54,6 +54,8 @@ export default async function AssessmentPage({
             { label: "WhatsApp", value: blank(assessment.whatsapp) },
             { label: "AnyDesk ID", value: blank(assessment.anydeskId) },
             { label: "AnyDesk password", value: blank(assessment.anydeskPassword) },
+            { label: "Referral Link", value: assessment.referralLink ? <ExternalLink href={assessment.referralLink} /> : "—" },
+            { label: "Sign Up Link", value: assessment.signupLink ? <ExternalLink href={assessment.signupLink} /> : "—" },
           ]}
         />
       </section>

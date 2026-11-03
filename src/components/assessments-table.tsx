@@ -4,12 +4,12 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AssessmentCells } from "@/components/assessment-row";
 import { EmptyRow, NoCell, NoHead, inputClass, thClass } from "@/components/ui";
-import { LAPTOP_STATUSES } from "@/lib/constants";
+import { LAPTOP_STATUSES, signUpLinkForAttempt } from "@/lib/constants";
 import type { Assessment, AssessmentNotification } from "@/lib/types";
 import { jstWallElapsedMinutes } from "@/lib/time";
 import { cn } from "@/lib/utils";
 
-const columns = ["ID", "Name", "Referral Link", "Email", "Password", "WhatsApp", "Laptop Status", "Email Forwarding", "AnyDesk ID", "AnyDesk password", "Start time", "End time", "Update time", "UltraViewer ID", "UltraViewer password", "Written By", "Status"];
+const columns = ["ID", "Name", "Sign Up Link", "Email", "Password", "WhatsApp", "Laptop Status", "Email Forwarding", "AnyDesk ID", "AnyDesk password", "Start time", "End time", "Update time", "UltraViewer ID", "UltraViewer password", "Written By", "Status"];
 const BLANK_WRITTEN = "__blank__";
 const WAITING_LATE_MINUTES = 3 * 24 * 60;
 
@@ -73,7 +73,7 @@ export function AssessmentsTable({
     if (filter === "Stuck" && !row.stuck) return false;
     if (filter && filter !== "Stuck" && row.status !== filter) return false;
     if (!needle) return true;
-    const haystack = [row.id, row.name, row.email, row.password, row.whatsapp, row.anydeskId, row.anydeskPassword, row.ultraviewerId, row.ultraviewerPassword, row.referralLink, row.status, row.stage, row.writtenBy, row.laptopStatus]
+    const haystack = [row.id, row.name, row.email, row.password, row.whatsapp, row.anydeskId, row.anydeskPassword, row.ultraviewerId, row.ultraviewerPassword, row.signupLink, row.referralLink, row.status, row.stage, row.writtenBy, row.laptopStatus]
       .join(" ")
       .toLowerCase();
     return haystack.includes(needle);
@@ -239,6 +239,7 @@ function applyNotification(rows: Assessment[], notification: AssessmentNotificat
         startTime: notification["started at"] || row.startTime,
         updatedAt: "",
         writtenBy: writtenByFromSignal(row.status, "Started", row.writtenBy),
+        signupLink: row.status === "Started" ? row.signupLink : signUpLinkForAttempt(rows.filter((item) => item.candidateId === row.candidateId).length, row.referralLink),
       };
     }
     if (notification.event === "updated") {

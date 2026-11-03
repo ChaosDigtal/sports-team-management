@@ -36,7 +36,7 @@ export function AssessmentCells({
         </Link>
       </td>
       <td className="px-4 py-3 text-center">
-        <ReferralLinkCell link={row.referralLink} />
+        <SignUpLinkCell link={row.signupLink} />
       </td>
       <td className="px-4 py-3 text-center break-all">{row.email || "—"}</td>
       <td className="px-4 py-3 text-center break-all font-mono text-xs">{row.password || "—"}</td>
@@ -60,7 +60,7 @@ export function AssessmentCells({
   );
 }
 
-function ReferralLinkCell({ link }: { link: string }) {
+function SignUpLinkCell({ link }: { link: string }) {
   const [copied, setCopied] = useState(false);
   return (
     <span className="inline-flex max-w-56 items-center justify-center gap-1.5">
@@ -74,8 +74,8 @@ function ReferralLinkCell({ link }: { link: string }) {
       <button
         type="button"
         className="inline-flex size-7 shrink-0 items-center justify-center rounded-md text-muted hover:bg-hover hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
-        aria-label={copied ? "Copied referral link" : "Copy referral link"}
-        title={copied ? "Copied" : "Copy referral link"}
+        aria-label={copied ? "Copied sign up link" : "Copy sign up link"}
+        title={copied ? "Copied" : "Copy sign up link"}
         disabled={!link}
         onClick={async () => {
           try {

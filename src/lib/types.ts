@@ -214,6 +214,7 @@ export type Assessment = {
   stuckError: string;
   updatedAt: string;
   writtenBy: string;
+  signupLink: string;
   email: string;
   password: string;
   dob: string;

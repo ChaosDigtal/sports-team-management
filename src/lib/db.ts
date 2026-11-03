@@ -2,6 +2,7 @@ import { randomInt } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
+import { signUpLinkForAttempt } from "./constants";
 import { hashPassword } from "./passwords";
 
 const globalForDb = globalThis as unknown as { __teamDb?: DatabaseSync; __teamDbVersion?: number };
@@ -374,7 +375,8 @@ function ensureOnboarding(db: DatabaseSync) {
       stuck_error TEXT NOT NULL DEFAULT '',
       password TEXT NOT NULL DEFAULT '',
       updated_at TEXT NOT NULL DEFAULT '',
-      written_by TEXT NOT NULL DEFAULT ''
+      written_by TEXT NOT NULL DEFAULT '',
+      signup_link TEXT NOT NULL DEFAULT ''
     );
     CREATE TABLE IF NOT EXISTS "DA_assessment_notifications" (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -401,6 +403,20 @@ function ensureOnboarding(db: DatabaseSync) {
 function ensureAssessmentWrittenBy(db: DatabaseSync) {
   const names = new Set((db.prepare(`PRAGMA table_info("DA_assessments")`).all() as Array<{ name: string }>).map((row) => row.name));
   if (!names.has("written_by")) db.exec(`ALTER TABLE "DA_assessments" ADD COLUMN written_by TEXT NOT NULL DEFAULT ''`);
+}
+
+function ensureAssessmentSignupLink(db: DatabaseSync) {
+  const names = new Set((db.prepare(`PRAGMA table_info("DA_assessments")`).all() as Array<{ name: string }>).map((row) => row.name));
+  if (!names.has("signup_link")) db.exec(`ALTER TABLE "DA_assessments" ADD COLUMN signup_link TEXT NOT NULL DEFAULT ''`);
+  const rows = db.prepare(`SELECT id, candidate_id FROM "DA_assessments" WHERE status != 'Ready' AND signup_link = '' ORDER BY id`).all() as Array<{ id: number; candidate_id: string }>;
+  const count = db.prepare(`SELECT COUNT(*) AS n FROM "DA_assessments" WHERE candidate_id = ? AND id <= ?`);
+  const referral = db.prepare(`SELECT referral_link FROM "DA_candidates" WHERE id = ?`);
+  const set = db.prepare(`UPDATE "DA_assessments" SET signup_link = ? WHERE id = ? AND signup_link = ''`);
+  for (const row of rows) {
+    const attempts = count.get(row.candidate_id, row.id) as { n: number };
+    const candidate = referral.get(row.candidate_id) as { referral_link: string } | undefined;
+    set.run(signUpLinkForAttempt(Number(attempts.n) || 0, candidate?.referral_link ?? ""), row.id);
+  }
 }
 
 function assessmentPassword() {
@@ -501,6 +517,7 @@ export function getDb() {
   ensureWithdrawalSchedule(db);
   ensureOnboarding(db);
   ensureAssessmentWrittenBy(db);
+  ensureAssessmentSignupLink(db);
   ensureTelegram(db);
   ensureEmailForwarding(db);
   ensureCandidateWorkflow(db);

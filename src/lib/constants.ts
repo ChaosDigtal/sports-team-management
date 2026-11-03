@@ -26,6 +26,13 @@ export function assessmentLabel(status: string, stage: string) {
   return status;
 }
 
+export const CODING_SIGNUP_LINK = "https://www.dataannotation.tech/coding";
+
+export function signUpLinkForAttempt(attemptCount: number, referralLink: string) {
+  if (attemptCount % 2 === 1) return referralLink.trim();
+  return CODING_SIGNUP_LINK;
+}
+
 export const TASK_STATUSES: TaskStatus[] = ["WIP", "Completed", "Exited"];
 export const WITHDRAWAL_STATUSES: WithdrawalStatus[] = ["Processing", "Paid"];
 
